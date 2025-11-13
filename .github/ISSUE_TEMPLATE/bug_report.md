@@ -2,7 +2,7 @@
 name: Bug report
 about: Краткое описание бага
 title: 'Bug: имя'
-labels: bug
+labels: bug, dev
 assignees: ''
 
 ---
