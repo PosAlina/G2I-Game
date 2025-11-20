@@ -5,6 +5,9 @@
 # Intellij Idea
 .idea
 
+#Resharper
+*.DotSettings.user
+
 # Compiled Object files
 *.slo
 *.lo
