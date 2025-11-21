@@ -4,6 +4,8 @@
 #include "GameFramework/PlayerController.h"
 #include "G2IPlayerController.generated.h"
 
+struct FInputActionValue;
+class UInputAction;
 class UInputMappingContext;
 
 /**
@@ -11,23 +13,41 @@ class UInputMappingContext;
  *  Manages input mappings
  */
 UCLASS(abstract)
-class AG2IPlayerController : public APlayerController
+class G2I_API AG2IPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
 protected:
 
-	/** TODO: Refactor Input */
-	/** Input Mapping Contexts */
-	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
-	TArray<UInputMappingContext*> InputMappingContexts;
-
-	/** Gameplay initialization */
 	virtual void BeginPlay() override;
 
-	/** Input mapping context setup */
+	/** Setup Input */
+	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
+	TArray<UInputMappingContext*> InputMappingContexts;
+	
 	virtual void SetupInputComponent() override;
 
-	// Input Handlers
-	void SetupPlayerInputBindings();
+	/** Actions */
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* LookAction;
+
+	void Look(const FInputActionValue& Value);
+
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* MouseLookAction;
+	
+	void MouseLook(const FInputActionValue& Value);
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* MoveAction;
+	
+	void Move(const FInputActionValue& Value);
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* JumpAction;
+
+	void Jump(const FInputActionValue& Value);
+	
+	void StopJumping(const FInputActionValue& Value);
+
 };

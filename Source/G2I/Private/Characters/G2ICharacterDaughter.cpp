@@ -52,84 +52,42 @@ AG2ICharacterDaughter::AG2ICharacterDaughter()
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
 
-void AG2ICharacterDaughter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AG2ICharacterDaughter::MoveAction_Implementation(const float Right, const float Forward, const FRotator Rotation)
 {
-	// Set up action bindings
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-		
-		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+	// find out which way is forward
+	const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-		// Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AG2ICharacterDaughter::Move);
-		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &AG2ICharacterDaughter::Look);
+	// get forward vector
+	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 
-		// Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AG2ICharacterDaughter::Look);
-	}
-	else
-	{
-		UE_LOG(LogG2I, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
-	}
+	// get right vector 
+	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+	// add movement 
+	AddMovementInput(ForwardDirection, Forward);
+	AddMovementInput(RightDirection, Right);
 }
 
-void AG2ICharacterDaughter::Move(const FInputActionValue& Value)
+void AG2ICharacterDaughter::LookAction_Implementation(const float Yaw, const float Pitch)
 {
-	// input is a Vector2D
-	FVector2D MovementVector = Value.Get<FVector2D>();
-
-	// route the input
-	DoMove(MovementVector.X, MovementVector.Y);
+	// add yaw and pitch input to controller
+	AddControllerYawInput(Yaw);
+	AddControllerPitchInput(Pitch);
 }
 
-void AG2ICharacterDaughter::Look(const FInputActionValue& Value)
+void AG2ICharacterDaughter::MouseLookAction_Implementation(const float Yaw, const float Pitch)
 {
-	// input is a Vector2D
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
-
-	// route the input
-	DoLook(LookAxisVector.X, LookAxisVector.Y);
+	// add yaw and pitch input to controller
+	AddControllerYawInput(Yaw);
+	AddControllerPitchInput(Pitch);
 }
-
-void AG2ICharacterDaughter::DoMove(float Right, float Forward)
+	
+void AG2ICharacterDaughter::JumpAction_Implementation()
 {
-	if (GetController() != nullptr)
-	{
-		// find out which way is forward
-		const FRotator Rotation = GetController()->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-
-		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-		// add movement 
-		AddMovementInput(ForwardDirection, Forward);
-		AddMovementInput(RightDirection, Right);
-	}
-}
-
-void AG2ICharacterDaughter::DoLook(float Yaw, float Pitch)
-{
-	if (GetController() != nullptr)
-	{
-		// add yaw and pitch input to controller
-		AddControllerYawInput(Yaw);
-		AddControllerPitchInput(Pitch);
-	}
-}
-
-void AG2ICharacterDaughter::DoJumpStart()
-{
-	// signal the character to jump
 	Jump();
 }
 
-void AG2ICharacterDaughter::DoJumpEnd()
+void AG2ICharacterDaughter::StopJumpingAction_Implementation()
 {
-	// signal the character to stop jumping
 	StopJumping();
 }
