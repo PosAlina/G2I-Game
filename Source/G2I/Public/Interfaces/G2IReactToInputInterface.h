@@ -4,8 +4,6 @@
 #include "UObject/Interface.h"
 #include "G2IReactToInputInterface.generated.h"
 
-struct FInputActionValue;
-
 UINTERFACE(MinimalAPI, Blueprintable)
 class UG2IReactToInputInterface : public UInterface
 {
