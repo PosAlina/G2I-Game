@@ -18,19 +18,10 @@ class G2I_API IG2IReactToInputInterface
 	GENERATED_BODY()
 
 public:
-	
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Actions)
-	void MoveAction(const float Right, const float Forward, const FRotator Rotation);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Actions)
 	void LookAction(const float Yaw, const float Pitch);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Actions)
 	void MouseLookAction(const float Yaw, const float Pitch);
-	
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Actions)
-	void JumpAction();
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Actions)
-	void StopJumpingAction();
 };
