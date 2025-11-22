@@ -1,17 +1,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/G2ICameraComponent.h"
-#include "Components/G2IMovementComponent.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/G2IReactToInputInterface.h"
-#include "Logging/LogMacros.h"
 #include "G2ICharacterEngineer.generated.h"
 
+class UG2IMovementComponent;
+class UG2ICameraComponent;
 class USpringArmComponent;
 class UCameraComponent;
-class UInputAction;
-struct FInputActionValue;
 
 /**
  *  First player`s character. Engineer.
@@ -52,22 +49,11 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-	/** TODO: Refactor MovementComponent */
-	
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void MoveAction_Implementation(const float Right, const float Forward, const FRotator Rotation) override;
-
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void LookAction_Implementation(const float Yaw, const float Pitch) override;
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void MouseLookAction_Implementation(const float Yaw, const float Pitch) override;
-	
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void JumpAction_Implementation() override;
-
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void StopJumpingAction_Implementation() override;
 
 };
 

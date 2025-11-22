@@ -1,29 +1,25 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "G2IMovementInputInterface.h"
 #include "G2IMovementComponent.generated.h"
 
-
-struct FInputActionValue;
-class UInputAction;
-
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class G2I_API UG2IMovementComponent : public UActorComponent
+class G2I_API UG2IMovementComponent : public UActorComponent, public IG2IMovementInputInterface
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this component's properties
+
 	UG2IMovementComponent();
+	
+	UFUNCTION(BlueprintCallable, Category="Input")
+	virtual void MoveAction_Implementation(const float Right, const float Forward, const FRotator Rotation) override;
+	
+	UFUNCTION(BlueprintCallable, Category="Input")
+	virtual void JumpAction_Implementation() override;
 
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
-							   FActorComponentTickFunction* ThisTickFunction) override;
-
-protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
-
+	UFUNCTION(BlueprintCallable, Category="Input")
+	virtual void StopJumpingAction_Implementation() override;
 
 };

@@ -1,33 +1,57 @@
 ﻿#include "Components/G2IMovementComponent.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
-
-// Sets default values for this component's properties
 UG2IMovementComponent::UG2IMovementComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
+	if (const ACharacter *Owner = Cast<ACharacter>(GetOwner()))
+	{
+		// Configure character movement
+		Owner->GetCharacterMovement()->bOrientRotationToMovement = true;
+		Owner->GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 
-	// ...
+		// Note: For faster iteration times these variables, and many more, can be tweaked in the Character Blueprint
+		// instead of recompiling to adjust them
+		Owner->GetCharacterMovement()->JumpZVelocity = 500.f;
+		Owner->GetCharacterMovement()->AirControl = 0.35f;
+		Owner->GetCharacterMovement()->MaxWalkSpeed = 500.f;
+		Owner->GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
+		Owner->GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
+		Owner->GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
+	}
 }
 
-
-// Called when the game starts
-void UG2IMovementComponent::BeginPlay()
+void UG2IMovementComponent::MoveAction_Implementation(const float Right, const float Forward, const FRotator Rotation)
 {
-	Super::BeginPlay();
+	if (ACharacter *Owner = Cast<ACharacter>(GetOwner()))
+	{
+		// find out which way is forward
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-	// ...
+		// get forward vector
+		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+
+		// get right vector 
+		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+		// add movement 
+		Owner->AddMovementInput(ForwardDirection, Forward);
+		Owner->AddMovementInput(RightDirection, Right);
+	}
+}
 	
-}
-
-
-// Called every frame
-void UG2IMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-                                              FActorComponentTickFunction* ThisTickFunction)
+void UG2IMovementComponent::JumpAction_Implementation()
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
+	if (ACharacter *Owner = Cast<ACharacter>(GetOwner()))
+	{
+		Owner->Jump();
+	}
 }
 
+void UG2IMovementComponent::StopJumpingAction_Implementation()
+{
+	if (ACharacter *Owner = Cast<ACharacter>(GetOwner()))
+	{
+		Owner->StopJumping();
+	}
+}

@@ -17,6 +17,10 @@ class G2I_API AG2IPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
+public:
+
+	virtual void OnPossess(APawn *NewPawn) override;
+
 protected:
 
 	/** Setup Input */
@@ -25,7 +29,12 @@ protected:
 	
 	virtual void SetupInputComponent() override;
 
+	void SetupCharacterActorComponents();
+
 	/** Actions */
+	UPROPERTY(VisibleAnywhere)
+	TSet<UActorComponent*> MovementComponents;
+	
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* LookAction;
 
