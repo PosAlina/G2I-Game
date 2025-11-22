@@ -3,16 +3,10 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "G2I.h"
+#include "G2IPlayerState.h"
 #include "G2IReactToInputInterface.h"
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
-
-void AG2IPlayerController::BeginPlay()
-{
-	Super::BeginPlay();
-
-	SetupInputComponent();
-}
 
 void AG2IPlayerController::SetupInputComponent()
 {
@@ -42,6 +36,9 @@ void AG2IPlayerController::SetupInputComponent()
 				EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ThisClass::StopJumping);
 
 				EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ThisClass::Look);
+
+				EnhancedInputComponent->BindAction(SelectNextCharacterAction, ETriggerEvent::Started, this,
+					&ThisClass::SelectNextCharacter);
 			}
 			else
 			{
@@ -50,7 +47,7 @@ void AG2IPlayerController::SetupInputComponent()
 		}
 		else
 		{
-			UE_LOG(LogG2I, Log, TEXT("Local character is not defined"))
+			UE_LOG(LogG2I, Log, TEXT("Local character is not defined"));
 		}
 	}
 }
@@ -68,12 +65,13 @@ void AG2IPlayerController::Look(const FInputActionValue& Value)
 		}
 		else
 		{
-			UE_LOG(LogG2I, Log, TEXT("Current local character is not implemented %s interface for definition action"), *UG2IReactToInputInterface::StaticClass()->GetName())
+			UE_LOG(LogG2I, Log, TEXT("Current local character is not implemented %s interface for definition action"),
+			*UG2IReactToInputInterface::StaticClass()->GetName());
 		}
 	}
 	else
 	{
-		UE_LOG(LogG2I, Log, TEXT("Current local character is not implemented %s interface for definition action"), *UG2IReactToInputInterface::StaticClass()->GetName())
+		UE_LOG(LogG2I, Log, TEXT("Local character is not defined"));
 	}
 }
 
@@ -90,12 +88,13 @@ void AG2IPlayerController::MouseLook(const FInputActionValue& Value)
 		}
 		else
 		{
-			UE_LOG(LogG2I, Log, TEXT("Current local character is not implemented %s interface for definition action"), *UG2IReactToInputInterface::StaticClass()->GetName())
+			UE_LOG(LogG2I, Log, TEXT("Current local character is not implemented %s interface for definition action"),
+				*UG2IReactToInputInterface::StaticClass()->GetName());
 		}
 	}
 	else
 	{
-		UE_LOG(LogG2I, Log, TEXT("Current local character is not implemented %s interface for definition action"), *UG2IReactToInputInterface::StaticClass()->GetName())
+		UE_LOG(LogG2I, Log, TEXT("Local character is not defined"));
 	}
 }
 
@@ -113,12 +112,13 @@ void AG2IPlayerController::Move(const FInputActionValue& Value)
 		}
 		else
 		{
-			UE_LOG(LogG2I, Log, TEXT("Current local character is not implemented %s interface for definition action"), *UG2IReactToInputInterface::StaticClass()->GetName())
+			UE_LOG(LogG2I, Log, TEXT("Current local character is not implemented %s interface for definition action"),
+				*UG2IReactToInputInterface::StaticClass()->GetName());
 		}
 	}
 	else
 	{
-		UE_LOG(LogG2I, Log, TEXT("Current local character is not implemented %s interface for definition action"), *UG2IReactToInputInterface::StaticClass()->GetName())
+		UE_LOG(LogG2I, Log, TEXT("Local character is not defined"));
 	}
 }
 
@@ -132,12 +132,13 @@ void AG2IPlayerController::Jump(const FInputActionValue& Value)
 		}
 		else
 		{
-			UE_LOG(LogG2I, Log, TEXT("Current local character is not implemented %s interface for definition action"), *UG2IReactToInputInterface::StaticClass()->GetName())
+			UE_LOG(LogG2I, Log, TEXT("Current local character is not implemented %s interface for definition action"),
+				*UG2IReactToInputInterface::StaticClass()->GetName());
 		}
 	}
 	else
 	{
-		UE_LOG(LogG2I, Log, TEXT("Current local character is not implemented %s interface for definition action"), *UG2IReactToInputInterface::StaticClass()->GetName())
+		UE_LOG(LogG2I, Log, TEXT("Local character is not defined"));
 	}
 }
 
@@ -151,11 +152,27 @@ void AG2IPlayerController::StopJumping(const FInputActionValue& Value)
 		}
 		else
 		{
-			UE_LOG(LogG2I, Log, TEXT("Current local character is not implemented %s interface for definition action"), *UG2IReactToInputInterface::StaticClass()->GetName())
+			UE_LOG(LogG2I, Log, TEXT("Current local character is not implemented %s interface for definition action"),
+				*UG2IReactToInputInterface::StaticClass()->GetName());
 		}
 	}
 	else
 	{
-		UE_LOG(LogG2I, Log, TEXT("Current local character is not implemented %s interface for definition action"), *UG2IReactToInputInterface::StaticClass()->GetName())
+		UE_LOG(LogG2I, Log, TEXT("Local character is not defined"));
 	}
+}
+
+void AG2IPlayerController::SelectNextCharacter(const FInputActionValue& Value)
+{
+    if (AG2IPlayerState *CurrentPlayerState = GetPlayerState<AG2IPlayerState>())
+    {
+        const FVector NewCharacterLocationIfUnexisted = FVector(0, 0, 0);
+        const FRotator NewCharacterRotationIfUnexisted = FRotator(0, 0, 0);
+        CurrentPlayerState->SelectNextCharacter(NewCharacterLocationIfUnexisted, NewCharacterRotationIfUnexisted);
+    }
+    else
+    {
+        UE_LOG(LogG2I, Error, TEXT("This player state %s is not class %s"),
+            *GetName(), *AG2IPlayerState::StaticClass()->GetName());
+    }
 }

@@ -19,8 +19,6 @@ class G2I_API AG2IPlayerController : public APlayerController
 
 protected:
 
-	virtual void BeginPlay() override;
-
 	/** Setup Input */
 	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
 	TArray<UInputMappingContext*> InputMappingContexts;
@@ -50,4 +48,9 @@ protected:
 	
 	void StopJumping(const FInputActionValue& Value);
 
+	/** Select character actions */
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* SelectNextCharacterAction;
+
+	void SelectNextCharacter(const FInputActionValue& Value);
 };
