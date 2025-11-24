@@ -1,32 +1,30 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/G2IReactToInputInterface.h"
 #include <Components/SphereComponent.h>
-#include "G2ICharacterEngineer.generated.h"
+#include "G2ICharacterDaughter.generated.h"
 
-class UG2IMovementComponent;
 class UG2ICameraComponent;
+class UG2IMovementComponent;
 class USpringArmComponent;
 class UCameraComponent;
 
 /**
- *  First player`s character. Engineer.
+ *  Second player`s character. Daughter.
  *  Implements a controllable orbiting camera
  */
 UCLASS(abstract)
-class G2I_API AG2ICharacterEngineer : public ACharacter, public IG2IReactToInputInterface
+class AG2ICharacterDaughter : public ACharacter, public IG2IReactToInputInterface
 {
 	GENERATED_BODY()
 
 public:
 
 	/** Constructor */
-	AG2ICharacterEngineer();
+	AG2ICharacterDaughter();
 
-	/** TODO: Refactor CameraComponent */
-	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UG2ICameraComponent *CameraComp;
 
@@ -36,6 +34,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	float InteractionSphereRadius = 200.f;
 
+	/** TODO: Refactor CameraComponent */
 private:
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
@@ -48,7 +47,7 @@ private:
 	/** Interaction Sphere */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	USphereComponent* InteractionSphere;
-
+	
 public:
 
 	/** Returns CameraBoom subobject **/
@@ -57,8 +56,7 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-	/** Returns InteractionSphere subobject **/
-	FORCEINLINE class USphereComponent* GetInteractionSphere() const { return InteractionSphere; }
+protected:
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void LookAction_Implementation(const float Yaw, const float Pitch) override;
