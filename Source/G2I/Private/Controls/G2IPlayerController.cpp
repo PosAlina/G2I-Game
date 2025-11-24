@@ -7,6 +7,7 @@
 #include "G2IReactToInputInterface.h"
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
+#include "Components/G2IMovementComponent.h"
 
 void AG2IPlayerController::SetupInputComponent()
 {
@@ -56,6 +57,33 @@ void AG2IPlayerController::SetupInputComponent()
 	}
 }
 
+void AG2IPlayerController::OnPossess(APawn* NewPawn)
+{
+	Super::OnPossess(NewPawn);
+
+	SetupCharacterActorComponents();
+}
+
+void AG2IPlayerController::SetupCharacterActorComponents()
+{
+	if (const APawn *CurrentCharacter = GetPawn())
+	{
+		TSet<UActorComponent*> CharacterComponents = CurrentCharacter->GetComponents();
+		for (UActorComponent *Component : CharacterComponents)
+		{
+			if (Component->Implements<UG2IMovementInputInterface>())
+			{
+				MovementComponents.Add(Component);
+			}
+		}
+	}
+	else
+	{
+		UE_LOG(LogG2I, Log, TEXT("Local character is not defined"));
+	}
+}
+
+
 void AG2IPlayerController::Look(const FInputActionValue& Value)
 {
 	if (APawn *CurrentCharacter = GetPawn())
@@ -104,65 +132,53 @@ void AG2IPlayerController::MouseLook(const FInputActionValue& Value)
 
 void AG2IPlayerController::Move(const FInputActionValue& Value)
 {
-	if (APawn *CurrentCharacter = GetPawn())
+	for (UActorComponent *Component : MovementComponents)
 	{
-		if (CurrentCharacter->Implements<UG2IReactToInputInterface>())
+		if (Component->Implements<UG2IMovementInputInterface>())
 		{
 			const FVector2D MovementVector = Value.Get<FVector2D>();
 			const float Right = MovementVector.X;
 			const float Forward = MovementVector.Y;
 			const FRotator Rotation = GetControlRotation();
-			IG2IReactToInputInterface::Execute_MoveAction(CurrentCharacter, Right, Forward, Rotation);
+			IG2IMovementInputInterface::Execute_MoveAction(Component, Right, Forward, Rotation);
 		}
 		else
 		{
-			UE_LOG(LogG2I, Log, TEXT("Current local character is not implemented %s interface for definition action"),
-				*UG2IReactToInputInterface::StaticClass()->GetName());
+			UE_LOG(LogG2I, Warning, TEXT("In Movement Components array %s contains component which not "
+								"implemented needed interface"), *Component->GetName());
 		}
-	}
-	else
-	{
-		UE_LOG(LogG2I, Log, TEXT("Local character is not defined"));
 	}
 }
 
 void AG2IPlayerController::Jump(const FInputActionValue& Value)
 {
-	if (APawn *CurrentCharacter = GetPawn())
+	for (UActorComponent *Component : MovementComponents)
 	{
-		if (CurrentCharacter->Implements<UG2IReactToInputInterface>())
+		if (Component->Implements<UG2IMovementInputInterface>())
 		{
-			IG2IReactToInputInterface::Execute_JumpAction(CurrentCharacter);
+			IG2IMovementInputInterface::Execute_JumpAction(Component);
 		}
 		else
 		{
-			UE_LOG(LogG2I, Log, TEXT("Current local character is not implemented %s interface for definition action"),
-				*UG2IReactToInputInterface::StaticClass()->GetName());
+			UE_LOG(LogG2I, Warning, TEXT("In Movement Components array %s contains component which not "
+								"implemented needed interface"), *Component->GetName());
 		}
-	}
-	else
-	{
-		UE_LOG(LogG2I, Log, TEXT("Local character is not defined"));
 	}
 }
 
 void AG2IPlayerController::StopJumping(const FInputActionValue& Value)
 {
-	if (APawn *CurrentCharacter = GetPawn())
+	for (UActorComponent *Component : MovementComponents)
 	{
-		if (CurrentCharacter->Implements<UG2IReactToInputInterface>())
+		if (Component->Implements<UG2IMovementInputInterface>())
 		{
-			IG2IReactToInputInterface::Execute_StopJumpingAction(CurrentCharacter);
+			IG2IMovementInputInterface::Execute_StopJumpingAction(Component);
 		}
 		else
 		{
-			UE_LOG(LogG2I, Log, TEXT("Current local character is not implemented %s interface for definition action"),
-				*UG2IReactToInputInterface::StaticClass()->GetName());
+			UE_LOG(LogG2I, Warning, TEXT("In Movement Components array %s contains component which not "
+								"implemented needed interface"), *Component->GetName());
 		}
-	}
-	else
-	{
-		UE_LOG(LogG2I, Log, TEXT("Local character is not defined"));
 	}
 }
 

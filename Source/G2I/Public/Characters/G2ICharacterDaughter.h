@@ -1,19 +1,15 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "Components/G2ICameraComponent.h"
-#include "Components/G2IMovementComponent.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/G2IReactToInputInterface.h"
-#include "Logging/LogMacros.h"
 #include <Components/SphereComponent.h>
 #include "G2ICharacterDaughter.generated.h"
 
-
+class UG2ICameraComponent;
+class UG2IMovementComponent;
 class USpringArmComponent;
 class UCameraComponent;
-class UInputAction;
-struct FInputActionValue;
 
 /**
  *  Second player`s character. Daughter.
@@ -60,23 +56,13 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-	/** TODO: Refactor MovementComponent */
 protected:
-	
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void MoveAction_Implementation(const float Right, const float Forward, const FRotator Rotation) override;
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void LookAction_Implementation(const float Yaw, const float Pitch) override;
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void MouseLookAction_Implementation(const float Yaw, const float Pitch) override;
-	
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void JumpAction_Implementation() override;
-
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void StopJumpingAction_Implementation() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void InteractAction_Implementation(const FName& Tag) override;
