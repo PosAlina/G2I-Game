@@ -4,6 +4,7 @@
 #include "GameFramework/PlayerController.h"
 #include "G2IPlayerController.generated.h"
 
+struct FInputActionInstance;
 struct FInputActionValue;
 class UInputAction;
 class UInputMappingContext;
@@ -53,4 +54,13 @@ protected:
 	UInputAction* SelectNextCharacterAction;
 
 	void SelectNextCharacter(const FInputActionValue& Value);
+
+	/** Interact Actions */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TSet<UInputAction*> InteractActions;
+
+	void Interact(const FInputActionInstance& Instance);
+
+	UPROPERTY(EditAnywhere, Category = "Data")
+	TMap<UInputAction*, FName> ActionToTagMap;
 };
