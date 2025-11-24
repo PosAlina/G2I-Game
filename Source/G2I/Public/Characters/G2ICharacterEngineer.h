@@ -1,19 +1,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/G2ICameraComponent.h"
-#include "Components/G2IMovementComponent.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/G2IReactToInputInterface.h"
-#include "Logging/LogMacros.h"
 #include <Components/SphereComponent.h>
 #include "G2ICharacterEngineer.generated.h"
 
-
+class UG2IMovementComponent;
+class UG2ICameraComponent;
 class USpringArmComponent;
 class UCameraComponent;
-class UInputAction;
-struct FInputActionValue;
 
 /**
  *  First player`s character. Engineer.
@@ -64,8 +60,6 @@ public:
 	/** Returns InteractionSphere subobject **/
 	FORCEINLINE class USphereComponent* GetInteractionSphere() const { return InteractionSphere; }
 
-	
-
 	/** TODO: Refactor MovementComponent */
 	
 	UFUNCTION(BlueprintCallable, Category="Input")
@@ -76,12 +70,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void MouseLookAction_Implementation(const float Yaw, const float Pitch) override;
-	
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void JumpAction_Implementation() override;
-
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void StopJumpingAction_Implementation() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void InteractAction_Implementation(const FName& Tag) override;
