@@ -61,16 +61,6 @@ void AG2ICharacterEngineer::MouseLookAction_Implementation(const float Yaw, cons
 	AddControllerYawInput(Yaw);
 	AddControllerPitchInput(Pitch);
 }
-	
-void AG2ICharacterEngineer::JumpAction_Implementation()
-{
-	Jump();
-}
-
-void AG2ICharacterEngineer::StopJumpingAction_Implementation()
-{
-	StopJumping();
-}
 
 void AG2ICharacterEngineer::InteractAction_Implementation(const FName& Tag)
 {
