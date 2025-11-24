@@ -39,6 +39,10 @@ void AG2IPlayerController::SetupInputComponent()
 
 				EnhancedInputComponent->BindAction(SelectNextCharacterAction, ETriggerEvent::Started, this,
 					&ThisClass::SelectNextCharacter);
+
+				for (const auto& InteractAction : InteractActions) {
+					EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ThisClass::Interact);
+				}
 			}
 			else
 			{
@@ -175,4 +179,36 @@ void AG2IPlayerController::SelectNextCharacter(const FInputActionValue& Value)
         UE_LOG(LogG2I, Error, TEXT("This player state %s is not class %s"),
             *GetName(), *AG2IPlayerState::StaticClass()->GetName());
     }
+}
+
+void AG2IPlayerController::Interact(const FInputActionInstance& Instance)
+{
+	if (APawn* CurrentCharacter = GetPawn()) {
+		if (CurrentCharacter->Implements<UG2IReactToInputInterface>())
+		{
+			
+			if (const UInputAction* Action = Instance.GetSourceAction()) {
+				if (ActionToTagMap.Contains(Action))
+				{
+					FName Tag = ActionToTagMap[Action];
+					IG2IReactToInputInterface::Execute_InteractAction(CurrentCharacter, Tag);
+				}
+				else {
+					UE_LOG(LogG2I, Log, TEXT("Map doesn't contains interact action"));
+				}
+			}
+			else {
+				UE_LOG(LogG2I, Log, TEXT("Can't get interact action for this local character"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogG2I, Log, TEXT("Current loàcal character is not implemented %s interface for definition action"),
+				*UG2IReactToInputInterface::StaticClass()->GetName());
+		}
+	}
+	else
+	{
+		UE_LOG(LogG2I, Log, TEXT("Local character is not defined"));
+	}
 }

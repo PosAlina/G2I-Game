@@ -8,6 +8,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "G2IInteractiveObjectInterface.h"
 #include "G2I.h"
 
 AG2ICharacterDaughter::AG2ICharacterDaughter()
@@ -47,6 +48,12 @@ AG2ICharacterDaughter::AG2ICharacterDaughter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
+
+	// Create a interaction sphere
+	InteractionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("InteractionSphere"));
+	InteractionSphere->SetupAttachment(RootComponent);
+	InteractionSphere->InitSphereRadius(InteractionSphereRadius);
+	InteractionSphere->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
@@ -90,4 +97,32 @@ void AG2ICharacterDaughter::JumpAction_Implementation()
 void AG2ICharacterDaughter::StopJumpingAction_Implementation()
 {
 	StopJumping();
+}
+
+void AG2ICharacterDaughter::InteractAction_Implementation(const FName& Tag)
+{
+	DrawDebugSphere(
+		GetWorld(),
+		InteractionSphere->GetComponentLocation(),
+		InteractionSphere->GetScaledSphereRadius(),
+		16,
+		FColor::Green,
+		false,
+		1.0f,
+		0,
+		2.0f
+	);
+
+	TArray<AActor*> OverlappedActors;
+	InteractionSphere->GetOverlappingActors(OverlappedActors);
+
+	for (const auto& Overlap : OverlappedActors) {
+		if (Overlap->ActorHasTag(Tag)) {
+			if (Overlap->Implements<UG2IInteractiveObjectInterface>()) {
+				if (IG2IInteractiveObjectInterface::Execute_CanInteract(Overlap, this)) {
+					IG2IInteractiveObjectInterface::Execute_Interact(Overlap, this);
+				}
+			}
+		}
+	}
 }

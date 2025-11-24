@@ -6,7 +6,9 @@
 #include "GameFramework/Character.h"
 #include "Interfaces/G2IReactToInputInterface.h"
 #include "Logging/LogMacros.h"
+#include <Components/SphereComponent.h>
 #include "G2ICharacterDaughter.generated.h"
+
 
 class USpringArmComponent;
 class UCameraComponent;
@@ -33,6 +35,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	UG2IMovementComponent *MovementComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	float InteractionSphereRadius = 200.f;
+
 	/** TODO: Refactor CameraComponent */
 private:
 	/** Camera boom positioning the camera behind the character */
@@ -42,6 +47,10 @@ private:
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
+
+	/** Interaction Sphere */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	USphereComponent* InteractionSphere;
 	
 public:
 
@@ -68,6 +77,9 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void StopJumpingAction_Implementation() override;
+
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	virtual void InteractAction_Implementation(const FName& Tag) override;
 
 };
 

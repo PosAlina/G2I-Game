@@ -8,6 +8,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "G2IInteractiveObjectInterface.h"
 #include "G2I.h"
 
 AG2ICharacterEngineer::AG2ICharacterEngineer()
@@ -47,6 +48,13 @@ AG2ICharacterEngineer::AG2ICharacterEngineer()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
+
+	// Create a interaction sphere
+	InteractionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("InteractionSphere"));
+	InteractionSphere->SetupAttachment(RootComponent);
+	InteractionSphere->InitSphereRadius(InteractionSphereRadius);
+	InteractionSphere->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
@@ -90,4 +98,65 @@ void AG2ICharacterEngineer::JumpAction_Implementation()
 void AG2ICharacterEngineer::StopJumpingAction_Implementation()
 {
 	StopJumping();
+}
+
+void AG2ICharacterEngineer::InteractAction_Implementation(const FName& Tag)
+{
+	// Рисуем сферу
+	DrawDebugSphere(
+		GetWorld(),
+		InteractionSphere->GetComponentLocation(),
+		InteractionSphere->GetScaledSphereRadius(),
+		16,
+		FColor::Green,
+		false,
+		1.0f,
+		0,
+		2.0f
+	);
+
+	TArray<AActor*> OverlappedActors;
+	InteractionSphere->GetOverlappingActors(OverlappedActors);
+
+	UE_LOG(LogTemp, Log, TEXT("InteractAction: found %d overlapping actors"), OverlappedActors.Num());
+
+	for (AActor* Overlap : OverlappedActors)
+	{
+		if (!Overlap)
+		{
+			UE_LOG(LogTemp, Log, TEXT("Overlap actor is null!"));
+			continue;
+		}
+
+		UE_LOG(LogTemp, Log, TEXT("Checking actor: %s"), *Overlap->GetName());
+
+		if (Overlap->ActorHasTag(Tag))
+		{
+			UE_LOG(LogTemp, Log, TEXT("Actor %s has tag %s"), *Overlap->GetName(), *Tag.ToString());
+
+			if (Overlap->Implements<UG2IInteractiveObjectInterface>())
+			{
+				UE_LOG(LogTemp, Log, TEXT("Actor %s implements IG2IInteractiveObjectInterface"), *Overlap->GetName());
+
+				// Проверяем CanInteract
+				if (IG2IInteractiveObjectInterface::Execute_CanInteract(Overlap, this))
+				{
+					UE_LOG(LogTemp, Log, TEXT("Actor %s CAN interact, executing Interact"), *Overlap->GetName());
+					IG2IInteractiveObjectInterface::Execute_Interact(Overlap, this);
+				}
+				else
+				{
+					UE_LOG(LogTemp, Log, TEXT("Actor %s CANNOT interact"), *Overlap->GetName());
+				}
+			}
+			else
+			{
+				UE_LOG(LogTemp, Log, TEXT("Actor %s does NOT implement IG2IInteractiveObjectInterface"), *Overlap->GetName());
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Log, TEXT("Actor %s does NOT have tag %s"), *Overlap->GetName(), *Tag.ToString());
+		}
+	}
 }
