@@ -3,11 +3,11 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/G2IReactToInputInterface.h"
-#include <Components/SphereComponent.h>
 #include "G2ICharacterDaughter.generated.h"
 
 class UG2ICameraComponent;
 class UG2IMovementComponent;
+class UG2IInteractionComponent;
 class USpringArmComponent;
 class UCameraComponent;
 
@@ -31,8 +31,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	UG2IMovementComponent *MovementComp;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	float InteractionSphereRadius = 200.f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
+	UG2IInteractionComponent* InteractionComp;
 
 	/** TODO: Refactor CameraComponent */
 private:
@@ -44,10 +44,6 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
 
-	/** Interaction Sphere */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	USphereComponent* InteractionSphere;
-	
 public:
 
 	/** Returns CameraBoom subobject **/
@@ -63,9 +59,5 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void MouseLookAction_Implementation(const float Yaw, const float Pitch) override;
-
-	UFUNCTION(BlueprintCallable, Category = "Input")
-	virtual void InteractAction_Implementation(const FName& Tag) override;
-
 };
 

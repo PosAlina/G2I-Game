@@ -8,6 +8,7 @@
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
 #include "Components/G2IMovementComponent.h"
+#include "Components/G2IInteractionComponent.h"
 
 void AG2IPlayerController::SetupInputComponent()
 {
@@ -42,7 +43,7 @@ void AG2IPlayerController::SetupInputComponent()
 					&ThisClass::SelectNextCharacter);
 
 				for (const auto& InteractAction : InteractActions) {
-					EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ThisClass::Interact);
+					EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &ThisClass::Interact);
 				}
 			}
 			else
@@ -74,6 +75,11 @@ void AG2IPlayerController::SetupCharacterActorComponents()
 			if (Component->Implements<UG2IMovementInputInterface>())
 			{
 				MovementComponents.Add(Component);
+			}
+
+			if (Component->Implements<UG2IInteractionInputInterface>())
+			{
+				InteractionComponents.Add(Component);
 			}
 		}
 	}
@@ -199,15 +205,15 @@ void AG2IPlayerController::SelectNextCharacter(const FInputActionValue& Value)
 
 void AG2IPlayerController::Interact(const FInputActionInstance& Instance)
 {
-	if (APawn* CurrentCharacter = GetPawn()) {
-		if (CurrentCharacter->Implements<UG2IReactToInputInterface>())
+	for (UActorComponent* Component : InteractionComponents)
+	{
+		if (Component->Implements<UG2IInteractionInputInterface>())
 		{
-			
 			if (const UInputAction* Action = Instance.GetSourceAction()) {
 				if (ActionToTagMap.Contains(Action))
 				{
 					FName Tag = ActionToTagMap[Action];
-					IG2IReactToInputInterface::Execute_InteractAction(CurrentCharacter, Tag);
+					IG2IInteractionInputInterface::Execute_InteractAction(Component, Tag);
 				}
 				else {
 					UE_LOG(LogG2I, Log, TEXT("Map doesn't contains interact action"));
@@ -216,15 +222,12 @@ void AG2IPlayerController::Interact(const FInputActionInstance& Instance)
 			else {
 				UE_LOG(LogG2I, Log, TEXT("Can't get interact action for this local character"));
 			}
+			
 		}
 		else
 		{
-			UE_LOG(LogG2I, Log, TEXT("Current loàcal character is not implemented %s interface for definition action"),
-				*UG2IReactToInputInterface::StaticClass()->GetName());
+			UE_LOG(LogG2I, Warning, TEXT("In Interaction Components array %s contains component which not "
+				"implemented needed interface"), *Component->GetName());
 		}
-	}
-	else
-	{
-		UE_LOG(LogG2I, Log, TEXT("Local character is not defined"));
 	}
 }

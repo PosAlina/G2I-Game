@@ -3,11 +3,11 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/G2IReactToInputInterface.h"
-#include <Components/SphereComponent.h>
 #include "G2ICharacterEngineer.generated.h"
 
 class UG2IMovementComponent;
 class UG2ICameraComponent;
+class UG2IInteractionComponent;
 class USpringArmComponent;
 class UCameraComponent;
 
@@ -33,9 +33,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	UG2IMovementComponent *MovementComp;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	float InteractionSphereRadius = 200.f;
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
+	UG2IInteractionComponent* InteractionComp;
 private:
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
@@ -45,10 +44,6 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
 
-	/** Interaction Sphere */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	USphereComponent* InteractionSphere;
-
 public:
 
 	/** Returns CameraBoom subobject **/
@@ -57,17 +52,11 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-	/** Returns InteractionSphere subobject **/
-	FORCEINLINE class USphereComponent* GetInteractionSphere() const { return InteractionSphere; }
-
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void LookAction_Implementation(const float Yaw, const float Pitch) override;
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void MouseLookAction_Implementation(const float Yaw, const float Pitch) override;
-
-	UFUNCTION(BlueprintCallable, Category = "Input")
-	virtual void InteractAction_Implementation(const FName& Tag) override;
 
 };
 
