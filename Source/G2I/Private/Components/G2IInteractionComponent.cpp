@@ -17,24 +17,28 @@ void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 	AActor* Ow = GetOwner();
 	if (Ow == nullptr)
 	{
+		UE_LOG(LogTemp, Log, TEXT("Component don't have owner"));
 		return;
 	}
 
 	APawn* Pawn = Cast<APawn>(Ow);
 	if (Pawn == nullptr)
 	{
+		UE_LOG(LogTemp, Log, TEXT("The component's owner is not a Pawn"));
 		return;
 	}
 
 	APlayerController* PlayerController = Cast<APlayerController>(Pawn->GetController());
 	if (PlayerController == nullptr)
 	{
+		UE_LOG(LogTemp, Log, TEXT("The component's owner is not controlled by the player"));
 		return;
 	}
 	
 	const ACharacter* Owner = Cast<ACharacter>(GetOwner());
 	if (!Owner)
 	{
+		UE_LOG(LogTemp, Log, TEXT("The component's owner is not a Character"));
 		return;
 	}
 
@@ -73,15 +77,15 @@ void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 			{
 				UE_LOG(LogTemp, Log, TEXT("Actor %s implements IG2IInteractiveObjectInterface"), *Overlap->GetName());
 
-					if (IG2IInteractiveObjectInterface::Execute_CanInteract(Overlap, Owner))
-					{
-						UE_LOG(LogTemp, Log, TEXT("Actor %s CAN interact, executing Interact"), *Overlap->GetName());
-						IG2IInteractiveObjectInterface::Execute_Interact(Overlap, Owner);
-					}
-					else
-					{
-						UE_LOG(LogTemp, Log, TEXT("Actor %s CANNOT interact"), *Overlap->GetName());
-					}
+				if (IG2IInteractiveObjectInterface::Execute_CanInteract(Overlap, Owner))
+				{
+					UE_LOG(LogTemp, Log, TEXT("Actor %s CAN interact, executing Interact"), *Overlap->GetName());
+					IG2IInteractiveObjectInterface::Execute_Interact(Overlap, Owner);
+				}
+				else
+				{
+					UE_LOG(LogTemp, Log, TEXT("Actor %s CANNOT interact"), *Overlap->GetName());
+				}
 			}
 			else
 			{
