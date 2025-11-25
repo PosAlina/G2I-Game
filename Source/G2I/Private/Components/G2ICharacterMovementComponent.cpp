@@ -1,9 +1,11 @@
-﻿#include "Components/G2IMovementComponent.h"
+﻿#include "Components/G2ICharacterMovementComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-UG2IMovementComponent::UG2IMovementComponent()
+void UG2ICharacterMovementComponent::PostInitProperties()
 {
+	Super::PostInitProperties();
+	
 	if (const ACharacter *Owner = Cast<ACharacter>(GetOwner()))
 	{
 		// Configure character movement
@@ -21,7 +23,7 @@ UG2IMovementComponent::UG2IMovementComponent()
 	}
 }
 
-void UG2IMovementComponent::MoveAction_Implementation(const float Right, const float Forward, const FRotator Rotation)
+void UG2ICharacterMovementComponent::MoveAction_Implementation(const float Right, const float Forward, const FRotator Rotation)
 {
 	if (ACharacter *Owner = Cast<ACharacter>(GetOwner()))
 	{
@@ -40,7 +42,7 @@ void UG2IMovementComponent::MoveAction_Implementation(const float Right, const f
 	}
 }
 	
-void UG2IMovementComponent::JumpAction_Implementation()
+void UG2ICharacterMovementComponent::JumpAction_Implementation()
 {
 	if (ACharacter *Owner = Cast<ACharacter>(GetOwner()))
 	{
@@ -48,10 +50,15 @@ void UG2IMovementComponent::JumpAction_Implementation()
 	}
 }
 
-void UG2IMovementComponent::StopJumpingAction_Implementation()
+void UG2ICharacterMovementComponent::StopJumpingAction_Implementation()
 {
 	if (ACharacter *Owner = Cast<ACharacter>(GetOwner()))
 	{
 		Owner->StopJumping();
 	}
+}
+
+void UG2ICharacterMovementComponent::SetCanPassThroughObject(bool Value)
+{
+	bCanPassThroughObject = Value;
 }

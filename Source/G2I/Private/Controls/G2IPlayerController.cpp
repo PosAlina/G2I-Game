@@ -1,5 +1,4 @@
 #include "G2IPlayerController.h"
-
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "G2I.h"
@@ -7,8 +6,8 @@
 #include "G2IReactToInputInterface.h"
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
-#include "Components/G2IMovementComponent.h"
 #include "Components/G2IInteractionComponent.h"
+#include "Components/G2ICharacterMovementComponent.h"
 
 void AG2IPlayerController::SetupInputComponent()
 {

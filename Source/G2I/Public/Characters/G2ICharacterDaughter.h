@@ -5,9 +5,11 @@
 #include "Interfaces/G2IReactToInputInterface.h"
 #include "G2ICharacterDaughter.generated.h"
 
+class UG2ICharacterCollisionComponent;
+class UG2IPassingThroughObjectsComponent;
 class UG2ICameraComponent;
-class UG2IMovementComponent;
 class UG2IInteractionComponent;
+class UG2ICharacterMovementComponent;
 class USpringArmComponent;
 class UCameraComponent;
 
@@ -25,11 +27,14 @@ public:
 	/** Constructor */
 	AG2ICharacterDaughter();
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Collision, meta = (AllowPrivateAccess = "true"))
+	UG2ICharacterCollisionComponent *CollisionComp;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UG2ICameraComponent *CameraComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	UG2IMovementComponent *MovementComp;
+	UG2ICharacterMovementComponent *MovementComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
 	UG2IInteractionComponent* InteractionComp;
@@ -52,12 +57,15 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-protected:
-
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void LookAction_Implementation(const float Yaw, const float Pitch) override;
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void MouseLookAction_Implementation(const float Yaw, const float Pitch) override;
+
+private:
+
+	void SetupPassingThroughObjectCamera(USpringArmComponent& Camera);
+	
 };
 

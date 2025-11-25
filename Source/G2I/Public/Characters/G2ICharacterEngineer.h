@@ -5,7 +5,8 @@
 #include "Interfaces/G2IReactToInputInterface.h"
 #include "G2ICharacterEngineer.generated.h"
 
-class UG2IMovementComponent;
+class UG2ICharacterCollisionComponent;
+class UG2ICharacterMovementComponent;
 class UG2ICameraComponent;
 class UG2IInteractionComponent;
 class USpringArmComponent;
@@ -26,12 +27,14 @@ public:
 	AG2ICharacterEngineer();
 
 	/** TODO: Refactor CameraComponent */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Collision, meta = (AllowPrivateAccess = "true"))
+	UG2ICharacterCollisionComponent *CollisionComp;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UG2ICameraComponent *CameraComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	UG2IMovementComponent *MovementComp;
+	UG2ICharacterMovementComponent *MovementComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
 	UG2IInteractionComponent* InteractionComp;
@@ -58,5 +61,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void MouseLookAction_Implementation(const float Yaw, const float Pitch) override;
 
+private:
+
+	void SetupPassingThroughObjectCamera(USpringArmComponent& Camera);
 };
 
