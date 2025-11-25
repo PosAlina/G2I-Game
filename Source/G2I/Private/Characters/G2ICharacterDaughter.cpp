@@ -1,23 +1,23 @@
 ﻿#include "G2ICharacterDaughter.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
-#include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
 #include "Components/G2ICameraComponent.h"
-#include "Components/G2IMovementComponent.h"
+#include "Components/G2ICharacterMovementComponent.h"
 #include "Components/G2IInteractionComponent.h"
+#include "Components/G2ICharacterCollisionComponent.h"
 
 AG2ICharacterDaughter::AG2ICharacterDaughter()
 {
+	CollisionComp = CreateDefaultSubobject<UG2ICharacterCollisionComponent>(TEXT("CollisionComp"));
 	CameraComp = CreateDefaultSubobject<UG2ICameraComponent>(TEXT("CameraComp"));
-	MovementComp = CreateDefaultSubobject<UG2IMovementComponent>(TEXT("MovementComp"));
+	MovementComp = CreateDefaultSubobject<UG2ICharacterMovementComponent>(TEXT("MovementComp"));
 	InteractionComp = CreateDefaultSubobject<UG2IInteractionComponent>(FName("InteractionComp"));
-
-	/** TODO: Refactor to Component */
-	// Set size for collision capsule
-	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 		
+	MovementComp->SetCanPassThroughObject(true);
+		
+	/** TODO: Refactor to Camera Component */
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -34,6 +34,7 @@ AG2ICharacterDaughter::AG2ICharacterDaughter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
+	SetupPassingThroughObjectCamera(*CameraBoom);
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
@@ -50,4 +51,18 @@ void AG2ICharacterDaughter::MouseLookAction_Implementation(const float Yaw, cons
 	// add yaw and pitch input to controller
 	AddControllerYawInput(Yaw);
 	AddControllerPitchInput(Pitch);
+}
+
+void AG2ICharacterDaughter::SetupPassingThroughObjectCamera(USpringArmComponent& Camera)
+{
+	if (UActorComponent *Component = GetComponentByClass(UG2ICharacterMovementComponent::StaticClass()))
+	{
+		if (const UG2ICharacterMovementComponent *MovementComponent = Cast<UG2ICharacterMovementComponent>(Component))
+		{
+			if (MovementComponent->CanPassThroughObject())
+			{
+				Camera.bDoCollisionTest = false;
+			}
+		}
+	}
 }
