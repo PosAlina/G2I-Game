@@ -7,6 +7,7 @@
 
 class UG2ICameraComponent;
 class UG2IMovementComponent;
+class UG2IInteractionComponent;
 class USpringArmComponent;
 class UCameraComponent;
 
@@ -30,6 +31,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	UG2IMovementComponent *MovementComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
+	UG2IInteractionComponent* InteractionComp;
+
 	/** TODO: Refactor CameraComponent */
 private:
 	/** Camera boom positioning the camera behind the character */
@@ -39,7 +43,7 @@ private:
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
-	
+
 public:
 
 	/** Returns CameraBoom subobject **/
@@ -55,6 +59,5 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void MouseLookAction_Implementation(const float Yaw, const float Pitch) override;
-
 };
 

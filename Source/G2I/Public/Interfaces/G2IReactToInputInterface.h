@@ -24,4 +24,13 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Actions)
 	void MouseLookAction(const float Yaw, const float Pitch);
+	
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Actions)
+	void JumpAction();
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Actions)
+	void StopJumpingAction();
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Actions)
+	void InteractAction(const FName& Tag);
 };

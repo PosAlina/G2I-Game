@@ -8,6 +8,7 @@
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
 #include "Components/G2IMovementComponent.h"
+#include "Components/G2IInteractionComponent.h"
 
 void AG2IPlayerController::SetupInputComponent()
 {
@@ -40,6 +41,10 @@ void AG2IPlayerController::SetupInputComponent()
 
 				EnhancedInputComponent->BindAction(SelectNextCharacterAction, ETriggerEvent::Started, this,
 					&ThisClass::SelectNextCharacter);
+
+				for (const auto& InteractAction : InteractActions) {
+					EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &ThisClass::Interact);
+				}
 			}
 			else
 			{
@@ -70,6 +75,11 @@ void AG2IPlayerController::SetupCharacterActorComponents()
 			if (Component->Implements<UG2IMovementInputInterface>())
 			{
 				MovementComponents.Add(Component);
+			}
+
+			if (Component->Implements<UG2IInteractionInputInterface>())
+			{
+				InteractionComponents.Add(Component);
 			}
 		}
 	}
@@ -191,4 +201,33 @@ void AG2IPlayerController::SelectNextCharacter(const FInputActionValue& Value)
         UE_LOG(LogG2I, Error, TEXT("This player state %s is not class %s"),
             *GetName(), *AG2IPlayerState::StaticClass()->GetName());
     }
+}
+
+void AG2IPlayerController::Interact(const FInputActionInstance& Instance)
+{
+	for (UActorComponent* Component : InteractionComponents)
+	{
+		if (Component->Implements<UG2IInteractionInputInterface>())
+		{
+			if (const UInputAction* Action = Instance.GetSourceAction()) {
+				if (ActionToTagMap.Contains(Action))
+				{
+					FName Tag = ActionToTagMap[Action];
+					IG2IInteractionInputInterface::Execute_InteractAction(Component, Tag);
+				}
+				else {
+					UE_LOG(LogG2I, Log, TEXT("Map doesn't contains interact action"));
+				}
+			}
+			else {
+				UE_LOG(LogG2I, Log, TEXT("Can't get interact action for this local character"));
+			}
+			
+		}
+		else
+		{
+			UE_LOG(LogG2I, Warning, TEXT("In Interaction Components array %s contains component which not "
+				"implemented needed interface"), *Component->GetName());
+		}
+	}
 }
