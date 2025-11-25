@@ -2,15 +2,18 @@
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Components/G2ICameraComponent.h"
-#include "Components/G2IMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
+#include "Components/G2ICameraComponent.h"
+#include "Components/G2IMovementComponent.h"
+#include "Components/G2IInteractionComponent.h"
+
 
 AG2ICharacterEngineer::AG2ICharacterEngineer()
 {
 	CameraComp = CreateDefaultSubobject<UG2ICameraComponent>(FName("CameraComp"));
 	MovementComp = CreateDefaultSubobject<UG2IMovementComponent>(FName("MovementComp"));
+	InteractionComp = CreateDefaultSubobject<UG2IInteractionComponent>(FName("InteractionComp"));
 
 	/** TODO: Refactor to Component */
 	// Set size for collision capsule
@@ -31,6 +34,7 @@ AG2ICharacterEngineer::AG2ICharacterEngineer()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
+
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)

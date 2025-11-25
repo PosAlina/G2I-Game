@@ -7,6 +7,7 @@
 
 class UG2IMovementComponent;
 class UG2ICameraComponent;
+class UG2IInteractionComponent;
 class USpringArmComponent;
 class UCameraComponent;
 
@@ -32,6 +33,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	UG2IMovementComponent *MovementComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
+	UG2IInteractionComponent* InteractionComp;
 private:
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
@@ -40,7 +43,7 @@ private:
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
-	
+
 public:
 
 	/** Returns CameraBoom subobject **/

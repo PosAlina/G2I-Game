@@ -6,11 +6,13 @@
 #include "GameFramework/Controller.h"
 #include "Components/G2ICameraComponent.h"
 #include "Components/G2IMovementComponent.h"
+#include "Components/G2IInteractionComponent.h"
 
 AG2ICharacterDaughter::AG2ICharacterDaughter()
 {
 	CameraComp = CreateDefaultSubobject<UG2ICameraComponent>(TEXT("CameraComp"));
 	MovementComp = CreateDefaultSubobject<UG2IMovementComponent>(TEXT("MovementComp"));
+	InteractionComp = CreateDefaultSubobject<UG2IInteractionComponent>(FName("InteractionComp"));
 
 	/** TODO: Refactor to Component */
 	// Set size for collision capsule
