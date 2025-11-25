@@ -68,6 +68,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TSet<UInputAction*> InteractActions;
 
+	UPROPERTY(VisibleAnywhere)
+	TSet<UActorComponent*> InteractionComponents;
+
 	void Interact(const FInputActionInstance& Instance);
 
 	UPROPERTY(EditAnywhere, Category = "Data")
