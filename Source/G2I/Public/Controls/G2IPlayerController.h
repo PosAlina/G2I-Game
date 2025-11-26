@@ -34,7 +34,7 @@ protected:
 
 	/** Actions */
 	UPROPERTY(VisibleAnywhere)
-	TSet<UActorComponent*> MovementComponents;
+	TSet<UActorComponent*> CameraComponents;
 	
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* LookAction;
@@ -45,6 +45,9 @@ protected:
 	UInputAction* MouseLookAction;
 	
 	void MouseLook(const FInputActionValue& Value);
+
+	UPROPERTY(VisibleAnywhere)
+	TSet<UActorComponent*> MovementComponents;
 	
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* MoveAction;

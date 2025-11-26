@@ -2,9 +2,9 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-void UG2ICharacterMovementComponent::PostInitProperties()
+void UG2ICharacterMovementComponent::OnRegister()
 {
-	Super::PostInitProperties();
+	Super::OnRegister();
 	
 	if (const ACharacter *Owner = Cast<ACharacter>(GetOwner()))
 	{

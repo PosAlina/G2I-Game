@@ -2,8 +2,8 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "G2I.h"
+#include "G2ICameraInputInterface.h"
 #include "G2IPlayerState.h"
-#include "G2IReactToInputInterface.h"
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
 #include "Components/G2IInteractionComponent.h"
@@ -71,6 +71,11 @@ void AG2IPlayerController::SetupCharacterActorComponents()
 		TSet<UActorComponent*> CharacterComponents = CurrentCharacter->GetComponents();
 		for (UActorComponent *Component : CharacterComponents)
 		{
+			if (Component->Implements<UG2ICameraInputInterface>())
+			{
+				CameraComponents.Add(Component);
+			}
+			
 			if (Component->Implements<UG2IMovementInputInterface>())
 			{
 				MovementComponents.Add(Component);
@@ -88,50 +93,41 @@ void AG2IPlayerController::SetupCharacterActorComponents()
 	}
 }
 
-
 void AG2IPlayerController::Look(const FInputActionValue& Value)
 {
-	if (APawn *CurrentCharacter = GetPawn())
+	for (UActorComponent *Component : CameraComponents)
 	{
-		if (CurrentCharacter->Implements<UG2IReactToInputInterface>())
+		if (Component->Implements<UG2ICameraInputInterface>())
 		{
 			const FVector2D LookAxisVector = Value.Get<FVector2D>();
 			const float Yaw = LookAxisVector.X;
 			const float Pitch = LookAxisVector.Y;
-			IG2IReactToInputInterface::Execute_LookAction(CurrentCharacter, Yaw, Pitch);
+			IG2ICameraInputInterface::Execute_LookAction(Component, Yaw, Pitch);
 		}
 		else
 		{
-			UE_LOG(LogG2I, Log, TEXT("Current local character is not implemented %s interface for definition action"),
-			*UG2IReactToInputInterface::StaticClass()->GetName());
+			UE_LOG(LogG2I, Warning, TEXT("In Camera Components array %s contains component which not "
+								"implemented needed interface"), *Component->GetName());
 		}
-	}
-	else
-	{
-		UE_LOG(LogG2I, Log, TEXT("Local character is not defined"));
 	}
 }
 
 void AG2IPlayerController::MouseLook(const FInputActionValue& Value)
 {
-	if (APawn *CurrentCharacter = GetPawn())
+	for (UActorComponent *Component : CameraComponents)
 	{
-		if (CurrentCharacter->Implements<UG2IReactToInputInterface>())
+		if (Component->Implements<UG2ICameraInputInterface>())
 		{
 			const FVector2D LookAxisVector = Value.Get<FVector2D>();
 			const float Yaw = LookAxisVector.X;
 			const float Pitch = LookAxisVector.Y;
-			IG2IReactToInputInterface::Execute_LookAction(CurrentCharacter, Yaw, Pitch);
+			IG2ICameraInputInterface::Execute_LookAction(Component, Yaw, Pitch);
 		}
 		else
 		{
-			UE_LOG(LogG2I, Log, TEXT("Current local character is not implemented %s interface for definition action"),
-				*UG2IReactToInputInterface::StaticClass()->GetName());
+			UE_LOG(LogG2I, Warning, TEXT("In Camera Components array %s contains component which not "
+								"implemented needed interface"), *Component->GetName());
 		}
-	}
-	else
-	{
-		UE_LOG(LogG2I, Log, TEXT("Local character is not defined"));
 	}
 }
 

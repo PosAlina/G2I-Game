@@ -3,9 +3,9 @@
 #include "Components/G2ICharacterMovementComponent.h"
 #include "GameFramework/Character.h"
 
-void UG2ICharacterCollisionComponent::PostInitProperties()
+void UG2ICharacterCollisionComponent::OnRegister()
 {
-	Super::PostInitProperties();
+	Super::OnRegister();
 	
 	if (const ACharacter *Owner = Cast<ACharacter>(GetOwner()))
 	{
