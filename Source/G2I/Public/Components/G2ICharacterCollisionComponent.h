@@ -18,7 +18,7 @@ protected:
 	
 public:
 
-	virtual void PostInitProperties() override;
+	virtual void OnRegister() override;
 
 private:
 
