@@ -2,6 +2,8 @@
 #include "GameFramework/Character.h"
 #include "G2IInteractiveObjectInterface.h"
 #include <Components/SphereComponent.h>
+
+#include "DrawDebugHelpers.h"
 #include "G2I.h"
 
 

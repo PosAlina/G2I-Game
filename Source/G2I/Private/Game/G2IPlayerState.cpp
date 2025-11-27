@@ -1,6 +1,8 @@
 ﻿#include "G2IPlayerState.h"
 #include "G2I.h"
 #include "DataTables/G2IItemCharacter.h"
+#include "Engine/World.h"
+#include "GameFramework/Pawn.h"
 #include "Kismet/GameplayStatics.h"
 
 void AG2IPlayerState::BeginPlay()
