@@ -3,11 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "G2IGadgetInterface.h"
 #include "Components/ActorComponent.h"
 #include "G2IGloveComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGadgetActivationEventSignature);
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class G2I_API UG2IGloveComponent : public UActorComponent
+class G2I_API UG2IGloveComponent : public UActorComponent, public IG2IGadgetInterface
 {
 	GENERATED_BODY()
 
@@ -36,6 +39,12 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void InputControl(bool isInputEnabled);
+
+	UFUNCTION(BlueprintCallable)
+	virtual void GadgetActivation_Implementation() override;
+
+	UPROPERTY(BlueprintAssignable, Category = "GadgetPunch")
+	FOnGadgetActivationEventSignature OnGadgetActivationEvent;
 	
 protected:
 	virtual void BeginPlay() override;
