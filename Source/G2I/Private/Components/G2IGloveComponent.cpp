@@ -78,3 +78,13 @@ void UG2IGloveComponent::InputControl(bool isInputEnabled)
 	}
 }
 
+void UG2IGloveComponent::GadgetActivation_Implementation()
+{
+	IG2IGadgetInterface::GadgetActivation_Implementation();
+
+	if (bIsGloveEnabled)
+	{
+		OnGadgetActivationEvent.Broadcast();
+	}
+}
+

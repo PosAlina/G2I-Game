@@ -123,4 +123,12 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UActorComponent> SteamMovementComponent;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* GadgetAction;
+
+	UPROPERTY(VisibleAnywhere)
+	TSet<UActorComponent*> GadgetComponents;
+	
+	void GadgetActivation(const FInputActionInstance& Instance);
 };
