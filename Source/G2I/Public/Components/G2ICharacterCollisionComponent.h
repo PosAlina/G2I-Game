@@ -4,7 +4,7 @@
 #include "Components/ActorComponent.h"
 #include "G2ICharacterCollisionComponent.generated.h"
 
-
+class ACharacter;
 class UCapsuleComponent;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))

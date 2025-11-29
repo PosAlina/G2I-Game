@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "G2IMovementInputInterface.h"
+#include "Components/ActorComponent.h"
 #include "G2ICharacterMovementComponent.generated.h"
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -27,6 +28,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void StopJumpingAction_Implementation() override;
+
+	UFUNCTION(BlueprintCallable, Category="Input")
+	virtual void ToggleCrouchAction_Implementation() override;
 
 	// Getters
 	bool CanPassThroughObject() const { return bCanPassThroughObject; }

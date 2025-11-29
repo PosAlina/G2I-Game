@@ -1,4 +1,5 @@
 ﻿#include "Components/G2ICharacterMovementComponent.h"
+#include "G2I.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -8,18 +9,20 @@ void UG2ICharacterMovementComponent::OnRegister()
 	
 	if (const ACharacter *Owner = Cast<ACharacter>(GetOwner()))
 	{
-		// Configure character movement
-		Owner->GetCharacterMovement()->bOrientRotationToMovement = true;
-		Owner->GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
-
-		// Note: For faster iteration times these variables, and many more, can be tweaked in the Character Blueprint
-		// instead of recompiling to adjust them
-		Owner->GetCharacterMovement()->JumpZVelocity = 500.f;
-		Owner->GetCharacterMovement()->AirControl = 0.35f;
-		Owner->GetCharacterMovement()->MaxWalkSpeed = 500.f;
-		Owner->GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
-		Owner->GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
-		Owner->GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
+		if (UCharacterMovementComponent *CurrentCharacterMovement = Owner->GetCharacterMovement())
+		{
+			CurrentCharacterMovement->bOrientRotationToMovement = true;
+			CurrentCharacterMovement->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
+			
+			CurrentCharacterMovement->JumpZVelocity = 500.f;
+			CurrentCharacterMovement->AirControl = 0.35f;
+			CurrentCharacterMovement->MaxWalkSpeed = 500.f;
+			CurrentCharacterMovement->MinAnalogWalkSpeed = 20.f;
+			CurrentCharacterMovement->BrakingDecelerationWalking = 2000.f;
+			CurrentCharacterMovement->BrakingDecelerationFalling = 1500.0f;
+			
+			CurrentCharacterMovement->GetNavAgentPropertiesRef().bCanCrouch = true;
+		}
 	}
 }
 
@@ -55,6 +58,32 @@ void UG2ICharacterMovementComponent::StopJumpingAction_Implementation()
 	if (ACharacter *Owner = Cast<ACharacter>(GetOwner()))
 	{
 		Owner->StopJumping();
+	}
+}
+
+void UG2ICharacterMovementComponent::ToggleCrouchAction_Implementation()
+{
+	if (ACharacter *Owner = Cast<ACharacter>(GetOwner()))
+	{
+		if (const UCharacterMovementComponent *CurrentCharacterMovement = Owner->GetCharacterMovement())
+		{
+			if (!CurrentCharacterMovement->IsFalling())
+			{
+				if (Owner->IsCrouched())
+				{
+					Owner->UnCrouch();
+				}
+				else
+				{
+					Owner->Crouch();
+				}
+			}
+		}
+		else
+		{
+			UE_LOG(LogG2I, Warning, TEXT("%s doesn't have base character movement component"),
+				*Owner->GetName());
+		}
 	}
 }
 
