@@ -61,6 +61,11 @@ protected:
 	
 	void StopJumping(const FInputActionValue& Value);
 
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* ToggleCrouchAction;
+
+	void ToggleCrouch(const FInputActionValue& Value);
+
 	/** Select character actions */
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* SelectNextCharacterAction;

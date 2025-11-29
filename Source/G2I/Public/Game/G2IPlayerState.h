@@ -4,6 +4,8 @@
 #include "GameFramework/PlayerState.h"
 #include "G2IPlayerState.generated.h"
 
+class UDataTable;
+
 /**
  * Player state contains info about playable characters
  */

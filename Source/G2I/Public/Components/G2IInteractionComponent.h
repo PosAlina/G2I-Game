@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "G2IInteractionInputInterface.h"
+#include "Components/ActorComponent.h"
 #include "G2IInteractionComponent.generated.h"
 
 class USphereComponent;

@@ -3,8 +3,10 @@
 #include "CoreMinimal.h"
 #include "G2ICameraInputInterface.h"
 #include "Components/ActorComponent.h"
+#include "Components/SceneComponent.h"
 #include "G2ICameraComponent.generated.h"
 
+class ACharacter;
 class UCameraComponent;
 class USpringArmComponent;
 

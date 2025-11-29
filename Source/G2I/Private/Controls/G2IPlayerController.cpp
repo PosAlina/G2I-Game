@@ -36,6 +36,8 @@ void AG2IPlayerController::SetupInputComponent()
 				EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ThisClass::Jump);
 				EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ThisClass::StopJumping);
 
+				EnhancedInputComponent->BindAction(ToggleCrouchAction, ETriggerEvent::Started, this, &ThisClass::ToggleCrouch);
+
 				EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ThisClass::Look);
 
 				EnhancedInputComponent->BindAction(SelectNextCharacterAction, ETriggerEvent::Started, this,
@@ -174,6 +176,22 @@ void AG2IPlayerController::StopJumping(const FInputActionValue& Value)
 		if (Component->Implements<UG2IMovementInputInterface>())
 		{
 			IG2IMovementInputInterface::Execute_StopJumpingAction(Component);
+		}
+		else
+		{
+			UE_LOG(LogG2I, Warning, TEXT("In Movement Components array %s contains component which not "
+								"implemented needed interface"), *Component->GetName());
+		}
+	}
+}
+
+void AG2IPlayerController::ToggleCrouch(const FInputActionValue& Value)
+{
+	for (UActorComponent *Component : MovementComponents)
+	{
+		if (Component->Implements<UG2IMovementInputInterface>())
+		{
+			IG2IMovementInputInterface::Execute_ToggleCrouchAction(Component);
 		}
 		else
 		{
