@@ -5,6 +5,8 @@
 #include "Templates/SubclassOf.h"
 #include "G2IItemCharacter.generated.h"
 
+class AAIController;
+
 /**
  * Row for table of playable characters.
  * Contains from enum of characters name, certain character pointer.
@@ -18,4 +20,8 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Chracter)
 	TSubclassOf<AActor> CharacterClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character AI Controller")
+	TSubclassOf<AActor> AIControllerClass;
+	
 };

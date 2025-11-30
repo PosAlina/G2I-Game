@@ -68,6 +68,10 @@ void AG2IPlayerController::OnPossess(APawn* NewPawn)
 
 void AG2IPlayerController::SetupCharacterActorComponents()
 {
+	CameraComponents.Empty();
+	MovementComponents.Empty();
+	InteractionComponents.Empty();
+	
 	if (const APawn *CurrentCharacter = GetPawn())
 	{
 		TSet<UActorComponent*> CharacterComponents = CurrentCharacter->GetComponents();
@@ -205,9 +209,7 @@ void AG2IPlayerController::SelectNextCharacter(const FInputActionValue& Value)
 {
     if (AG2IPlayerState *CurrentPlayerState = GetPlayerState<AG2IPlayerState>())
     {
-        const FVector NewCharacterLocationIfUnexisted = FVector(0, 0, 0);
-        const FRotator NewCharacterRotationIfUnexisted = FRotator(0, 0, 0);
-        CurrentPlayerState->SelectNextCharacter(NewCharacterLocationIfUnexisted, NewCharacterRotationIfUnexisted);
+        CurrentPlayerState->SelectNextCharacter();
     }
     else
     {

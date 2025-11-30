@@ -1,7 +1,17 @@
 ﻿#include "Components/G2ICharacterMovementComponent.h"
 #include "G2I.h"
+#include "G2IPlayerState.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/PlayerController.h"
+
+void UG2ICharacterMovementComponent::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	BindingToDelegates();
+}
+
 
 void UG2ICharacterMovementComponent::OnRegister()
 {
@@ -72,10 +82,12 @@ void UG2ICharacterMovementComponent::ToggleCrouchAction_Implementation()
 				if (Owner->IsCrouched())
 				{
 					Owner->UnCrouch();
+					bIsCrouchState = false;
 				}
 				else
 				{
 					Owner->Crouch();
+					bIsCrouchState = true;
 				}
 			}
 		}
@@ -90,4 +102,45 @@ void UG2ICharacterMovementComponent::ToggleCrouchAction_Implementation()
 void UG2ICharacterMovementComponent::SetCanPassThroughObject(bool Value)
 {
 	bCanPassThroughObject = Value;
+}
+
+void UG2ICharacterMovementComponent::BindingToDelegates()
+{
+	if (const UWorld *World = GetWorld())
+	{
+		if (const APlayerController *PlayerController = World->GetFirstPlayerController())
+		{
+			if (AG2IPlayerState *PlayerState = PlayerController->GetPlayerState<AG2IPlayerState>())
+			{
+				PlayerState->OnNewControllerPossessDelegate.AddDynamic(this, &ThisClass::PossessedByNewController);
+			}
+			else
+			{
+				UE_LOG(LogG2I, Error, TEXT("G2I PlayerState doesn't exist"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogG2I, Error, TEXT("PlayerController doesn't exist"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogG2I, Error, TEXT("World doesn't exist"));
+	}
+}
+
+
+void UG2ICharacterMovementComponent::PossessedByNewController(APawn *ChangedPawn)
+{
+	if (ACharacter *Owner = Cast<ACharacter>(GetOwner()))
+	{
+		if (ChangedPawn == Owner)
+		{
+			if (bIsCrouchState)
+			{
+				Owner->Crouch();
+			}
+		}
+	}
 }
