@@ -5,6 +5,10 @@
 #include "G2IPlayerState.generated.h"
 
 class UDataTable;
+class AAIController;
+
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNewControllerPossessDelegat, APawn*, Pawn);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNewControllerPossessDelegat, APawn*, Pawn);
 
 /**
  * Player state contains info about playable characters
@@ -16,12 +20,6 @@ class G2I_API AG2IPlayerState : public APlayerState
 
 public:
 
-	virtual void BeginPlay() override;
-
-	void SetupPlayableDataTable();
-
-	void SetupDefaultCharacter();
-
 	UPROPERTY(EditAnywhere, Category = Characters)
 	uint32 NumberCurrentCharacter = 0;
 	
@@ -29,13 +27,36 @@ public:
 	TObjectPtr<UDataTable> PlayableCharactersDataTable;
 
 	TArray<FName> PlayableCharactersRowNames;
-	
-	void SpawnCharacter(const uint32 NewCharacterNumber, TSubclassOf<AActor> CharacterClass,
-		const FVector& CharacterSpawnLocation, const FRotator& CharacterSpawnRotation);
 
-	void SelectCharacter(const uint32 NewCharacterNumber,APawn &NewCharacter);
+	UPROPERTY(BlueprintAssignable)
+	FNewControllerPossessDelegat OnNewControllerPossessDelegate;
 
-	void SelectNextCharacter(const FVector& CharacterSpawnLocation, const FRotator& CharacterSpawnRotation);
+public:
 	
-	void SwitchCharacters(uint32 NewCharacterNumber, const FVector& CharacterSpawnLocation, const FRotator& CharacterSpawnRotation);
+	virtual void BeginPlay() override;
+
+	void SelectNextCharacter();
+
+protected:
+
+	APawn *GetPawn(const uint32 PawnNumber);
+	
+	void SetupPlayableDataTable();
+	
+	void SetupPlayableCharacters();
+
+	bool SetupPlayerControllerForPawn(const uint32 PawnNumber, APawn& CurrentPawn);
+	
+	bool SetupControllerForPawn(const uint32 PawnNumber);
+	
+	bool SetupControllerForPawn(const uint32 PawnNumber, const TSubclassOf<AActor> AIControllerActorClass,
+    	APawn& CurrentPawn);
+    	
+    bool SetupControllerForPawn(const uint32 PawnNumber, AAIController& CurrentAIController,
+        	APawn& CurrentPawn);
+	
+	AActor *FindOneActor(const TSubclassOf<AActor> ActorClass) const;
+	
+	AActor *SpawnActor(const TSubclassOf<AActor> ActorClass) const;
+
 };

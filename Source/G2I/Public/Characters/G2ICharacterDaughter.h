@@ -14,7 +14,7 @@ class UG2ICharacterMovementComponent;
  *  Second player`s character. Daughter.
  *  Implements a controllable orbiting camera
  */
-UCLASS(abstract)
+UCLASS(Blueprintable)
 class AG2ICharacterDaughter : public ACharacter
 {
 	GENERATED_BODY()
