@@ -62,3 +62,63 @@ void UG2ICharacterMovementComponent::SetCanPassThroughObject(bool Value)
 {
 	bCanPassThroughObject = Value;
 }
+
+void UG2ICharacterMovementComponent::DisableJump_Implementation()
+{
+	if (ACharacter* Owner = Cast<ACharacter>(GetOwner()))
+	{
+		Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanJump = false;
+	}
+}
+
+void UG2ICharacterMovementComponent::DisableMove_Implementation()
+{
+	if (ACharacter* Owner = Cast<ACharacter>(GetOwner()))
+	{
+		Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanWalk = false;
+	}
+}
+
+void UG2ICharacterMovementComponent::DisableCrouch_Implementation()
+{
+	if (ACharacter* Owner = Cast<ACharacter>(GetOwner()))
+	{
+		Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = false;
+	}
+}
+
+void UG2ICharacterMovementComponent::DisableRotation_Implementation() {
+	if (ACharacter* Owner = Cast<ACharacter>(GetOwner())) {
+		Owner->GetCharacterMovement()->bOrientRotationToMovement = false;
+	}
+}
+
+void UG2ICharacterMovementComponent::EnableJump_Implementation()
+{
+	if (ACharacter* Owner = Cast<ACharacter>(GetOwner()))
+	{
+		Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanJump = true;
+	}
+}
+
+void UG2ICharacterMovementComponent::EnableMove_Implementation()
+{
+	if (ACharacter* Owner = Cast<ACharacter>(GetOwner()))
+	{
+		Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanWalk = true;
+	}
+}
+
+void UG2ICharacterMovementComponent::EnableCrouch_Implementation()
+{
+	if (ACharacter* Owner = Cast<ACharacter>(GetOwner()))
+	{
+		Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
+	}
+}
+
+void UG2ICharacterMovementComponent::EnableRotation_Implementation() {
+	if (ACharacter* Owner = Cast<ACharacter>(GetOwner())) {
+		Owner->GetCharacterMovement()->bOrientRotationToMovement = true;
+	}
+}

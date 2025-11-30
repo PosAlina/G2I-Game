@@ -1,16 +1,16 @@
 #include "Components/G2IInteractionComponent.h"
 #include "GameFramework/Character.h"
 #include "G2IInteractiveObjectInterface.h"
-#include <Components/SphereComponent.h>
+#include <Components/BoxComponent.h>
+#include <Components/CapsuleComponent.h>
 #include "G2I.h"
 
 
 UG2IInteractionComponent::UG2IInteractionComponent()
 {
-	// Create a interaction sphere
-	InteractionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("InteractionSphere"));
-	InteractionSphere->InitSphereRadius(InteractionSphereRadius);
-	InteractionSphere->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+	// Create a interaction box
+	InteractionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("InteractionBox"));
+	InteractionBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 }
 
 void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
@@ -43,22 +43,20 @@ void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 		return;
 	}
 
-	DrawDebugSphere(
-			GetWorld(),
-			InteractionSphere->GetComponentLocation(),
-			InteractionSphere->GetScaledSphereRadius(),
-			16,
-			FColor::Green,
-			false,
-			1.0f,
-			0,
-			2.0f
-			);
+	DrawDebugBox(
+		GetWorld(),
+		InteractionBox->GetComponentLocation(),
+		InteractionBox->GetScaledBoxExtent(),
+		InteractionBox->GetComponentQuat(),
+		FColor::Green,
+		false,
+		1.0f,
+		0,
+		2.0f
+	);
 
 	TArray<AActor*> OverlappedActors;
-	InteractionSphere->GetOverlappingActors(OverlappedActors);
-
-	UE_LOG(LogG2I, Log, TEXT("InteractAction: found %d overlapping actors"), OverlappedActors.Num());
+	InteractionBox->GetOverlappingActors(OverlappedActors);
 
 	for (AActor* Overlap : OverlappedActors)
 	{
@@ -68,34 +66,29 @@ void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 			continue;
 		}
 
-		UE_LOG(LogG2I, Log, TEXT("Checking actor: %s"), *Overlap->GetName());
-
 		if (Overlap->ActorHasTag(Tag))
 		{
-			UE_LOG(LogG2I, Log, TEXT("Actor %s has tag %s"), *Overlap->GetName(), *Tag.ToString());
 
 			if (Overlap->Implements<UG2IInteractiveObjectInterface>())
 			{
-				UE_LOG(LogG2I, Log, TEXT("Actor %s implements IG2IInteractiveObjectInterface"), *Overlap->GetName());
 
 				if (IG2IInteractiveObjectInterface::Execute_CanInteract(Overlap, Owner))
 				{
-					UE_LOG(LogG2I, Log, TEXT("Actor %s CAN interact, executing Interact"), *Overlap->GetName());
 					IG2IInteractiveObjectInterface::Execute_Interact(Overlap, Owner);
 				}
 				else
 				{
-					UE_LOG(LogG2I, Log, TEXT("Actor %s CANNOT interact"), *Overlap->GetName());
+					UE_LOG(LogG2I, Log, TEXT("Actor %s can't interact"), *Overlap->GetName());
 				}
 			}
 			else
 			{
-				UE_LOG(LogG2I, Log, TEXT("Actor %s does NOT implement IG2IInteractiveObjectInterface"), *Overlap->GetName());
+				UE_LOG(LogG2I, Log, TEXT("Actor %s doesn't implement Interactive Object Interface"), *Overlap->GetName());
 			}
 		}
 		else
 		{
-			UE_LOG(LogG2I, Log, TEXT("Actor %s does NOT have tag %s"), *Overlap->GetName(), *Tag.ToString());
+			UE_LOG(LogG2I, Log, TEXT("Actor %s doesn't have tag %s"), *Overlap->GetName(), *Tag.ToString());
 		}
 	}
 }
@@ -108,10 +101,45 @@ void UG2IInteractionComponent::OnRegister()
 	{
 		if (USceneComponent* Root = Owner->GetRootComponent())
 		{
-			InteractionSphere->AttachToComponent(
+			InteractionBox->AttachToComponent(
 				Root,
 				FAttachmentTransformRules::SnapToTargetNotIncludingScale
 			);
+			if (ACharacter* Character = Cast<ACharacter>(Owner))
+			{
+				UCapsuleComponent* Capsule = Character->GetCapsuleComponent();
+				if (Capsule)
+				{
+					float Radius = Capsule->GetUnscaledCapsuleRadius();
+					float HalfHeight = Capsule->GetUnscaledCapsuleHalfHeight();;
+
+					float Length = InteractionBoxLength;
+
+					FVector HalfSize;
+					HalfSize.X = Length * 0.5f;
+					HalfSize.Y = Radius; 
+					HalfSize.Z = HalfHeight;
+
+					InteractionBox->SetBoxExtent(HalfSize);
+
+					InteractionBox->SetRelativeLocation(
+						FVector(Length * 0.5f + Radius, 0.f, 0.f)
+					);
+				}
+				else {
+					UE_LOG(LogG2I, Log, TEXT("Character don't have capsule"));
+				}
+			}
+			else {
+				UE_LOG(LogG2I, Log, TEXT("Owner isn't a Character"));
+				return;
+			}
 		}
+		else {
+			UE_LOG(LogG2I, Log, TEXT("Owner don't have RootComponent"));
+		}
+	}
+	else {
+		UE_LOG(LogG2I, Log, TEXT("Component don't have owner"));
 	}
 }
