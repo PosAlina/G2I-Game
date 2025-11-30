@@ -15,7 +15,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta=(AllowPrivateAccess))
 	bool bCanPassThroughObject = false;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Crouch)
+	bool bIsCrouchState = false;
+
 public:
+
+	virtual void BeginPlay() override;
 
 	virtual void OnRegister() override;
 
@@ -37,4 +42,11 @@ public:
 
 	// Setters
 	void SetCanPassThroughObject(bool Value);
+
+protected:
+
+	void BindingToDelegates();
+	
+	UFUNCTION()
+	void PossessedByNewController(APawn *ChangedPawn);
 };
