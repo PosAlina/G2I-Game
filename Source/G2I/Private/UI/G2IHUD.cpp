@@ -1,5 +1,6 @@
 #include "UI/G2IHUD.h"
 
+#include "G2I.h"
 #include "G2IPlayerController.h"
 #include "Blueprint/UserWidget.h"
 
@@ -13,6 +14,11 @@ inline void AG2IHUD::BeginPlay()
 void AG2IHUD::InitHud()
 {
 	APlayerController* pc = Cast<AG2IPlayerController>(GetOwner());
+	if (!pc)
+	{
+		UE_LOG(LogG2I, Error, TEXT("Player controller is null"));
+		return;
+	}
 	InputDescriptionWidget = CreateWidget<UUserWidget>(pc, InputDescriptionWidgetClass);
 }
 
