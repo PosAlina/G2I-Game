@@ -34,7 +34,7 @@ public class G2I : ModuleRules
 			"G2I/Public/Gameplay",
 			"G2I/Public/Interfaces",
 			"G2I/Public/UI"
-		});
+        });
 		
 		PrivateIncludePaths.AddRange(new string[] {
 			"G2I",
@@ -47,7 +47,7 @@ public class G2I : ModuleRules
 			"G2I/Private/Gameplay",
 			"G2I/Private/Interfaces",
 			"G2I/Private/UI"
-		});
+        });
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });

@@ -10,11 +10,22 @@ class G2I_API UG2ICharacterMovementComponent : public UActorComponent, public IG
 	GENERATED_BODY()
 
 protected:
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FJumpingDelegate);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta=(AllowPrivateAccess))
 	bool bCanPassThroughObject = false;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess))
+	float StandartMaxWalkSpeed;
+
+	void BindingToDelegates();
 public:
+	
+
+	UPROPERTY(BlueprintAssignable)
+	FJumpingDelegate OnJumpDelegate;
+
+	virtual void BeginPlay() override;
 
 	virtual void OnRegister() override;
 
@@ -25,37 +36,30 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void JumpAction_Implementation() override;
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Disablers)
-	void DisableJump_Implementation();
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Disablers)
-	void DisableMove_Implementation();
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Disablers)
-	void DisableCrouch_Implementation();
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Disablers)
-	void DisableRotation_Implementation();
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Enablers)
-	void EnableJump_Implementation();
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Enablers)
-	void EnableMove_Implementation();
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Enablers)
-	void EnableCrouch_Implementation();
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Enablers)
-	void EnableRotation_Implementation();
-
-	UFUNCTION(BlueprintCallable, Category="Input")
+	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void StopJumpingAction_Implementation() override;
 
+	UFUNCTION(BlueprintCallable, Category = Togglers)
+	void ToggleJump();
+
+	UFUNCTION(BlueprintCallable, Category = Togglers)
+	void ToggleMove();
+
+	UFUNCTION(BlueprintCallable, Category = Togglers)
+	void ToggleCrouch();
+
+	UFUNCTION(BlueprintCallable, Category = Togglers)
+	void ToggleRotation();
+
+	UFUNCTION(BlueprintCallable, Category = Togglers)
+	void ToggleSlow(float NewSpeed);
 	// Getters
 	bool CanPassThroughObject() const { return bCanPassThroughObject; }
 
 	// Setters
 	void SetCanPassThroughObject(bool Value);
-
+	
+	// Handlers for delegate
+	UFUNCTION()
+	void HandleMovingInteraction(float SpeedChange);
 };

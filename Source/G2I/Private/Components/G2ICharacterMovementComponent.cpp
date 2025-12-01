@@ -1,6 +1,25 @@
 ﻿#include "Components/G2ICharacterMovementComponent.h"
 #include "GameFramework/Character.h"
+#include "Components/G2IInteractionComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "G2I.h"
+
+void UG2ICharacterMovementComponent::BindingToDelegates()
+{
+	if (const ACharacter* Owner = Cast<ACharacter>(GetOwner()))
+	{
+		if (UG2IInteractionComponent* InteractionComp = Owner->FindComponentByClass<UG2IInteractionComponent>()) {
+			InteractionComp->OnMovingInteractingDelegate.AddDynamic(this, &UG2ICharacterMovementComponent::HandleMovingInteraction);
+		}
+	}
+}
+
+void UG2ICharacterMovementComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	BindingToDelegates();
+}
 
 void UG2ICharacterMovementComponent::OnRegister()
 {
@@ -17,6 +36,7 @@ void UG2ICharacterMovementComponent::OnRegister()
 		Owner->GetCharacterMovement()->JumpZVelocity = 500.f;
 		Owner->GetCharacterMovement()->AirControl = 0.35f;
 		Owner->GetCharacterMovement()->MaxWalkSpeed = 500.f;
+		StandartMaxWalkSpeed = Owner->GetCharacterMovement()->MaxWalkSpeed;
 		Owner->GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 		Owner->GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 		Owner->GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
@@ -47,6 +67,7 @@ void UG2ICharacterMovementComponent::JumpAction_Implementation()
 	if (ACharacter *Owner = Cast<ACharacter>(GetOwner()))
 	{
 		Owner->Jump();
+		OnJumpDelegate.Broadcast();
 	}
 }
 
@@ -63,62 +84,58 @@ void UG2ICharacterMovementComponent::SetCanPassThroughObject(bool Value)
 	bCanPassThroughObject = Value;
 }
 
-void UG2ICharacterMovementComponent::DisableJump_Implementation()
+void UG2ICharacterMovementComponent::ToggleJump()
 {
 	if (ACharacter* Owner = Cast<ACharacter>(GetOwner()))
 	{
-		Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanJump = false;
+		Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanJump = 1 - Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanJump;
 	}
 }
 
-void UG2ICharacterMovementComponent::DisableMove_Implementation()
+void UG2ICharacterMovementComponent::ToggleMove()
 {
 	if (ACharacter* Owner = Cast<ACharacter>(GetOwner()))
 	{
-		Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanWalk = false;
+		Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanWalk = 1 - Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanWalk;
 	}
 }
 
-void UG2ICharacterMovementComponent::DisableCrouch_Implementation()
+void UG2ICharacterMovementComponent::ToggleCrouch()
 {
 	if (ACharacter* Owner = Cast<ACharacter>(GetOwner()))
 	{
-		Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = false;
+		Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = 1 - Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch;
 	}
 }
 
-void UG2ICharacterMovementComponent::DisableRotation_Implementation() {
+void UG2ICharacterMovementComponent::ToggleRotation() {
 	if (ACharacter* Owner = Cast<ACharacter>(GetOwner())) {
-		Owner->GetCharacterMovement()->bOrientRotationToMovement = false;
+		Owner->GetCharacterMovement()->bOrientRotationToMovement = 1 - Owner->GetCharacterMovement()->bOrientRotationToMovement;
 	}
 }
 
-void UG2ICharacterMovementComponent::EnableJump_Implementation()
+void UG2ICharacterMovementComponent::ToggleSlow(float SpeedChange)
 {
-	if (ACharacter* Owner = Cast<ACharacter>(GetOwner()))
-	{
-		Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanJump = true;
+	if (SpeedChange < 0) {
+		UE_LOG(LogG2I, Log, TEXT("Speed can't be negative"));
+		return;
 	}
-}
 
-void UG2ICharacterMovementComponent::EnableMove_Implementation()
-{
-	if (ACharacter* Owner = Cast<ACharacter>(GetOwner()))
-	{
-		Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanWalk = true;
-	}
-}
-
-void UG2ICharacterMovementComponent::EnableCrouch_Implementation()
-{
-	if (ACharacter* Owner = Cast<ACharacter>(GetOwner()))
-	{
-		Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
-	}
-}
-
-void UG2ICharacterMovementComponent::EnableRotation_Implementation() {
 	if (ACharacter* Owner = Cast<ACharacter>(GetOwner())) {
-		Owner->GetCharacterMovement()->bOrientRotationToMovement = true;
+		float currentMaxWalkSpeed = Owner->GetCharacterMovement()->MaxWalkSpeed;
+		if (abs(currentMaxWalkSpeed - StandartMaxWalkSpeed) <= 1e-5) {
+			Owner->GetCharacterMovement()->MaxWalkSpeed -= SpeedChange < currentMaxWalkSpeed ? SpeedChange : currentMaxWalkSpeed;
+		}
+		else {
+			Owner->GetCharacterMovement()->MaxWalkSpeed = StandartMaxWalkSpeed;
+		}
 	}
+}
+
+void UG2ICharacterMovementComponent::HandleMovingInteraction(float SpeedChange)
+{
+	ToggleCrouch();
+	ToggleJump();
+	ToggleRotation();
+	ToggleSlow(SpeedChange);
 }
