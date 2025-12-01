@@ -30,8 +30,6 @@ public:
 
 	virtual void BeginPlay() override;
 
-	virtual void BeginPlay() override;
-
 	virtual void OnRegister() override;
 
 	// Interface methods
