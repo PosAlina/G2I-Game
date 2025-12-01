@@ -2,8 +2,10 @@
 #include "G2I.h"
 #include "G2IPlayerState.h"
 #include "GameFramework/Character.h"
+#include "Components/G2IInteractionComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "G2I.h"
 
 void UG2ICharacterMovementComponent::BeginPlay()
 {
@@ -27,6 +29,7 @@ void UG2ICharacterMovementComponent::OnRegister()
 			CurrentCharacterMovement->JumpZVelocity = 500.f;
 			CurrentCharacterMovement->AirControl = 0.35f;
 			CurrentCharacterMovement->MaxWalkSpeed = 500.f;
+			StandartMaxWalkSpeed = CurrentCharacterMovement->MaxWalkSpeed;
 			CurrentCharacterMovement->MinAnalogWalkSpeed = 20.f;
 			CurrentCharacterMovement->BrakingDecelerationWalking = 2000.f;
 			CurrentCharacterMovement->BrakingDecelerationFalling = 1500.0f;
@@ -60,6 +63,7 @@ void UG2ICharacterMovementComponent::JumpAction_Implementation()
 	if (ACharacter *Owner = Cast<ACharacter>(GetOwner()))
 	{
 		Owner->Jump();
+		OnJumpDelegate.Broadcast();
 	}
 }
 
@@ -104,6 +108,77 @@ void UG2ICharacterMovementComponent::SetCanPassThroughObject(bool Value)
 	bCanPassThroughObject = Value;
 }
 
+void UG2ICharacterMovementComponent::ToggleJump()
+{
+	if (ACharacter* Owner = Cast<ACharacter>(GetOwner()))
+	{
+		if (UCharacterMovementComponent* CurrentCharacterMovement = Owner->GetCharacterMovement())
+		{
+			CurrentCharacterMovement->GetNavAgentPropertiesRef().bCanJump = !CurrentCharacterMovement->GetNavAgentPropertiesRef().bCanJump;
+		}
+	}
+}
+
+void UG2ICharacterMovementComponent::ToggleMove()
+{
+	if (ACharacter* Owner = Cast<ACharacter>(GetOwner()))
+	{
+		if (UCharacterMovementComponent* CurrentCharacterMovement = Owner->GetCharacterMovement())
+		{
+			CurrentCharacterMovement->GetNavAgentPropertiesRef().bCanWalk = !CurrentCharacterMovement->GetNavAgentPropertiesRef().bCanWalk;
+		}
+	}
+}
+
+void UG2ICharacterMovementComponent::ToggleCrouch()
+{
+	if (ACharacter* Owner = Cast<ACharacter>(GetOwner()))
+	{
+		if (UCharacterMovementComponent* CurrentCharacterMovement = Owner->GetCharacterMovement())
+		{
+			CurrentCharacterMovement->GetNavAgentPropertiesRef().bCanCrouch = !CurrentCharacterMovement->GetNavAgentPropertiesRef().bCanCrouch;
+		}
+	}
+}
+
+void UG2ICharacterMovementComponent::ToggleRotation() {
+	if (ACharacter* Owner = Cast<ACharacter>(GetOwner())) {
+		if (UCharacterMovementComponent* CurrentCharacterMovement = Owner->GetCharacterMovement())
+		{
+			CurrentCharacterMovement->bOrientRotationToMovement = !CurrentCharacterMovement->bOrientRotationToMovement;
+		}
+	}
+}
+
+void UG2ICharacterMovementComponent::ToggleSlow(float SpeedChange)
+{
+	if (SpeedChange < 0) {
+		UE_LOG(LogG2I, Log, TEXT("Speed can't be negative"));
+		return;
+	}
+
+	if (ACharacter* Owner = Cast<ACharacter>(GetOwner())) {
+		if (UCharacterMovementComponent* CurrentCharacterMovement = Owner->GetCharacterMovement())
+		{
+			float CurrentMaxWalkSpeed = CurrentCharacterMovement->MaxWalkSpeed;
+			if (FMath::IsNearlyEqual(CurrentMaxWalkSpeed, StandartMaxWalkSpeed)) {
+				CurrentCharacterMovement->MaxWalkSpeed -= SpeedChange < CurrentMaxWalkSpeed ? SpeedChange : CurrentMaxWalkSpeed;
+			}
+			else {
+				CurrentCharacterMovement->MaxWalkSpeed = StandartMaxWalkSpeed;
+			}
+		}
+		
+	}
+}
+
+void UG2ICharacterMovementComponent::HandleMovingInteraction(float SpeedChange)
+{
+	ToggleCrouch();
+	ToggleJump();
+	ToggleRotation();
+	ToggleSlow(SpeedChange);
+}
 void UG2ICharacterMovementComponent::BindingToDelegates()
 {
 	if (const UWorld *World = GetWorld())
@@ -127,6 +202,19 @@ void UG2ICharacterMovementComponent::BindingToDelegates()
 	else
 	{
 		UE_LOG(LogG2I, Error, TEXT("World doesn't exist"));
+	}
+	
+	if (const ACharacter* Owner = Cast<ACharacter>(GetOwner()))
+	{
+		if (UG2IInteractionComponent* InteractionComp = Owner->FindComponentByClass<UG2IInteractionComponent>()) {
+			InteractionComp->OnMovingInteractingDelegate.AddDynamic(this, &UG2ICharacterMovementComponent::HandleMovingInteraction);
+		}
+		else{
+			UE_LOG(LogG2I, Error, TEXT("Character dont't have Interaction Component"));
+		}
+	}
+	else{
+		UE_LOG(LogG2I, Error, TEXT("Component Owner isn't Character"));
 	}
 }
 
