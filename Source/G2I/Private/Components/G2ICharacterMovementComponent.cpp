@@ -112,7 +112,10 @@ void UG2ICharacterMovementComponent::ToggleJump()
 {
 	if (ACharacter* Owner = Cast<ACharacter>(GetOwner()))
 	{
-		Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanJump = 1 - Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanJump;
+		if (UCharacterMovementComponent* CurrentCharacterMovement = Owner->GetCharacterMovement())
+		{
+			CurrentCharacterMovement->GetNavAgentPropertiesRef().bCanJump = !CurrentCharacterMovement->GetNavAgentPropertiesRef().bCanJump;
+		}
 	}
 }
 
@@ -120,7 +123,10 @@ void UG2ICharacterMovementComponent::ToggleMove()
 {
 	if (ACharacter* Owner = Cast<ACharacter>(GetOwner()))
 	{
-		Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanWalk = 1 - Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanWalk;
+		if (UCharacterMovementComponent* CurrentCharacterMovement = Owner->GetCharacterMovement())
+		{
+			CurrentCharacterMovement->GetNavAgentPropertiesRef().bCanWalk = !CurrentCharacterMovement->GetNavAgentPropertiesRef().bCanWalk;
+		}
 	}
 }
 
@@ -128,13 +134,19 @@ void UG2ICharacterMovementComponent::ToggleCrouch()
 {
 	if (ACharacter* Owner = Cast<ACharacter>(GetOwner()))
 	{
-		Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = 1 - Owner->GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch;
+		if (UCharacterMovementComponent* CurrentCharacterMovement = Owner->GetCharacterMovement())
+		{
+			CurrentCharacterMovement->GetNavAgentPropertiesRef().bCanCrouch = !CurrentCharacterMovement->GetNavAgentPropertiesRef().bCanCrouch;
+		}
 	}
 }
 
 void UG2ICharacterMovementComponent::ToggleRotation() {
 	if (ACharacter* Owner = Cast<ACharacter>(GetOwner())) {
-		Owner->GetCharacterMovement()->bOrientRotationToMovement = 1 - Owner->GetCharacterMovement()->bOrientRotationToMovement;
+		if (UCharacterMovementComponent* CurrentCharacterMovement = Owner->GetCharacterMovement())
+		{
+			CurrentCharacterMovement->bOrientRotationToMovement = !CurrentCharacterMovement->bOrientRotationToMovement;
+		}
 	}
 }
 
@@ -146,13 +158,17 @@ void UG2ICharacterMovementComponent::ToggleSlow(float SpeedChange)
 	}
 
 	if (ACharacter* Owner = Cast<ACharacter>(GetOwner())) {
-		float currentMaxWalkSpeed = Owner->GetCharacterMovement()->MaxWalkSpeed;
-		if (abs(currentMaxWalkSpeed - StandartMaxWalkSpeed) <= 1e-5) {
-			Owner->GetCharacterMovement()->MaxWalkSpeed -= SpeedChange < currentMaxWalkSpeed ? SpeedChange : currentMaxWalkSpeed;
+		if (UCharacterMovementComponent* CurrentCharacterMovement = Owner->GetCharacterMovement())
+		{
+			float CurrentMaxWalkSpeed = CurrentCharacterMovement->MaxWalkSpeed;
+			if (FMath::IsNearlyEqual(CurrentMaxWalkSpeed, StandartMaxWalkSpeed)) {
+				CurrentCharacterMovement->MaxWalkSpeed -= SpeedChange < CurrentMaxWalkSpeed ? SpeedChange : CurrentMaxWalkSpeed;
+			}
+			else {
+				CurrentCharacterMovement->MaxWalkSpeed = StandartMaxWalkSpeed;
+			}
 		}
-		else {
-			Owner->GetCharacterMovement()->MaxWalkSpeed = StandartMaxWalkSpeed;
-		}
+		
 	}
 }
 
