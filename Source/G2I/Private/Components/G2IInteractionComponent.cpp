@@ -1,10 +1,29 @@
 #include "Components/G2IInteractionComponent.h"
 #include "GameFramework/Character.h"
 #include "G2IInteractiveObjectInterface.h"
+#include "G2IMovingObjectInterface.h"
+#include "Components/G2ICharacterMovementComponent.h"
 #include <Components/BoxComponent.h>
 #include <Components/CapsuleComponent.h>
 #include "G2I.h"
 
+void UG2IInteractionComponent::BindingToDelegates()
+{
+	if (ACharacter* Owner = Cast<ACharacter>(GetOwner()))
+	{
+		if (UG2ICharacterMovementComponent* CharacterMovementComp = Owner->FindComponentByClass<UG2ICharacterMovementComponent>()) {
+			CharacterMovementComp->OnJumpDelegate.AddDynamic(this, &UG2IInteractionComponent::HandleJumping);
+			Owner->LandedDelegate.AddDynamic(this, &UG2IInteractionComponent::HandleLanded);
+		}
+	}
+}
+
+void UG2IInteractionComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	BindingToDelegates();
+}
 
 UG2IInteractionComponent::UG2IInteractionComponent()
 {
@@ -15,6 +34,9 @@ UG2IInteractionComponent::UG2IInteractionComponent()
 
 void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 {
+	if (!bCanInteract) {
+		return;
+	}
 	AActor* Ow = GetOwner();
 	if (Ow == nullptr)
 	{
@@ -74,6 +96,10 @@ void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 
 				if (IG2IInteractiveObjectInterface::Execute_CanInteract(Overlap, Owner))
 				{
+					if (Overlap->Implements<UG2IMovingObjectInterface>()) {
+						float SpeedChange = IG2IMovingObjectInterface::Execute_GetSpeedChange(Overlap);
+						OnMovingInteractingDelegate.Broadcast(SpeedChange);
+					}
 					IG2IInteractiveObjectInterface::Execute_Interact(Overlap, Owner);
 				}
 				else
@@ -91,6 +117,16 @@ void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 			UE_LOG(LogG2I, Log, TEXT("Actor %s doesn't have tag %s"), *Overlap->GetName(), *Tag.ToString());
 		}
 	}
+}
+
+void UG2IInteractionComponent::HandleJumping()
+{
+	bCanInteract = false;
+}
+
+void UG2IInteractionComponent::HandleLanded(const FHitResult& Hit)
+{
+	bCanInteract = true;
 }
 
 void UG2IInteractionComponent::OnRegister()

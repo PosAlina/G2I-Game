@@ -29,28 +29,4 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Actions)
 	void StopJumpingAction();
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Disablers)
-	void DisableJump();
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Disablers)
-	void DisableMove();
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Disablers)
-	void DisableCrouch();
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Disablers)
-	void DisableRotation();
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Enablers)
-	void EnableJump();
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Enablers)
-	void EnableMove();
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Enablers)
-	void EnableCrouch();
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Enablers)
-	void EnableRotation();
 };
