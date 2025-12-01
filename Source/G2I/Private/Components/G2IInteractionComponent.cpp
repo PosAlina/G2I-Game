@@ -5,6 +5,7 @@
 #include "Components/G2ICharacterMovementComponent.h"
 #include <Components/BoxComponent.h>
 #include <Components/CapsuleComponent.h>
+#include "DrawDebugHelpers.h"
 #include "G2I.h"
 
 void UG2IInteractionComponent::BindingToDelegates()

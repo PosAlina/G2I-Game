@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "G2IMovementInputInterface.h"
+#include "Components/ActorComponent.h"
 #include "G2ICharacterMovementComponent.generated.h"
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -18,12 +19,16 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess))
 	float StandartMaxWalkSpeed;
 
-	void BindingToDelegates();
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Crouch)
+	bool bIsCrouchState = false;
+
 public:
 	
 
 	UPROPERTY(BlueprintAssignable)
 	FJumpingDelegate OnJumpDelegate;
+
+	virtual void BeginPlay() override;
 
 	virtual void BeginPlay() override;
 
@@ -53,6 +58,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = Togglers)
 	void ToggleSlow(float NewSpeed);
+	
+	UFUNCTION(BlueprintCallable, Category="Input")
+	virtual void ToggleCrouchAction_Implementation() override;
+
 	// Getters
 	bool CanPassThroughObject() const { return bCanPassThroughObject; }
 
@@ -62,4 +71,11 @@ public:
 	// Handlers for delegate
 	UFUNCTION()
 	void HandleMovingInteraction(float SpeedChange);
+
+protected:
+
+	void BindingToDelegates();
+	
+	UFUNCTION()
+	void PossessedByNewController(APawn *ChangedPawn);
 };

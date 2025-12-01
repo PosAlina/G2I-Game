@@ -36,6 +36,8 @@ void AG2IPlayerController::SetupInputComponent()
 				EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ThisClass::Jump);
 				EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ThisClass::StopJumping);
 
+				EnhancedInputComponent->BindAction(ToggleCrouchAction, ETriggerEvent::Started, this, &ThisClass::ToggleCrouch);
+
 				EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ThisClass::Look);
 
 				EnhancedInputComponent->BindAction(SelectNextCharacterAction, ETriggerEvent::Started, this,
@@ -66,6 +68,10 @@ void AG2IPlayerController::OnPossess(APawn* NewPawn)
 
 void AG2IPlayerController::SetupCharacterActorComponents()
 {
+	CameraComponents.Empty();
+	MovementComponents.Empty();
+	InteractionComponents.Empty();
+	
 	if (const APawn *CurrentCharacter = GetPawn())
 	{
 		TSet<UActorComponent*> CharacterComponents = CurrentCharacter->GetComponents();
@@ -183,13 +189,27 @@ void AG2IPlayerController::StopJumping(const FInputActionValue& Value)
 	}
 }
 
+void AG2IPlayerController::ToggleCrouch(const FInputActionValue& Value)
+{
+	for (UActorComponent *Component : MovementComponents)
+	{
+		if (Component->Implements<UG2IMovementInputInterface>())
+		{
+			IG2IMovementInputInterface::Execute_ToggleCrouchAction(Component);
+		}
+		else
+		{
+			UE_LOG(LogG2I, Warning, TEXT("In Movement Components array %s contains component which not "
+								"implemented needed interface"), *Component->GetName());
+		}
+	}
+}
+
 void AG2IPlayerController::SelectNextCharacter(const FInputActionValue& Value)
 {
     if (AG2IPlayerState *CurrentPlayerState = GetPlayerState<AG2IPlayerState>())
     {
-        const FVector NewCharacterLocationIfUnexisted = FVector(0, 0, 0);
-        const FRotator NewCharacterRotationIfUnexisted = FRotator(0, 0, 0);
-        CurrentPlayerState->SelectNextCharacter(NewCharacterLocationIfUnexisted, NewCharacterRotationIfUnexisted);
+        CurrentPlayerState->SelectNextCharacter();
     }
     else
     {

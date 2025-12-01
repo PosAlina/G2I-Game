@@ -13,7 +13,7 @@ class UG2IInteractionComponent;
  *  First player`s character. Engineer.
  *  Implements a controllable orbiting camera
  */
-UCLASS(abstract)
+UCLASS(Blueprintable)
 class G2I_API AG2ICharacterEngineer : public ACharacter
 {
 	GENERATED_BODY()

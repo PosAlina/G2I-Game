@@ -29,4 +29,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Actions)
 	void StopJumpingAction();
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Actions)
+	void ToggleCrouchAction();
+	
 };
