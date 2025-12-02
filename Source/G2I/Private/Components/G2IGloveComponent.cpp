@@ -3,6 +3,7 @@
 
 #include "Components/G2IGloveComponent.h"
 
+#include "G2I.h"
 #include "G2IDestructibleActorBase.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -22,8 +23,6 @@ void UG2IGloveComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	PC = GetWorld()->GetFirstPlayerController();
-	// ...
-	
 }
 
 
@@ -31,18 +30,24 @@ void UG2IGloveComponent::BeginPlay()
 void UG2IGloveComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
 }
 
 void UG2IGloveComponent::ActivatePunch()
 {
 	AActor* character = GetOwner();
-	if (!character) return;
+	if (!character)
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Character is null"));
+		return;
+	}
 	
 	UWorld* world = GetWorld();
-	if (!world) return;
-	
+	if (!world){
+		UE_LOG(LogG2I, Warning, TEXT("World is null"));
+		return;
+	}
+
+	//магические числа, надо будет убрать
 	FVector PunchDirection = character->GetActorForwardVector();
 	FVector PunchLocation = character->GetActorLocation() + PunchDirection * 50.f;
 	PunchLocation.Z += 30;

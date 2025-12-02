@@ -15,7 +15,7 @@ class G2I_API UG2IGloveComponent : public UActorComponent, public IG2IGadgetInte
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "GlovePunch")
 	float PunchArea = 50.f;
 
 private:
@@ -40,10 +40,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void InputControl(bool isInputEnabled);
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	virtual void GadgetActivation_Implementation() override;
 
-	UPROPERTY(BlueprintAssignable, Category = "GadgetPunch")
+	UPROPERTY(BlueprintAssignable, Category = "GlovePunch")
 	FOnGadgetActivationEventSignature OnGadgetActivationEvent;
 	
 protected:
