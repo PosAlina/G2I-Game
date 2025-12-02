@@ -3,6 +3,7 @@
 #include "Components/G2ICameraComponent.h"
 #include "Components/G2ICharacterCollisionComponent.h"
 #include "Components/G2ICharacterMovementComponent.h"
+#include "Components/G2IGloveComponent.h"
 #include "GameFramework/Controller.h"
 #include "Components/G2IInteractionComponent.h"
 
@@ -13,4 +14,5 @@ AG2ICharacterEngineer::AG2ICharacterEngineer()
 	CameraComp->SetupAttachment(RootComponent);
 	MovementComp = CreateDefaultSubobject<UG2ICharacterMovementComponent>(FName("MovementComp"));
 	InteractionComp = CreateDefaultSubobject<UG2IInteractionComponent>(FName("InteractionComp"));
+	GadgetComp = CreateDefaultSubobject<UG2IGloveComponent>(FName("GadgetComp"));
 }
