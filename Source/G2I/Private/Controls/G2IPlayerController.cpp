@@ -3,6 +3,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "G2I.h"
 #include "G2ICameraInputInterface.h"
+#include "G2IGadgetInterface.h"
 #include "G2IPlayerState.h"
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
@@ -46,6 +47,8 @@ void AG2IPlayerController::SetupInputComponent()
 				for (const auto& InteractAction : InteractActions) {
 					EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &ThisClass::Interact);
 				}
+
+				EnhancedInputComponent->BindAction(GadgetAction, ETriggerEvent::Started, this, &ThisClass::GadgetActivation);
 			}
 			else
 			{
@@ -90,6 +93,11 @@ void AG2IPlayerController::SetupCharacterActorComponents()
 			if (Component->Implements<UG2IInteractionInputInterface>())
 			{
 				InteractionComponents.Add(Component);
+			}
+
+			if (Component->Implements<UG2IGadgetInterface>())
+			{
+				GadgetComponents.Add(Component);
 			}
 		}
 	}
@@ -244,5 +252,14 @@ void AG2IPlayerController::Interact(const FInputActionInstance& Instance)
 			UE_LOG(LogG2I, Warning, TEXT("In Interaction Components array %s contains component which not "
 				"implemented needed interface"), *Component->GetName());
 		}
+	}
+}
+
+
+void AG2IPlayerController::GadgetActivation(const FInputActionInstance& Instance)
+{
+	for (UActorComponent* Component : GadgetComponents)
+	{
+		IG2IGadgetInterface::Execute_GadgetActivation(Component);
 	}
 }

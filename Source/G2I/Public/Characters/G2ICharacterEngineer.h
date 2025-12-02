@@ -4,6 +4,8 @@
 #include "GameFramework/Character.h"
 #include "G2ICharacterEngineer.generated.h"
 
+class UG2IGloveComponent;
+class UG2IGadgetInterface;
 class UG2ICharacterCollisionComponent;
 class UG2ICharacterMovementComponent;
 class UG2ICameraComponent;
@@ -31,6 +33,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
 	UG2IInteractionComponent* InteractionComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Gadgets, meta = (AllowPrivateAccess = "true"))
+	UG2IGloveComponent* GadgetComp;
 
 public:
 

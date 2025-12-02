@@ -83,4 +83,12 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Data")
 	TMap<UInputAction*, FName> ActionToTagMap;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* GadgetAction;
+
+	UPROPERTY(VisibleAnywhere)
+	TSet<UActorComponent*> GadgetComponents;
+	
+	void GadgetActivation(const FInputActionInstance& Instance);
 };
