@@ -8,6 +8,7 @@
 #include "InputMappingContext.h"
 #include "Components/G2IInteractionComponent.h"
 #include "Components/G2ICharacterMovementComponent.h"
+#include "GameFramework/Pawn.h"
 
 void AG2IPlayerController::SetupInputComponent()
 {
