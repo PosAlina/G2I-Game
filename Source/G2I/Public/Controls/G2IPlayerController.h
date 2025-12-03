@@ -26,7 +26,7 @@ protected:
 
 	/** Setup Input */
 	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
-	TArray<UInputMappingContext*> InputMappingContexts;
+	TArray<TObjectPtr<UInputMappingContext>> InputMappingContexts;
 	
 	virtual void SetupInputComponent() override;
 
@@ -34,53 +34,53 @@ protected:
 
 	/** Actions */
 	UPROPERTY(VisibleAnywhere)
-	TSet<UActorComponent*> CameraComponents;
+	TSet<TObjectPtr<UActorComponent>> CameraComponents;
 	
 	UPROPERTY(EditAnywhere, Category="Input")
-	UInputAction* LookAction;
+	TObjectPtr<UInputAction> LookAction;
 
 	void Look(const FInputActionValue& Value);
 
 	UPROPERTY(EditAnywhere, Category="Input")
-	UInputAction* MouseLookAction;
+	TObjectPtr<UInputAction> MouseLookAction;
 	
 	void MouseLook(const FInputActionValue& Value);
 
 	UPROPERTY(VisibleAnywhere)
-	TSet<UActorComponent*> MovementComponents;
+	TSet<TObjectPtr<UActorComponent>> MovementComponents;
 	
 	UPROPERTY(EditAnywhere, Category="Input")
-	UInputAction* MoveAction;
+	TObjectPtr<UInputAction> MoveAction;
 	
 	void Move(const FInputActionValue& Value);
 	
 	UPROPERTY(EditAnywhere, Category="Input")
-	UInputAction* JumpAction;
+	TObjectPtr<UInputAction> JumpAction;
 
 	void Jump(const FInputActionValue& Value);
 	
 	void StopJumping(const FInputActionValue& Value);
 
 	UPROPERTY(EditAnywhere, Category="Input")
-	UInputAction* ToggleCrouchAction;
+	TObjectPtr<UInputAction> ToggleCrouchAction;
 
 	void ToggleCrouch(const FInputActionValue& Value);
 
 	/** Select character actions */
 	UPROPERTY(EditAnywhere, Category="Input")
-	UInputAction* SelectNextCharacterAction;
+	TObjectPtr<UInputAction> SelectNextCharacterAction;
 
 	void SelectNextCharacter(const FInputActionValue& Value);
 
 	/** Interact Actions */
 	UPROPERTY(EditAnywhere, Category = "Input")
-	TSet<UInputAction*> InteractActions;
+	TSet<TObjectPtr<UInputAction>> InteractActions;
 
 	UPROPERTY(VisibleAnywhere)
-	TSet<UActorComponent*> InteractionComponents;
+	TSet<TObjectPtr<UActorComponent>> InteractionComponents;
 
 	void Interact(const FInputActionInstance& Instance);
 
 	UPROPERTY(EditAnywhere, Category = "Data")
-	TMap<UInputAction*, FName> ActionToTagMap;
+	TMap<TObjectPtr<UInputAction>, FName> ActionToTagMap;
 };
