@@ -21,16 +21,16 @@ class G2I_API AG2ICharacterEngineer : public ACharacter
 public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Collision, meta = (AllowPrivateAccess = "true"))
-	UG2ICharacterCollisionComponent *CollisionComp;
+	TObjectPtr<UG2ICharacterCollisionComponent> CollisionComp;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	UG2ICameraComponent *CameraComp;
+	TObjectPtr<UG2ICameraComponent> CameraComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	UG2ICharacterMovementComponent *MovementComp;
+	TObjectPtr<UG2ICharacterMovementComponent> MovementComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
-	UG2IInteractionComponent* InteractionComp;
+	TObjectPtr<UG2IInteractionComponent> InteractionComp;
 
 public:
 
