@@ -7,6 +7,11 @@
 #include "GameFramework/PlayerController.h"
 #include "G2I.h"
 
+UG2ICharacterMovementComponent::UG2ICharacterMovementComponent()
+{
+	PrimaryComponentTick.bCanEverTick = true;
+}
+
 void UG2ICharacterMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -18,25 +23,50 @@ void UG2ICharacterMovementComponent::BeginPlay()
 void UG2ICharacterMovementComponent::OnRegister()
 {
 	Super::OnRegister();
-	
-	if (const ACharacter *Owner = Cast<ACharacter>(GetOwner()))
+
+	PreInitializationDefaults();
+}
+
+void UG2ICharacterMovementComponent::PreInitializationDefaults()
+{
+	AActor *OwnerActor = GetOwner();
+	if (!ensure(OwnerActor))
 	{
-		if (UCharacterMovementComponent *CurrentCharacterMovement = Owner->GetCharacterMovement())
-		{
-			CurrentCharacterMovement->bOrientRotationToMovement = true;
-			CurrentCharacterMovement->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
-			
-			CurrentCharacterMovement->JumpZVelocity = 500.f;
-			CurrentCharacterMovement->AirControl = 0.35f;
-			CurrentCharacterMovement->MaxWalkSpeed = 500.f;
-			StandartMaxWalkSpeed = CurrentCharacterMovement->MaxWalkSpeed;
-			CurrentCharacterMovement->MinAnalogWalkSpeed = 20.f;
-			CurrentCharacterMovement->BrakingDecelerationWalking = 2000.f;
-			CurrentCharacterMovement->BrakingDecelerationFalling = 1500.0f;
-			
-			CurrentCharacterMovement->GetNavAgentPropertiesRef().bCanCrouch = true;
-		}
+		UE_LOG(LogG2I, Error, TEXT("Owner doesn't exist in %s"), *GetName());
+		return;
 	}
+	
+	ACharacter *Owner = Cast<ACharacter>(OwnerActor);
+	if (!ensure(Owner))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Owner isn't character in %s"), *GetName());
+		return;
+	}
+	
+	Owner->bUseControllerRotationPitch = false;
+	Owner->bUseControllerRotationYaw = false;
+	Owner->bUseControllerRotationRoll = false;
+		
+	UCharacterMovementComponent *CurrentCharacterMovement = Owner->GetCharacterMovement();
+	if (!ensure(CurrentCharacterMovement))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Owner %s hasn't character movement component in %s"),
+			*Owner->GetName(), *GetName());
+		return;
+	}
+	
+	CurrentCharacterMovement->bOrientRotationToMovement = true;
+	CurrentCharacterMovement->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
+	
+	CurrentCharacterMovement->JumpZVelocity = 500.f;
+	CurrentCharacterMovement->AirControl = 0.35f;
+	CurrentCharacterMovement->MaxWalkSpeed = 500.f;
+	StandartMaxWalkSpeed = CurrentCharacterMovement->MaxWalkSpeed;
+	CurrentCharacterMovement->MinAnalogWalkSpeed = 20.f;
+	CurrentCharacterMovement->BrakingDecelerationWalking = 2000.f;
+	CurrentCharacterMovement->BrakingDecelerationFalling = 1500.0f;
+	
+	CurrentCharacterMovement->GetNavAgentPropertiesRef().bCanCrouch = true;
 }
 
 void UG2ICharacterMovementComponent::MoveAction_Implementation(const float Right, const float Forward, const FRotator Rotation)
