@@ -32,19 +32,25 @@ protected:
 
 	void SetupCharacterActorComponents();
 
+	void SetupCamera();
+
 	/** Actions */
+	/** Select camera actions */
 	UPROPERTY(VisibleAnywhere)
-	TSet<TObjectPtr<UActorComponent>> CameraComponents;
+	TObjectPtr<UActorComponent> CameraControllersComponent;
+
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> SwitchCameraBehaviorAction;
+	
+	void SwitchCameraBehavior();
+
+	UPROPERTY(VisibleAnywhere)
+	TSet<TObjectPtr<UActorComponent>> ThirdPersonCameraComponents;
 	
 	UPROPERTY(EditAnywhere, Category="Input")
 	TObjectPtr<UInputAction> LookAction;
 
 	void Look(const FInputActionValue& Value);
-
-	UPROPERTY(EditAnywhere, Category="Input")
-	TObjectPtr<UInputAction> MouseLookAction;
-	
-	void MouseLook(const FInputActionValue& Value);
 
 	UPROPERTY(VisibleAnywhere)
 	TSet<TObjectPtr<UActorComponent>> MovementComponents;
