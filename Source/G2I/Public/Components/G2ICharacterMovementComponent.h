@@ -28,9 +28,15 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FJumpingDelegate OnJumpDelegate;
 
+protected:
+	
+	UG2ICharacterMovementComponent();
+
 	virtual void BeginPlay() override;
 
 	virtual void OnRegister() override;
+
+public:
 
 	// Interface methods
 	UFUNCTION(BlueprintCallable, Category="Input")
@@ -76,4 +82,9 @@ protected:
 	
 	UFUNCTION()
 	void PossessedByNewController(APawn *ChangedPawn);
+
+private:
+
+	void PreInitializationDefaults();
+	
 };
