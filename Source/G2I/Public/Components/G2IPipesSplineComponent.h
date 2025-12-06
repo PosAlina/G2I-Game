@@ -5,9 +5,9 @@
 #include "G2IPipesSplineComponent.generated.h"
 
 
-/**
+/*
 Struct that holds custom data per spline point.
- */
+*/
 USTRUCT()
 struct FG2IPipesSplinePointParams
 {
@@ -23,7 +23,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	bool bHasPipe = true;
 
-	UPROPERTY(EditAnywhere)
+	/*UPROPERTY(EditAnywhere)
 	bool bHasValve = true;
 
 	UPROPERTY(EditAnywhere)
@@ -35,21 +35,21 @@ public:
 	bool bSendToOtherPipe = false;
 
 	UPROPERTY(EditAnywhere)
-	bool bResieveFromOtherPipe = false;
+	bool bResieveFromOtherPipe = false;*/
 
 };
 
-/**
+/*
 Spline component for PIPES that uses custom point parameters.
- */
+*/
 UCLASS(meta = (BlueprintSpawnableComponent))
 class G2I_API UG2IPipesSplineComponent : public USplineComponent
 {
 	GENERATED_BODY()
 
 public:
-	virtual USplineMetadata* GetSplinePointsMetadata() override;
-	virtual const USplineMetadata* GetSplinePointsMetadata() const override;
+	virtual USplineMetadata* GetSplinePointsMetadata();
+	virtual const USplineMetadata* GetSplinePointsMetadata() const;
 	virtual void PostLoad() override;
 	virtual void PostDuplicate(bool bDuplicateForPie) override;
 
