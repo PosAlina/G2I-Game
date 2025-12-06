@@ -1,8 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/SplineComponent.h"
-#include <Components/G2IPipesSplineComponent.h>
+#include "Components/G2IPipesSplineComponent.h"
 #include "G2IPipesSplineMetadata.generated.h"
 
 UCLASS()

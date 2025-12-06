@@ -60,7 +60,7 @@ void FG2IPipesSplineMetadataDetails::Update(USplineComponent* InSplineComponent,
 {
 	SplineComp = InSplineComponent;
 	SelectedKeys = InSelectedKeys;
-	//bHasPipeValue.Reset();
+	bHasPipeValue.Reset();
 	TestFloatValue.Reset();
 
 	if (InSplineComponent)
@@ -69,13 +69,21 @@ void FG2IPipesSplineMetadataDetails::Update(USplineComponent* InSplineComponent,
 
 		UG2IPipesSplineMetadata* Metadata = Cast<UG2IPipesSplineMetadata>(InSplineComponent->GetSplinePointsMetadata());
 		if (Metadata)
+		{
 			for (int32 Index : InSelectedKeys)
 			{
-				if (Metadata->PointParams.IsValidIndex(Index) && bUpdateTestFloat)
+				if (Metadata->PointParams.IsValidIndex(Index))
 				{
+					if (bUpdateTestFloat)
 						bUpdateTestFloat = UpdateMultipleValue(TestFloatValue, Metadata->PointParams[Index].TestValue);
 				}
+				else
+				{
+					Metadata->Fixup(SplineComp->GetNumberOfSplinePoints(), SplineComp);
+					TestFloatValue = Metadata->PointParams[Index].TestValue;
+				}
 			}
+		}
 	}
 }
 
@@ -92,8 +100,6 @@ void FG2IPipesSplineMetadataDetails::GenerateChildContent(IDetailGroup& DetailGr
 				.Font(IDetailLayoutBuilder::GetDetailFont())
 		]
 		.ValueContent()
-		.MinDesiredWidth(125.0f)
-		.MaxDesiredWidth(125.0f)
 		[
 			SNew(SNumericEntryBox<float>)
 				.Value(this, &FG2IPipesSplineMetadataDetails::GetTestFloat)

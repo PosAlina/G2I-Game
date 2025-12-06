@@ -6,8 +6,8 @@ public class G2IEditor : ModuleRules
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        PublicDependencyModuleNames.AddRange(new string[]
-        {
+        PublicDependencyModuleNames.AddRange(
+        [
             "Core",
             "CoreUObject",
             "Engine",
@@ -19,6 +19,18 @@ public class G2IEditor : ModuleRules
             "UnrealEd",
             "PropertyEditor",
             "EditorStyle"
-        });
+        ]);
+
+        PrivateDependencyModuleNames.AddRange([]);
+
+        PublicIncludePaths.AddRange([
+            "G2IEditor",
+            "G2IEditor/Public"
+        ]);
+
+        PrivateIncludePaths.AddRange([
+            "G2IEditor",
+            "G2IEditor/Private"
+        ]);
     }
 }
