@@ -4,6 +4,8 @@
 #include "GameFramework/PlayerController.h"
 #include "G2IPlayerController.generated.h"
 
+class UG2ICameraDefaultsParameters;
+class UCameraComponent;
 struct FInputActionInstance;
 struct FInputActionValue;
 class UInputAction;
@@ -18,9 +20,20 @@ class G2I_API AG2IPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
+private:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UG2ICameraDefaultsParameters> CameraDefaultsParameters;
+	
 public:
 
 	virtual void OnPossess(APawn *NewPawn) override;
+
+public:
+
+	void SetRotationTowardsCamera(const UCameraComponent& Camera);
+
+	TObjectPtr<UG2ICameraDefaultsParameters> GetCameraDefaultsParameters();
 
 protected:
 
@@ -32,19 +45,25 @@ protected:
 
 	void SetupCharacterActorComponents();
 
+	void SetupCamera();
+
 	/** Actions */
+	/** Select camera actions */
 	UPROPERTY(VisibleAnywhere)
-	TSet<TObjectPtr<UActorComponent>> CameraComponents;
+	TObjectPtr<UActorComponent> CameraControllersComponent;
+
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> SwitchCameraBehaviorAction;
+	
+	void SwitchCameraBehavior();
+
+	UPROPERTY(VisibleAnywhere)
+	TSet<TObjectPtr<UActorComponent>> ThirdPersonCameraComponents;
 	
 	UPROPERTY(EditAnywhere, Category="Input")
 	TObjectPtr<UInputAction> LookAction;
 
 	void Look(const FInputActionValue& Value);
-
-	UPROPERTY(EditAnywhere, Category="Input")
-	TObjectPtr<UInputAction> MouseLookAction;
-	
-	void MouseLook(const FInputActionValue& Value);
 
 	UPROPERTY(VisibleAnywhere)
 	TSet<TObjectPtr<UActorComponent>> MovementComponents;
