@@ -4,9 +4,11 @@
 #include "GameFramework/Character.h"
 #include "G2ICharacterEngineer.generated.h"
 
+class UG2IFixedCamerasComponent;
+class UG2IThirdPersonCameraComponent;
+class UG2ICameraControllerComponent;
 class UG2ICharacterCollisionComponent;
 class UG2ICharacterMovementComponent;
-class UG2ICameraComponent;
 class UG2IInteractionComponent;
 
 /**
@@ -21,20 +23,27 @@ class G2I_API AG2ICharacterEngineer : public ACharacter
 public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Collision, meta = (AllowPrivateAccess = "true"))
-	UG2ICharacterCollisionComponent *CollisionComp;
-	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	UG2ICameraComponent *CameraComp;
+	TObjectPtr<UG2ICharacterCollisionComponent> CollisionComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	UG2ICharacterMovementComponent *MovementComp;
+	TObjectPtr<UG2ICharacterMovementComponent> MovementComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
-	UG2IInteractionComponent* InteractionComp;
+	TObjectPtr<UG2IInteractionComponent> InteractionComp;
 
-public:
+	/** Different behavior of camera */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
+	TObjectPtr<UG2ICameraControllerComponent> CameraControllerComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
+	TObjectPtr<UG2IThirdPersonCameraComponent> ThirdPersonCameraComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
+	TObjectPtr<UG2IFixedCamerasComponent> FixedCamerasComp;
+
+protected:
 
 	AG2ICharacterEngineer();
-
+	
 };
 

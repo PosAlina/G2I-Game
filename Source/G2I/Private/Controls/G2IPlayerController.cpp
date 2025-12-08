@@ -2,17 +2,20 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "G2I.h"
-#include "G2ICameraInputInterface.h"
+#include "Camera/G2IThirdPersonCameraInputInterface.h"
 #include "G2IPlayerState.h"
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
 #include "Components/G2IInteractionComponent.h"
 #include "Components/G2ICharacterMovementComponent.h"
+#include "Components/Camera/G2ICameraControllerComponent.h"
+#include "GameFramework/Pawn.h"
 
 void AG2IPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
+	bAutoManageActiveCameraTarget = false;
 	if (IsLocalPlayerController())
 	{
 		if (const ULocalPlayer *LocalPlayer = GetLocalPlayer())
@@ -38,6 +41,9 @@ void AG2IPlayerController::SetupInputComponent()
 
 				EnhancedInputComponent->BindAction(ToggleCrouchAction, ETriggerEvent::Started, this, &ThisClass::ToggleCrouch);
 
+				EnhancedInputComponent->BindAction(SwitchCameraBehaviorAction, ETriggerEvent::Started, this,
+					&ThisClass::SwitchCameraBehavior);
+				
 				EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ThisClass::Look);
 
 				EnhancedInputComponent->BindAction(SelectNextCharacterAction, ETriggerEvent::Started, this,
@@ -64,11 +70,25 @@ void AG2IPlayerController::OnPossess(APawn* NewPawn)
 	Super::OnPossess(NewPawn);
 
 	SetupCharacterActorComponents();
+	SetupCamera();
+}
+
+void AG2IPlayerController::SetRotationTowardsCamera(const UCameraComponent& Camera)
+{
+	FVector NewCameraForwardVector = Camera.GetForwardVector();
+	NewCameraForwardVector.Z = 0.0f;
+	const FRotator NewControlRotator = NewCameraForwardVector.Rotation();
+	SetControlRotation(NewControlRotator);
+}
+
+TObjectPtr<UG2ICameraDefaultsParameters> AG2IPlayerController::GetCameraDefaultsParameters()
+{
+	return CameraDefaultsParameters;
 }
 
 void AG2IPlayerController::SetupCharacterActorComponents()
 {
-	CameraComponents.Empty();
+	ThirdPersonCameraComponents.Empty();
 	MovementComponents.Empty();
 	InteractionComponents.Empty();
 	
@@ -77,9 +97,14 @@ void AG2IPlayerController::SetupCharacterActorComponents()
 		TSet<UActorComponent*> CharacterComponents = CurrentCharacter->GetComponents();
 		for (UActorComponent *Component : CharacterComponents)
 		{
-			if (Component->Implements<UG2ICameraInputInterface>())
+			if (Component->Implements<UG2ICameraControllerInputInterface>())
 			{
-				CameraComponents.Add(Component);
+				CameraControllersComponent = Component;
+			}
+
+			if (Component->Implements<UG2IThirdPersonCameraInputInterface>())
+			{
+				ThirdPersonCameraComponents.Add(Component);
 			}
 			
 			if (Component->Implements<UG2IMovementInputInterface>())
@@ -99,40 +124,51 @@ void AG2IPlayerController::SetupCharacterActorComponents()
 	}
 }
 
-void AG2IPlayerController::Look(const FInputActionValue& Value)
+void AG2IPlayerController::SetupCamera()
 {
-	for (UActorComponent *Component : CameraComponents)
+	if (!ensure(CameraControllersComponent))
 	{
-		if (Component->Implements<UG2ICameraInputInterface>())
-		{
-			const FVector2D LookAxisVector = Value.Get<FVector2D>();
-			const float Yaw = LookAxisVector.X;
-			const float Pitch = LookAxisVector.Y;
-			IG2ICameraInputInterface::Execute_LookAction(Component, Yaw, Pitch);
-		}
-		else
-		{
-			UE_LOG(LogG2I, Warning, TEXT("In Camera Components array %s contains component which not "
-								"implemented needed interface"), *Component->GetName());
-		}
+		UE_LOG(LogG2I, Error, TEXT("Player Controller %s hasn't camera controller component"), *GetName());
+		return;
 	}
+	
+	if (!ensure(CameraControllersComponent->Implements<UG2ICameraControllerInputInterface>()))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Camera controller component %s doesn't implement camera controller"
+							 "interface in %s"), *CameraControllersComponent->GetName(), *GetName());
+		return;
+	}
+	
+	IG2ICameraControllerInputInterface::Execute_SetupCurrentCamera(CameraControllersComponent);
 }
 
-void AG2IPlayerController::MouseLook(const FInputActionValue& Value)
+void AG2IPlayerController::SwitchCameraBehavior()
 {
-	for (UActorComponent *Component : CameraComponents)
+	if (!ensure(CameraControllersComponent))
 	{
-		if (Component->Implements<UG2ICameraInputInterface>())
+		UE_LOG(LogG2I, Error, TEXT("Player Controller %s hasn't camera controller component"), *GetName());
+		return;
+	}
+	
+	if (!ensure(CameraControllersComponent->Implements<UG2ICameraControllerInputInterface>()))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Camera controller component %s doesn't implement camera controller"
+							 "interface in %s"), *CameraControllersComponent->GetName(), *GetName());
+		return;
+	}
+
+	IG2ICameraControllerInputInterface::Execute_SwitchCameraBehavior(CameraControllersComponent);
+}
+
+void AG2IPlayerController::Look(const FInputActionValue& Value)
+{
+	for (UActorComponent *Component : ThirdPersonCameraComponents)
+	{
+		if (Component->Implements<UG2IThirdPersonCameraInputInterface>())
 		{
 			const FVector2D LookAxisVector = Value.Get<FVector2D>();
 			const float Yaw = LookAxisVector.X;
-			const float Pitch = LookAxisVector.Y;
-			IG2ICameraInputInterface::Execute_LookAction(Component, Yaw, Pitch);
-		}
-		else
-		{
-			UE_LOG(LogG2I, Warning, TEXT("In Camera Components array %s contains component which not "
-								"implemented needed interface"), *Component->GetName());
+			IG2IThirdPersonCameraInputInterface::Execute_LookAction(Component, Yaw);
 		}
 	}
 }

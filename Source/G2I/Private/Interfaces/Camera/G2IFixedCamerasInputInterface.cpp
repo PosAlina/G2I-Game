@@ -1,0 +1,1 @@
+#include "Interfaces/Camera/G2IFixedCamerasInputInterface.h"
