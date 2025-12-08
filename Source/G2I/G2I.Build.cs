@@ -19,7 +19,8 @@ public class G2I : ModuleRules
 			"GameplayStateTreeModule",
 			"UMG",
 			"Slate",
-			"AIModule"
+			"AIModule",
+			"CinematicCamera"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
