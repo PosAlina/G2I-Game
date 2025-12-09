@@ -23,11 +23,14 @@ public:
 	UPROPERTY(EditAnywhere)
 	bool bHasPipe = true;
 
-	/*UPROPERTY(EditAnywhere)
-	bool bHasValve = true;
+	UPROPERTY(EditAnywhere)
+	bool bHasValve = false;
 
 	UPROPERTY(EditAnywhere)
 	bool bHasTechnicalHole = false;
+
+	UPROPERTY(EditAnywhere, meta=(ToolTip="Enables interaction with that pipe (i.e. Grab/Insert)"))
+	bool bCanInteractAtSplinePoint = false;
 
 	// Properties for connecting pipes
 
@@ -35,7 +38,7 @@ public:
 	bool bSendToOtherPipe = false;
 
 	UPROPERTY(EditAnywhere)
-	bool bResieveFromOtherPipe = false;*/
+	bool bResieveFromOtherPipe = false;
 
 };
 
