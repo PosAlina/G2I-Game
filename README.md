@@ -17,7 +17,7 @@
 
 ## Ссылка на текущий билд:
 
-https://drive.google.com/file/d/1uaT-tj0Z8lByGASC6votWx\_J6SaInfOe/view?usp=sharing
+https://drive.google.com/file/d/1uaT-tj0Z8lByGASC6votWx_J6SaInfOe/view?usp=sharing
 
 * Shipping - для игры
 * Development - для тестирования
