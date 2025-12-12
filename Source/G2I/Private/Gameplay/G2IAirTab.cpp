@@ -19,11 +19,16 @@ AG2IAirTab::AG2IAirTab()
 
 void AG2IAirTab::OnConstruction(const FTransform& Transform)
 {
+	BoxComponent->Owner = this;
+
 	BoxComponent->SetBoxExtent(BoxExtents);
+	if (StaticMeshComponent->GetStaticMesh())
+		BoxComponent->SetRelativeLocation(StaticMeshComponent->GetStaticMesh()->GetBounds().GetBox().GetCenter());
 }
 
 void AG2IAirTab::RecieveAir_Implementation(AActor* sender, bool bAirPassed)
 {
+	UE_LOG(LogG2I, Warning, TEXT("RecieveAir called in %s"), *GetActorNameOrLabel());
 	AirSendersMap.Add(sender, bAirPassed);
 	ChangeActivated(CheckIfEnoughAir());
 }
@@ -53,6 +58,7 @@ void AG2IAirTab::ChangeActivated(bool newActivated)
 {
 	if (bActivated != newActivated)
 	{
+		UE_LOG(LogG2I, Log, TEXT("bActivated changed in %s to %d"), *GetActorNameOrLabel(), newActivated);
 		bActivated = newActivated;
 		bActivated ? ActivateActors() : DeactivateActors();
 	}
@@ -63,7 +69,7 @@ void AG2IAirTab::ActivateActors()
 	for (auto& Actor : ActorsToActivate)
 		IG2IActivationInterface::Execute_Activate(Actor);
 
-	UE_LOG(LogG2I, Log, TEXT("Activated actors from %s"), *GetActorNameOrLabel());
+	UE_LOG(LogG2I, Log, TEXT("Activated %d actors from %s"), ActorsToActivate.Num(), *GetActorNameOrLabel());
 }
 
 void AG2IAirTab::DeactivateActors()
@@ -71,6 +77,6 @@ void AG2IAirTab::DeactivateActors()
 	for (auto& Actor : ActorsToActivate)
 		IG2IActivationInterface::Execute_Deactivate(Actor);
 
-	UE_LOG(LogG2I, Log, TEXT("Deactivated actors from %s"), *GetActorNameOrLabel());
+	UE_LOG(LogG2I, Log, TEXT("Deactivated %d actors from %s"), ActorsToActivate.Num(), *GetActorNameOrLabel());
 }
 

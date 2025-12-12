@@ -7,7 +7,7 @@
 #include "Interfaces/G2IAirReciever.h"
 #include "G2IAirTab.generated.h"
 
-UCLASS()
+UCLASS(Blueprintable, Placeable)
 class G2I_API AG2IAirTab : public AActor, public IG2IAirReciever
 {
 	GENERATED_BODY()
@@ -36,23 +36,25 @@ public:
 	void DeactivateActors();
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tab")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> StaticMeshComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tab")
-	int NumOfPipesNeeded;
+	int NumOfPipesNeeded = 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tab")
 	TArray<TObjectPtr<AActor>> ActorsToActivate;
 
+	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<UG2IPipesBoxComponent> BoxComponent;
 
-private:
-	UPROPERTY(VisibleAnywhere)
-	bool bActivated;
+protected:
+	UPROPERTY(VisibleAnywhere, Category = "Tab")
+	bool bActivated = false;
 
 	UPROPERTY(EditAnywhere, Category = "Tab")
 	FVector BoxExtents = FVector(15.f);
 
+	UPROPERTY()
 	TMap<TObjectPtr<AActor>, bool> AirSendersMap;
 };
