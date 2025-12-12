@@ -17,7 +17,7 @@ public:
 
 	// Properties for generating meshes
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY()
 	float TestValue = 0.0f;
 
 	UPROPERTY(EditAnywhere)
@@ -44,7 +44,7 @@ public:
 	bool bSendToOtherPipe = false;
 
 	UPROPERTY(EditAnywhere)
-	bool bResieveFromOtherPipe = false;
+	bool bReceiveFromOtherPipe = false;
 };
 
 /*

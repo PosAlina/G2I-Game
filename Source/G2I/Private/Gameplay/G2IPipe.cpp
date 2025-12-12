@@ -30,10 +30,14 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 	// Resize and empty array of spline meshes
 	SplineMeshes.Reset(SplineComponent->GetNumberOfSplinePoints());
 
-	// Destroy & empty valve actors
+	// Destroy & empty valves & holes actors
 	for (auto& Valve : ValvesMap)
 		Valve.Key->Destroy();
 	ValvesMap.Empty();
+	
+	for (auto& Hole : HolesSet)
+		Hole->Destroy();
+	HolesSet.Empty();
 
 	// Empty array of component boxes for sending/resieving air
 	sendingBoxComponents.Empty();
@@ -86,7 +90,7 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 			UG2IPipesBoxComponent* box = SpawnPipesBoxComponent(PointIndex, false);
 			sendingBoxComponents.Add(box);
 		}
-		if (GetResieveFromOtherPipeAtSplinePoint(PointIndex))
+		if (GetReceiveFromOtherPipeAtSplinePoint(PointIndex))
 		{
 			UG2IPipesBoxComponent* box = SpawnPipesBoxComponent(PointIndex, true);
 			sendingBoxComponents.Add(box);
@@ -127,11 +131,11 @@ void AG2IPipe::RecieveAir_Implementation(AActor* sender, bool bAirPassed)
 	}
 
 	// Set new value in ResieveAir Map
-	ResieveAirMap.Add(sender, bAirPassed);
+	ReceiveAirMap.Add(sender, bAirPassed);
 
 	// If at least one sender has air - then this pipe also has air
 	// so we look for TRUE value in our map
-	for (auto& resievedPair : ResieveAirMap)
+	for (auto& resievedPair : ReceiveAirMap)
 	{
 		if (!resievedPair.Value)
 			continue;
@@ -161,7 +165,7 @@ void AG2IPipe::OnPipeBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* O
 		if (!box->bRecieves && otherBox->bRecieves)
 			ActorsToSendAirTo.AddUnique(otherBox->Owner);
 		else if (box->bRecieves && !otherBox->bRecieves)
-			ResieveAirMap.Add(otherBox->Owner, false);
+			ReceiveAirMap.Add(otherBox->Owner, false);
 	}
 }
 
@@ -174,7 +178,7 @@ void AG2IPipe::OnPipeEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* Oth
 		if (box->bRecieves)
 			ActorsToSendAirTo.Remove(box->Owner);
 		else
-			ResieveAirMap.Remove(box->Owner);
+			ReceiveAirMap.Remove(box->Owner);
 	}
 }
 
@@ -201,7 +205,7 @@ void AG2IPipe::ChangeCanAirPass(bool newCanAirPass)
 	}
 }
 
-void AG2IPipe::CheckIfCanAirPass()
+void AG2IPipe::CheckIfAirCanPass()
 {
 	// Check for pipes with holes
 	for (auto& PointsValue : PointParams)
@@ -319,6 +323,14 @@ bool AG2IPipe::GetHasTechnicalHoleAtSplinePoint(int32 PointIndex)
 	return false;
 }
 
+void AG2IPipe::SetHasTechnicalHoleAtSplinePoint(int32 PointIndex, bool newHasTechnicalHole)
+{
+	if (ensure(PointParams.IsValidIndex(PointIndex)))
+	{
+		PointParams[PointIndex].bHasTechnicalHole = newHasTechnicalHole;
+	}
+}
+
 bool AG2IPipe::GetCanInteractAtSplinePoint(int32 PointIndex)
 {
 	/*if (ensure(SplineMetadata))
@@ -347,11 +359,11 @@ bool AG2IPipe::GetSendToOtherPipeAtSplinePoint(int32 PointIndex)
 	return false;
 }
 
-bool AG2IPipe::GetResieveFromOtherPipeAtSplinePoint(int32 PointIndex)
+bool AG2IPipe::GetReceiveFromOtherPipeAtSplinePoint(int32 PointIndex)
 {
 	if (ensure(PointParams.IsValidIndex(PointIndex)))
 	{
-		return PointParams[PointIndex].bResieveFromOtherPipe;
+		return PointParams[PointIndex].bReceiveFromOtherPipe;
 	}
 
 	return false;
@@ -377,7 +389,7 @@ void AG2IPipe::SpawnTechnicalHole(int32 PointIndex)
 {
 	if (!HoleClass)
 	{
-		UE_LOG(LogG2I, Error, TEXT("Hole Actor isn't set in %s"), *GetActorNameOrLabel());
+		UE_LOG(LogG2I, Error, TEXT("Hole Class isn't set in %s"), *GetActorNameOrLabel());
 		return;
 	}
 
@@ -387,10 +399,9 @@ void AG2IPipe::SpawnTechnicalHole(int32 PointIndex)
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	// Spawn Hole Actor
-	AG2IValve* Hole = GetWorld()->SpawnActor<AG2IValve>(ValveClass, GetLocationBetweenPoints(PointIndex, PointIndex + 1, ESplineCoordinateSpace::World), GetValveRotationAtSplinePoint(PointIndex), SpawnParams);
-	Hole->OwnerActor = this;
-	Hole->bActivated = GetValveActivatedAtSplinePoint(PointIndex);
-	ValvesMap.Add(Hole, Hole->bActivated);
+	AG2ITechnicalHole* Hole = GetWorld()->SpawnActor<AG2ITechnicalHole>(HoleClass, GetLocationBetweenPoints(PointIndex, PointIndex + 1, ESplineCoordinateSpace::World), FRotator(0.f), SpawnParams);
+	Hole->PointIndex = PointIndex;
+	HolesSet.Add(Hole);
 }
 
 void AG2IPipe::SpawnValve(int32 PointIndex)
@@ -507,6 +518,6 @@ void AG2IPipe::OnValveActivationChanged(AG2IValve* Valve, bool newActivated)
 {
 	ValvesMap.Add(Valve, newActivated);
 
-	CheckIfCanAirPass();
+	CheckIfAirCanPass();
 }
 
