@@ -11,7 +11,7 @@
 #include "Interfaces/G2IAirReciever.h"
 #include "G2IPipe.generated.h"
 
-UCLASS()
+UCLASS(Blueprintable, Placeable)
 class G2I_API AG2IPipe : public AActor, public IG2IAirReciever
 {
 	GENERATED_BODY()
@@ -24,6 +24,8 @@ public:
 	void OnConstruction(const FTransform& Transform) override;
 
 	void BeginPlay() override;
+
+	void OnPostWorldInit(UWorld* World, FWorldInitializationValues WorldInitializationValues);
 
 	// Interface function
 	void RecieveAir_Implementation(AActor* sender, bool bAirPassed) override;
@@ -102,6 +104,8 @@ private:
 	void RegenerateMesh(UStaticMesh* Mesh, int32 PointIndex);
 	FVector GetLocationBetweenPoints(int32 Point1, int32 Point2, ESplineCoordinateSpace::Type CoordSpace = ESplineCoordinateSpace::Local);
 	void ForceOverlaps();
+	void SpawnValves();
+	void SpawnTechnicalHoles();
 
 public:
 	// If I couldn't fix spline metadata to show up in the Editor - use this
