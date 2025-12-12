@@ -93,8 +93,8 @@ public:
 
 private:
 	UG2IPipesBoxComponent* SpawnPipesBoxComponent(int32 PointIndex, bool bRecieves);
-	void SpawnHoleComponent(int32 PointIndex);
-	void SpawnValveComponent(int32 PointIndex);
+	void SpawnTechnicalHole(int32 PointIndex);
+	void SpawnValve(int32 PointIndex);
 	void SpawnInteractableBoxComponent(int32 PointIndex);
 	void GenerateMesh(UStaticMesh* Mesh, int32 PointIndex);
 	void RegenerateMesh(UStaticMesh* Mesh, int32 PointIndex);
@@ -115,11 +115,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spline")
 	TEnumAsByte<ESplineMeshAxis::Type> ForwardAxis;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Defaults", 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pipe",
 		meta=(ToolTip="Base component for Valves. Defines interaction responses"))
 	TSubclassOf<AG2IValve> ValveClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Defaults", 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pipe",
 		meta = (ToolTip = "Base actor for Technical Holes. Defines interaction responses"))
 	TSubclassOf<USceneComponent> HoleClass;
 
@@ -130,16 +130,16 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UG2IPipesSplineComponent> SplineComponent;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Pipe")
 	float CollisionBoxExtent = 15.f;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category = "Pipe")
 	bool bHasAirPassed = true;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category = "Pipe")
 	bool bCanAirPassThrough = true;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category = "Pipe")
 	TArray<UG2IPipesBoxComponent*> sendingBoxComponents;
 
 	// Array of Spline Mesh Components for swaping meshes at certain points
@@ -148,10 +148,10 @@ private:
 
 	TMap<TObjectPtr<AG2IValve>, bool> ValvesMap;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category = "Pipe")
 	TArray <TObjectPtr<AActor>> ActorsToSendAirTo;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category = "Pipe")
 	TMap<TObjectPtr<AActor>, bool> ResieveAirMap;
 
 #if WITH_EDITORONLY_DATA

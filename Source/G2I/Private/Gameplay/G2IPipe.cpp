@@ -30,10 +30,12 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 	// Resize and empty array of spline meshes
 	SplineMeshes.Reset(SplineComponent->GetNumberOfSplinePoints());
 
+	// Destroy & empty valve actors
 	for (auto& Valve : ValvesMap)
 		Valve.Key->Destroy();
 	ValvesMap.Empty();
 
+	// Empty array of component boxes for sending/resieving air
 	sendingBoxComponents.Empty();
 
 	if (!DefaultMesh)
@@ -67,7 +69,7 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 			if (BrokenMesh)
 			{
 				bCanAirPassThrough = false;
-				SpawnHoleComponent(PointIndex);
+				SpawnTechnicalHole(PointIndex);
 				Mesh = BrokenMesh;
 			}
 			else
@@ -76,7 +78,7 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 		else
 			Mesh = DefaultMesh;
 		if (GetHasValveAtSplinePoint(PointIndex))
-			SpawnValveComponent(PointIndex);
+			SpawnValve(PointIndex);
 		
 		// Pipes Connections
 		if (GetSendToOtherPipeAtSplinePoint(PointIndex))
@@ -371,7 +373,7 @@ UG2IPipesBoxComponent* AG2IPipe::SpawnPipesBoxComponent(int32 PointIndex, bool b
 	return collisionBox;
 }
 
-void AG2IPipe::SpawnHoleComponent(int32 PointIndex)
+void AG2IPipe::SpawnTechnicalHole(int32 PointIndex)
 {
 	if (!HoleClass)
 	{
@@ -379,10 +381,19 @@ void AG2IPipe::SpawnHoleComponent(int32 PointIndex)
 		return;
 	}
 
-	// TODO
+	// Set Spawn Settings
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+	// Spawn Hole Actor
+	AG2IValve* Hole = GetWorld()->SpawnActor<AG2IValve>(ValveClass, GetLocationBetweenPoints(PointIndex, PointIndex + 1, ESplineCoordinateSpace::World), GetValveRotationAtSplinePoint(PointIndex), SpawnParams);
+	Hole->OwnerActor = this;
+	Hole->bActivated = GetValveActivatedAtSplinePoint(PointIndex);
+	ValvesMap.Add(Hole, Hole->bActivated);
 }
 
-void AG2IPipe::SpawnValveComponent(int32 PointIndex)
+void AG2IPipe::SpawnValve(int32 PointIndex)
 {
 	if (!ValveClass)
 	{

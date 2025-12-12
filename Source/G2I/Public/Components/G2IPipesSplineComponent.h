@@ -26,6 +26,12 @@ public:
 	UPROPERTY(EditAnywhere)
 	bool bHasValve = false;
 
+	UPROPERTY(EditAnywhere, meta=(EditCondition = "bHasValve", EditConditionHides))
+	FRotator ValveRotation = FRotator(0.0, 0.0, 0.0);
+
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "bHasValve", EditConditionHides))
+	bool bValveActivated = false;
+
 	UPROPERTY(EditAnywhere)
 	bool bHasTechnicalHole = false;
 
@@ -39,7 +45,6 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	bool bResieveFromOtherPipe = false;
-
 };
 
 /*

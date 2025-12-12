@@ -19,6 +19,6 @@ class G2I_API IG2IAirReciever
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Pipes)
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Pipes")
 	void RecieveAir(AActor* sender, bool bAirPassed);
 };
