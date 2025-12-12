@@ -10,6 +10,6 @@ public class G2IEditorTarget : TargetRules
 		Type = TargetType.Editor;
 		DefaultBuildSettings = BuildSettingsVersion.V5;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_6;
-		ExtraModuleNames.Add("G2I");
+		ExtraModuleNames.AddRange(["G2I", "G2IEditor"]);
 	}
 }
