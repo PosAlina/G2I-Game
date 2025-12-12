@@ -15,6 +15,7 @@ AG2IValve::AG2IValve()
 
 void AG2IValve::BeginPlay()
 {
+	Super::BeginPlay();
 	PassActivationToPipe();
 }
 
