@@ -104,6 +104,7 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 
 void AG2IPipe::BeginPlay()
 {
+	Super::BeginPlay();
 	GetWorld()->OnWorldBeginPlay.AddUObject(this, &AG2IPipe::ForceOverlaps);
 }
 
@@ -149,7 +150,7 @@ void AG2IPipe::RecieveAir_Implementation(AActor* sender, bool bAirPassed)
 
 void AG2IPipe::OnPipeBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Emerald, FString::Printf(TEXT("Overlap in %s Actor!"), *GetActorNameOrLabel()));
+	UE_LOG(LogG2I, Log, TEXT("Overlap in %s Actor"), *GetActorNameOrLabel());
 
 	UG2IPipesBoxComponent* box = Cast<UG2IPipesBoxComponent>(OverlappedComp);
 	UG2IPipesBoxComponent* otherBox = Cast<UG2IPipesBoxComponent>(OtherComp);
@@ -171,7 +172,7 @@ void AG2IPipe::OnPipeBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* O
 
 void AG2IPipe::OnPipeEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("End overlap in %s Actor"), *GetActorNameOrLabel()));
+	UE_LOG(LogG2I, Log, TEXT("End overlap in %s Actor"), *GetActorNameOrLabel());
 
 	if (UG2IPipesBoxComponent* box = Cast<UG2IPipesBoxComponent>(OtherComp))
 	{
@@ -232,7 +233,7 @@ void AG2IPipe::CheckIfAirCanPass()
 
 bool AG2IPipe::GetAir() const
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, FString::Printf(TEXT("AIR: %d in %s Actor"), bHasAirPassed && bCanAirPassThrough, *GetActorNameOrLabel()));
+	UE_LOG(LogG2I, Log, TEXT("bAir changed to %d in %s Actor"), bHasAirPassed && bCanAirPassThrough, *GetActorNameOrLabel());
 	return bHasAirPassed && bCanAirPassThrough;
 }
 
