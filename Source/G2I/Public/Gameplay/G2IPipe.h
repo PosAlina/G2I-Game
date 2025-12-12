@@ -5,7 +5,7 @@
 #include "Components/SplineMeshComponent.h"
 #include "Components/G2IPipesSplineComponent.h"
 #include "Components/G2IPipesBoxComponent.h"
-//#include "Components/G2IValveComponent.h"
+#include "Gameplay/G2ITechnicalHole.h"
 #include "Gameplay/G2IValve.h"
 #include "SplinesMetadata/G2IPipesSplineMetadata.h"
 #include "Interfaces/G2IAirReciever.h"
@@ -57,7 +57,7 @@ public:
 	void ChangeCanAirPass(bool newCanAirPass);
 
 	UFUNCTION(BlueprintCallable)
-	void CheckIfCanAirPass();
+	void CheckIfAirCanPass();
 
 	// If true - air is passing through pipe.
 	// ! Call this function if you want to know if air is reaching next pipe or some other object.
@@ -81,6 +81,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool GetHasTechnicalHoleAtSplinePoint(int32 PointIndex);
+	UFUNCTION(BlueprintCallable)
+	void SetHasTechnicalHoleAtSplinePoint(int32 PointIndex, bool newHasTechnicalHole);
 
 	UFUNCTION(BlueprintCallable)
 	bool GetCanInteractAtSplinePoint(int32 PointIndex);
@@ -89,7 +91,7 @@ public:
 	bool GetSendToOtherPipeAtSplinePoint(int32 PointIndex);
 
 	UFUNCTION(BlueprintCallable)
-	bool GetResieveFromOtherPipeAtSplinePoint(int32 PointIndex);
+	bool GetReceiveFromOtherPipeAtSplinePoint(int32 PointIndex);
 
 private:
 	UG2IPipesBoxComponent* SpawnPipesBoxComponent(int32 PointIndex, bool bRecieves);
@@ -116,12 +118,12 @@ public:
 	TEnumAsByte<ESplineMeshAxis::Type> ForwardAxis;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pipe",
-		meta=(ToolTip="Base component for Valves. Defines interaction responses"))
+		meta=(ToolTip="Base component for Valves. Defines interaction responses & other properties."))
 	TSubclassOf<AG2IValve> ValveClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pipe",
-		meta = (ToolTip = "Base actor for Technical Holes. Defines interaction responses"))
-	TSubclassOf<USceneComponent> HoleClass;
+		meta = (ToolTip = "Base actor for Technical Holes. Defines interaction responses & other properties."))
+	TSubclassOf<AG2ITechnicalHole> HoleClass;
 
 private:
 	UPROPERTY(Instanced, Export)
@@ -146,13 +148,16 @@ private:
 	// during runtime and not regenerating whole spline
 	TArray<TObjectPtr<USplineMeshComponent>> SplineMeshes;
 
+	UPROPERTY(VisibleAnywhere, Category = "Pipe")
 	TMap<TObjectPtr<AG2IValve>, bool> ValvesMap;
+	UPROPERTY(VisibleAnywhere, Category = "Pipe")
+	TSet<TObjectPtr<AG2ITechnicalHole>> HolesSet;
 
 	UPROPERTY(VisibleAnywhere, Category = "Pipe")
-	TArray <TObjectPtr<AActor>> ActorsToSendAirTo;
+	TArray<TObjectPtr<AActor>> ActorsToSendAirTo;
 
 	UPROPERTY(VisibleAnywhere, Category = "Pipe")
-	TMap<TObjectPtr<AActor>, bool> ResieveAirMap;
+	TMap<TObjectPtr<AActor>, bool> ReceiveAirMap;
 
 #if WITH_EDITORONLY_DATA
 	UPROPERTY(EditAnywhere, Category = "Spline")
