@@ -15,7 +15,7 @@ AG2IPipe::AG2IPipe()
 
 void AG2IPipe::OnConstruction(const FTransform& Transform)
 {
-	// Clearing arrays
+	// Setting up arrays
 
 	//  *** Remove when custom spline metadata gets fixed ***
 	if (PointParams.Num() < SplineComponent->GetNumberOfSplinePoints())
@@ -25,19 +25,15 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 		for (int i = 0; i < diff; i++)
 			PointParams.AddDefaulted();
 	}
+	else if (PointParams.Num() > SplineComponent->GetNumberOfSplinePoints())
+	{
+		int diff = PointParams.Num() - SplineComponent->GetNumberOfSplinePoints();
+		PointParams.RemoveAt<int>(SplineComponent->GetNumberOfSplinePoints(), diff, true);
+	}
 	//  *** End of the custom metadata crutch ***
 
 	// Resize and empty array of spline meshes
 	SplineMeshes.Reset(SplineComponent->GetNumberOfSplinePoints());
-
-	// Destroy & empty valves & holes actors
-	for (auto& Valve : ValvesMap)
-		Valve.Key->Destroy();
-	ValvesMap.Empty();
-	
-	for (auto& Hole : HolesSet)
-		Hole->Destroy();
-	HolesSet.Empty();
 
 	// Empty array of component boxes for sending/resieving air
 	sendingBoxComponents.Empty();
@@ -67,13 +63,24 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 			continue;
 		}
 
-		// *	Holes / Valves Checks
+#if WITH_EDITOR
+		// *	Valves Check & Spawn Editor arrow for easy-to-see edits
+		if (GetHasValveAtSplinePoint(PointIndex))
+		{
+			UArrowComponent* Arrow = (UArrowComponent*)(AddComponentByClass(UArrowComponent::StaticClass(), false, SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local), false));
+			Arrow->SetRelativeLocationAndRotation(GetLocationBetweenPoints(PointIndex, PointIndex + 1),
+				GetValveRotationAtSplinePoint(PointIndex).Add(90., 0., 0.));
+			Arrow->SetRelativeScale3D(FVector(0.3));
+			Arrow->ArrowColor = FColor::Cyan;
+		}
+#endif
+
+		// *    Holes Check
 		if (GetHasTechnicalHoleAtSplinePoint(PointIndex))
 		{
 			if (BrokenMesh)
 			{
 				bCanAirPassThrough = false;
-				SpawnTechnicalHole(PointIndex);
 				Mesh = BrokenMesh;
 			}
 			else
@@ -81,10 +88,8 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 		}
 		else
 			Mesh = DefaultMesh;
-		if (GetHasValveAtSplinePoint(PointIndex))
-			SpawnValve(PointIndex);
 		
-		// Pipes Connections
+		// *    Pipes Connections
 		if (GetSendToOtherPipeAtSplinePoint(PointIndex))
 		{
 			UG2IPipesBoxComponent* box = SpawnPipesBoxComponent(PointIndex, false);
@@ -105,11 +110,38 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 void AG2IPipe::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// Since Holes and Valves are actors - we spawn them during Runtime
+	SpawnValves();
+	SpawnTechnicalHoles();
+	
+	// Forcing Overlap Events for pipes to connect to each other
+	if (!GetWorld())
+	{
+		UE_LOG(LogG2I, Warning, TEXT("No World during %s's BeginPlay"), *GetActorNameOrLabel());
+		FWorldDelegates::OnPostWorldInitialization.AddUObject(this, &AG2IPipe::OnPostWorldInit);
+	}
+	else if (GetWorld()->bBegunPlay)
+	{
+		UE_LOG(LogG2I, Warning, TEXT("World's BeginPlay already ended during %s's BeginPlay"), *GetActorNameOrLabel());
+		ForceOverlaps();
+	}
+	else
+	{
+		UE_LOG(LogG2I, Warning, TEXT("World exists but still hasn't played BeginPlay during %s's BeginPlay"), *GetActorNameOrLabel());
+		GetWorld()->OnWorldBeginPlay.AddUObject(this, &AG2IPipe::ForceOverlaps);
+	}
+}
+
+void AG2IPipe::OnPostWorldInit(UWorld* World, FWorldInitializationValues WorldInitializationValues)
+{
 	GetWorld()->OnWorldBeginPlay.AddUObject(this, &AG2IPipe::ForceOverlaps);
 }
 
 void AG2IPipe::ForceOverlaps()
 {
+	UE_LOG(LogG2I, Log, TEXT("ForceOverlaps called in %s"), *GetActorNameOrLabel());
+
 	// Force call overlap events
 	for (UG2IPipesBoxComponent* box : sendingBoxComponents)
 	{
@@ -121,6 +153,24 @@ void AG2IPipe::ForceOverlaps()
 	}
 
 	SendAir();
+}
+
+void AG2IPipe::SpawnValves()
+{
+	for (int i = 0; i < SplineComponent->GetNumberOfSplinePoints() - 1; i++)
+	{
+		if (GetHasValveAtSplinePoint(i))
+			SpawnValve(i);
+	}
+}
+
+void AG2IPipe::SpawnTechnicalHoles()
+{
+	for (int i = 0; i < SplineComponent->GetNumberOfSplinePoints() - 1; i++)
+	{
+		if (GetHasTechnicalHoleAtSplinePoint(i))
+			SpawnTechnicalHole(i);
+	}
 }
 
 void AG2IPipe::RecieveAir_Implementation(AActor* sender, bool bAirPassed)
@@ -409,7 +459,7 @@ void AG2IPipe::SpawnValve(int32 PointIndex)
 {
 	if (!ValveClass)
 	{
-		UE_LOG(LogG2I, Warning, TEXT("Valve Class isn't set in %s"), *GetActorNameOrLabel());
+		UE_LOG(LogG2I, Error, TEXT("Valve Class isn't set in %s"), *GetActorNameOrLabel());
 		return;
 	}
 
@@ -464,7 +514,6 @@ void AG2IPipe::GenerateMesh(UStaticMesh* Mesh, int32 PointIndex)
 	if (bShowDebugUpArrows)
 	{
 		UArrowComponent* Arrow = (UArrowComponent*)(AddComponentByClass(UArrowComponent::StaticClass(), false, SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local), false));
-		Arrow->SetRelativeTransform(SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local));
 		Arrow->SetRelativeLocationAndRotation(SplineComponent->GetLocationAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local),
 			SplineMesh->GetSplineUpDir().Rotation());
 	}
