@@ -5,6 +5,8 @@
 #include "Components/SplineMeshComponent.h"
 #include "Components/G2IPipesSplineComponent.h"
 #include "Components/G2IPipesBoxComponent.h"
+//#include "Components/G2IValveComponent.h"
+#include "Gameplay/G2IValve.h"
 #include "SplinesMetadata/G2IPipesSplineMetadata.h"
 #include "Interfaces/G2IAirReciever.h"
 #include "G2IPipe.generated.h"
@@ -42,16 +44,20 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SendAir();
 
+	void OnValveActivationChanged(AG2IValve* Valve, bool newActivated);
+
 	// Getters & Setters
 
 	TObjectPtr<UG2IPipesSplineMetadata> GetSplineMetadata() const;
 
-	// If true - air is passed to that pipe (from other pipes or whatever).
 	UFUNCTION(BlueprintCallable)
-	bool GetHasAirPassed() const;
+	void ChangeAirPassed(bool newAirPassed);
 
 	UFUNCTION(BlueprintCallable)
-	void SetHasAirPassed(bool newAirPassed);
+	void ChangeCanAirPass(bool newCanAirPass);
+
+	UFUNCTION(BlueprintCallable)
+	void CheckIfCanAirPass();
 
 	// If true - air is passing through pipe.
 	// ! Call this function if you want to know if air is reaching next pipe or some other object.
@@ -68,6 +74,12 @@ public:
 	bool GetHasValveAtSplinePoint(int32 PointIndex);
 
 	UFUNCTION(BlueprintCallable)
+	FRotator GetValveRotationAtSplinePoint(int32 PointIndex);
+
+	UFUNCTION(BlueprintCallable)
+	bool GetValveActivatedAtSplinePoint(int32 PointIndex);
+
+	UFUNCTION(BlueprintCallable)
 	bool GetHasTechnicalHoleAtSplinePoint(int32 PointIndex);
 
 	UFUNCTION(BlueprintCallable)
@@ -81,17 +93,17 @@ public:
 
 private:
 	UG2IPipesBoxComponent* SpawnPipesBoxComponent(int32 PointIndex, bool bRecieves);
-	void SpawnHoleActor(int32 PointIndex);
-	void SpawnValveActor(int32 PointIndex);
+	void SpawnHoleComponent(int32 PointIndex);
+	void SpawnValveComponent(int32 PointIndex);
 	void SpawnInteractableBoxComponent(int32 PointIndex);
 	void GenerateMesh(UStaticMesh* Mesh, int32 PointIndex);
 	void RegenerateMesh(UStaticMesh* Mesh, int32 PointIndex);
-	FVector GetLocationBetweenPoints(int32 Point1, int32 Point2);
+	FVector GetLocationBetweenPoints(int32 Point1, int32 Point2, ESplineCoordinateSpace::Type CoordSpace = ESplineCoordinateSpace::Local);
+	void ForceOverlaps();
 
 public:
 	// If I couldn't fix spline metadata to show up in the Editor - use this
-	// ! DO NOT CHANGE THE SIZE, it updates automatically when spline is edited.
-	UPROPERTY(EditAnywhere, Category = "Spline")
+	UPROPERTY(EditAnywhere, Category = "Spline", meta=(ToolTip="Parameters for spline points. DO NOT CHANGE THE SIZE, it updates automatically when spline is edited."))
 	TArray<FG2IPipesSplinePointParams> PointParams;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spline")
@@ -104,12 +116,12 @@ public:
 	TEnumAsByte<ESplineMeshAxis::Type> ForwardAxis;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Defaults", 
-		meta=(ToolTip="Base actor for Valves. Defines interaction responses"))
-	TObjectPtr<AActor> ValveActor;
+		meta=(ToolTip="Base component for Valves. Defines interaction responses"))
+	TSubclassOf<AG2IValve> ValveClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Defaults", 
 		meta = (ToolTip = "Base actor for Technical Holes. Defines interaction responses"))
-	TObjectPtr<AActor> HoleActor;
+	TSubclassOf<USceneComponent> HoleClass;
 
 private:
 	UPROPERTY(Instanced, Export)
@@ -121,14 +133,26 @@ private:
 	UPROPERTY(EditAnywhere)
 	float CollisionBoxExtent = 15.f;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(VisibleAnywhere)
 	bool bHasAirPassed = true;
 
+	UPROPERTY(VisibleAnywhere)
 	bool bCanAirPassThrough = true;
+
+	UPROPERTY(VisibleAnywhere)
 	TArray<UG2IPipesBoxComponent*> sendingBoxComponents;
+
+	// Array of Spline Mesh Components for swaping meshes at certain points
+	// during runtime and not regenerating whole spline
+	TArray<TObjectPtr<USplineMeshComponent>> SplineMeshes;
+
+	TMap<TObjectPtr<AG2IValve>, bool> ValvesMap;
 
 	UPROPERTY(VisibleAnywhere)
 	TArray <TObjectPtr<AActor>> ActorsToSendAirTo;
+
+	UPROPERTY(VisibleAnywhere)
+	TMap<TObjectPtr<AActor>, bool> ResieveAirMap;
 
 #if WITH_EDITORONLY_DATA
 	UPROPERTY(EditAnywhere, Category = "Spline")
