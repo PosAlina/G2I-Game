@@ -3,13 +3,24 @@
 #include "CoreMinimal.h"
 #include "G2IMovementInputInterface.h"
 #include "Components/ActorComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "G2ICharacterMovementComponent.generated.h"
 
+class UCharacterMovementComponent;
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class G2I_API UG2ICharacterMovementComponent : public UActorComponent, public IG2IMovementInputInterface
+class G2I_API UG2ICharacterMovementComponent : public UCharacterMovementComponent, public IG2IMovementInputInterface
 {
 	GENERATED_BODY()
 
+private:
+
+	UPROPERTY()
+	TObjectPtr<ACharacter> Owner;
+
+	UPROPERTY()
+	TObjectPtr<UWorld> World;
+	
 protected:
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FJumpingDelegate);
 
@@ -76,6 +87,8 @@ public:
 	UFUNCTION()
 	void HandleMovingInteraction(float SpeedChange);
 
+	bool CanUncrouch() const;
+
 protected:
 
 	void BindingToDelegates();
@@ -86,5 +99,4 @@ protected:
 private:
 
 	void PreInitializationDefaults();
-	
 };
