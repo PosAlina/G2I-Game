@@ -10,7 +10,6 @@ class UG2ICharacterCollisionComponent;
 class UG2IPassingThroughObjectsComponent;
 class UG2IThirdPersonCameraComponent;
 class UG2IInteractionComponent;
-class UG2ICharacterMovementComponent;
 
 /**
  *  Second player`s character. Daughter.
@@ -25,9 +24,6 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Collision, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UG2ICharacterCollisionComponent> CollisionComp;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UG2ICharacterMovementComponent> MovementComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UG2IInteractionComponent> InteractionComp;
@@ -44,7 +40,7 @@ public:
 
 public:
 
-	AG2ICharacterDaughter();
+	explicit AG2ICharacterDaughter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	
 };
 
