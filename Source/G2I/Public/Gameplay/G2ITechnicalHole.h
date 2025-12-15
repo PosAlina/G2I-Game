@@ -42,7 +42,9 @@ private:
 	UPROPERTY()
 	FTimerHandle TimerHandle;
 
+	UPROPERTY()
 	TObjectPtr<USceneComponent> RootSceneComponent;
 
+	UPROPERTY()
 	TObjectPtr<UBoxComponent> BoxComponent;
 };
