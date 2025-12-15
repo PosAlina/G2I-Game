@@ -144,7 +144,7 @@ private:
 	bool bCanAirPassThrough = true;
 
 	UPROPERTY(VisibleAnywhere, Category = "Pipe|Debug")
-	TArray <TObjectPtr<UG2IPipesBoxComponent>> sendingBoxComponents;
+	TArray <TObjectPtr<UG2IPipesBoxComponent>> SendingBoxComponents;
 
 	// Array of Spline Mesh Components for swaping meshes at certain points
 	// during runtime and not regenerating whole spline

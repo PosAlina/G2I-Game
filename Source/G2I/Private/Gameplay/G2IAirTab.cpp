@@ -35,13 +35,13 @@ void AG2IAirTab::RecieveAir_Implementation(AActor* Sender, bool bAirPassed)
 
 bool AG2IAirTab::CheckIfEnoughAir()
 {
-	int counter = 0;
+	int Counter = 0;
 
 	for (auto& SenderPair : AirSendersMap)
 	{
 		if (SenderPair.Value)
 		{
-			if (++counter >= NumOfPipesNeeded)
+			if (++Counter >= NumOfPipesNeeded)
 				return true;
 		}
 	}

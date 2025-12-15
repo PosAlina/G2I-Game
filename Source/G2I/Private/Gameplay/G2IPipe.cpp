@@ -34,7 +34,7 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 	else if (PointParams.Num() > SplineComponent->GetNumberOfSplinePoints())
 	{
 		int Diff = PointParams.Num() - SplineComponent->GetNumberOfSplinePoints();
-		PointParams.RemoveAt<int>(SplineComponent->GetNumberOfSplinePoints(), Diff, true);
+		PointParams.RemoveAt<int>(SplineComponent->GetNumberOfSplinePoints(), Diff, EAllowShrinking::Yes);
 	}
 	//  *** End of the custom metadata crutch ***
 
@@ -42,7 +42,7 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 	SplineMeshes.Reset(SplineComponent->GetNumberOfSplinePoints());
 
 	// Empty array of component boxes for sending/resieving air
-	sendingBoxComponents.Empty();
+	SendingBoxComponents.Empty();
 
 	if (!DefaultMesh)
 	{
@@ -99,12 +99,12 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 		if (GetSendToOtherPipeAtSplinePoint(PointIndex))
 		{
 			UG2IPipesBoxComponent* Box = SpawnPipesBoxComponent(PointIndex, false);
-			sendingBoxComponents.Add(Box);
+			SendingBoxComponents.Add(Box);
 		}
 		if (GetReceiveFromOtherPipeAtSplinePoint(PointIndex))
 		{
 			UG2IPipesBoxComponent* Box = SpawnPipesBoxComponent(PointIndex, true);
-			sendingBoxComponents.Add(Box);
+			SendingBoxComponents.Add(Box);
 		}
 
 		// Generating Mesh
@@ -129,7 +129,7 @@ void AG2IPipe::BeginPlay()
 	}
 
 	// Forcing Overlap Events for pipes to connect to each other
-	if (GetWorld()->bBegunPlay)
+	if (GetWorld()->GetBegunPlay())
 	{
 		UE_LOG(LogG2I, Verbose, TEXT("World's BeginPlay already ended during %s's BeginPlay, starting ForceOverlaps"), *GetActorNameOrLabel());
 		ForceOverlaps();
@@ -146,7 +146,7 @@ void AG2IPipe::ForceOverlaps()
 	UE_LOG(LogG2I, Log, TEXT("ForceOverlaps called in %s"), *GetActorNameOrLabel());
 
 	// Force call overlap events
-	for (UG2IPipesBoxComponent* Box : sendingBoxComponents)
+	for (UG2IPipesBoxComponent* Box : SendingBoxComponents)
 	{
 		TArray<UPrimitiveComponent*> OverlappingComponents;
 		Box->GetOverlappingComponents(OverlappingComponents);
@@ -427,22 +427,22 @@ bool AG2IPipe::GetReceiveFromOtherPipeAtSplinePoint(int32 PointIndex)
 
 UG2IPipesBoxComponent* AG2IPipe::SpawnPipesBoxComponent(int32 PointIndex, bool bRecieves)
 {
-	UG2IPipesBoxComponent* collisionBox = (UG2IPipesBoxComponent*)(AddComponentByClass(UG2IPipesBoxComponent::StaticClass(), false, SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local), false));
+	UG2IPipesBoxComponent* CollisionBox = (UG2IPipesBoxComponent*)(AddComponentByClass(UG2IPipesBoxComponent::StaticClass(), false, SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local), false));
 	
-	if (ensure(collisionBox))
+	if (ensure(CollisionBox))
 	{
-		collisionBox->SetBoxExtent(FVector(CollisionBoxExtent));
-		collisionBox->bRecieves = bRecieves;
-		collisionBox->Owner = this;
-		collisionBox->PointIndex = PointIndex;
-		collisionBox->SetGenerateOverlapEvents(true);
-		collisionBox->SetCollisionObjectType(ECC_GameTraceChannel3);					 // Pipes Custom Collision
-		collisionBox->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Overlap); // Pipes Custom Collision
-		collisionBox->OnComponentBeginOverlap.AddDynamic(this, &AG2IPipe::OnPipeBeginOverlap);
-		collisionBox->OnComponentEndOverlap.AddDynamic(this, &AG2IPipe::OnPipeEndOverlap);
+		CollisionBox->SetBoxExtent(FVector(CollisionBoxExtent));
+		CollisionBox->bRecieves = bRecieves;
+		CollisionBox->Owner = this;
+		CollisionBox->PointIndex = PointIndex;
+		CollisionBox->SetGenerateOverlapEvents(true);
+		CollisionBox->SetCollisionObjectType(ECC_GameTraceChannel3);					 // Pipes Custom Collision
+		CollisionBox->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Overlap); // Pipes Custom Collision
+		CollisionBox->OnComponentBeginOverlap.AddDynamic(this, &AG2IPipe::OnPipeBeginOverlap);
+		CollisionBox->OnComponentEndOverlap.AddDynamic(this, &AG2IPipe::OnPipeEndOverlap);
 	}
 
-	return collisionBox;
+	return CollisionBox;
 }
 
 void AG2IPipe::SpawnTechnicalHole(int32 PointIndex)
