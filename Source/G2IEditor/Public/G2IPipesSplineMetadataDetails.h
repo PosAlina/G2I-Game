@@ -44,6 +44,9 @@ private:
 	//TOptional<bool> bHasTechnicalHoleValue;
 	//TOptional<bool> bSendToOtherPipeValue;
 	//TOptional<bool> bResieveFromOtherPipeValue;
-	USplineComponent* SplineComp = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<USplineComponent> SplineComp = nullptr;
+
 	TSet<int32> SelectedKeys;
 };
