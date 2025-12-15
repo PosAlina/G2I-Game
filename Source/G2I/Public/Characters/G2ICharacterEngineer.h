@@ -8,7 +8,6 @@ class UG2IFixedCamerasComponent;
 class UG2IThirdPersonCameraComponent;
 class UG2ICameraControllerComponent;
 class UG2ICharacterCollisionComponent;
-class UG2ICharacterMovementComponent;
 class UG2IInteractionComponent;
 
 /**
@@ -25,9 +24,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Collision, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UG2ICharacterCollisionComponent> CollisionComp;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UG2ICharacterMovementComponent> MovementComp;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UG2IInteractionComponent> InteractionComp;
 
@@ -43,7 +39,7 @@ public:
 
 protected:
 
-	AG2ICharacterEngineer();
+	explicit AG2ICharacterEngineer(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	
 };
 
