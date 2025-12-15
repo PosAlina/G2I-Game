@@ -129,14 +129,17 @@ UG2IPipesSplineMetadata* FG2IPipesSplineMetadataDetails::GetMetadata() const
 
 void FG2IPipesSplineMetadataDetails::OnSetValues(FG2IPipesSplineMetadataDetails& Details)
 {
-	Details.SplineComp->GetSplinePointsMetadata()->Modify();
-	Details.SplineComp->UpdateSpline();
-	Details.SplineComp->bSplineHasBeenEdited = true;
-	static FProperty* SplineCurvesProperty = FindFProperty<FProperty>(USplineComponent::StaticClass(), GET_MEMBER_NAME_CHECKED(USplineComponent, SplineCurves));
-	FComponentVisualizer::NotifyPropertyModified(Details.SplineComp, SplineCurvesProperty);
-	Details.Update(Details.SplineComp, Details.SelectedKeys);
+	if (SplineComp)
+	{
+		Details.SplineComp->GetSplinePointsMetadata()->Modify();
+		Details.SplineComp->UpdateSpline();
+		Details.SplineComp->bSplineHasBeenEdited = true;
+		static FProperty* SplineCurvesProperty = FindFProperty<FProperty>(USplineComponent::StaticClass(), GET_MEMBER_NAME_CHECKED(USplineComponent, SplineCurves));
+		FComponentVisualizer::NotifyPropertyModified(Details.SplineComp, SplineCurvesProperty);
+		Details.Update(Details.SplineComp, Details.SelectedKeys);
 
-	GEditor->RedrawLevelEditingViewports(true);
+		GEditor->RedrawLevelEditingViewports(true);
+	}
 }
 
 TOptional<bool> FG2IPipesSplineMetadataDetails::GetHasPipe() const
