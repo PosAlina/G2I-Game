@@ -26,10 +26,10 @@ void AG2IAirTab::OnConstruction(const FTransform& Transform)
 		BoxComponent->SetRelativeLocation(StaticMeshComponent->GetStaticMesh()->GetBounds().GetBox().GetCenter());
 }
 
-void AG2IAirTab::RecieveAir_Implementation(AActor* sender, bool bAirPassed)
+void AG2IAirTab::RecieveAir_Implementation(AActor* Sender, bool bAirPassed)
 {
 	UE_LOG(LogG2I, Warning, TEXT("RecieveAir called in %s"), *GetActorNameOrLabel());
-	AirSendersMap.Add(sender, bAirPassed);
+	AirSendersMap.Add(Sender, bAirPassed);
 	ChangeActivated(CheckIfEnoughAir());
 }
 
@@ -54,12 +54,12 @@ bool AG2IAirTab::GetActivated() const
 	return bActivated;
 }
 
-void AG2IAirTab::ChangeActivated(bool newActivated)
+void AG2IAirTab::ChangeActivated(bool bNewActivated)
 {
-	if (bActivated != newActivated)
+	if (bActivated != bNewActivated)
 	{
-		UE_LOG(LogG2I, Log, TEXT("bActivated changed in %s to %d"), *GetActorNameOrLabel(), newActivated);
-		bActivated = newActivated;
+		UE_LOG(LogG2I, Log, TEXT("bActivated changed in %s to %d"), *GetActorNameOrLabel(), bNewActivated);
+		bActivated = bNewActivated;
 		bActivated ? ActivateActors() : DeactivateActors();
 	}
 }

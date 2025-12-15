@@ -8,11 +8,11 @@
 #include "Gameplay/G2ITechnicalHole.h"
 #include "Gameplay/G2IValve.h"
 #include "SplinesMetadata/G2IPipesSplineMetadata.h"
-#include "Interfaces/G2IAirReciever.h"
+#include "Interfaces/G2IAirRecieverInterface.h"
 #include "G2IPipe.generated.h"
 
 UCLASS(Blueprintable, Placeable)
-class G2I_API AG2IPipe : public AActor, public IG2IAirReciever
+class G2I_API AG2IPipe : public AActor, public IG2IAirRecieverInterface
 {
 	GENERATED_BODY()
 	
@@ -25,10 +25,8 @@ public:
 
 	void BeginPlay() override;
 
-	void OnPostWorldInit(UWorld* World, FWorldInitializationValues WorldInitializationValues);
-
 	// Interface function
-	void RecieveAir_Implementation(AActor* sender, bool bAirPassed) override;
+	void RecieveAir_Implementation(AActor* Sender, bool bAirPassed) override;
 
 	UFUNCTION()
 	void OnPipeBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -37,26 +35,26 @@ public:
 	void OnPipeEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	UFUNCTION(BlueprintCallable)
-	void AddActorToSendAirTo(AActor* actor);
+	void AddActorToSendAirTo(AActor* Actor);
 
 	UFUNCTION(BlueprintCallable)
-	void RemoveActorFromSendAirTo(AActor* actor);
+	void RemoveActorFromSendAirTo(AActor* Actor);
 
 	// Passes Air to all actors in ActorsToSendAirTo.
 	UFUNCTION(BlueprintCallable)
 	void SendAir();
 
-	void OnValveActivationChanged(AG2IValve* Valve, bool newActivated);
+	void OnValveActivationChanged(AG2IValve* Valve, bool bNewActivated);
 
 	// Getters & Setters
 
 	TObjectPtr<UG2IPipesSplineMetadata> GetSplineMetadata() const;
 
 	UFUNCTION(BlueprintCallable)
-	void ChangeAirPassed(bool newAirPassed);
+	void ChangeAirPassed(bool bNewAirPassed);
 
 	UFUNCTION(BlueprintCallable)
-	void ChangeCanAirPass(bool newCanAirPass);
+	void ChangeCanAirPass(bool bNewCanAirPass);
 
 	UFUNCTION(BlueprintCallable)
 	void CheckIfAirCanPass();
@@ -84,7 +82,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool GetHasTechnicalHoleAtSplinePoint(int32 PointIndex);
 	UFUNCTION(BlueprintCallable)
-	void SetHasTechnicalHoleAtSplinePoint(int32 PointIndex, bool newHasTechnicalHole);
+	void SetHasTechnicalHoleAtSplinePoint(int32 PointIndex, bool bNewHasTechnicalHole);
 
 	UFUNCTION(BlueprintCallable)
 	bool GetCanInteractAtSplinePoint(int32 PointIndex);
@@ -136,35 +134,36 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UG2IPipesSplineComponent> SplineComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Pipe")
+	UPROPERTY(EditAnywhere, Category = "Pipe|Debug")
 	float CollisionBoxExtent = 15.f;
 
-	UPROPERTY(VisibleAnywhere, Category = "Pipe")
+	UPROPERTY(VisibleAnywhere, Category = "Pipe|Debug")
 	bool bHasAirPassed = true;
 
-	UPROPERTY(VisibleAnywhere, Category = "Pipe")
+	UPROPERTY(VisibleAnywhere, Category = "Pipe|Debug")
 	bool bCanAirPassThrough = true;
 
-	UPROPERTY(VisibleAnywhere, Category = "Pipe")
-	TArray<UG2IPipesBoxComponent*> sendingBoxComponents;
+	UPROPERTY(VisibleAnywhere, Category = "Pipe|Debug")
+	TArray <TObjectPtr<UG2IPipesBoxComponent>> sendingBoxComponents;
 
 	// Array of Spline Mesh Components for swaping meshes at certain points
 	// during runtime and not regenerating whole spline
+	UPROPERTY()
 	TArray<TObjectPtr<USplineMeshComponent>> SplineMeshes;
 
-	UPROPERTY(VisibleAnywhere, Category = "Pipe")
+	UPROPERTY(VisibleAnywhere, Category = "Pipe|Debug")
 	TMap<TObjectPtr<AG2IValve>, bool> ValvesMap;
-	UPROPERTY(VisibleAnywhere, Category = "Pipe")
+	UPROPERTY(VisibleAnywhere, Category = "Pipe|Debug")
 	TSet<TObjectPtr<AG2ITechnicalHole>> HolesSet;
 
-	UPROPERTY(VisibleAnywhere, Category = "Pipe")
+	UPROPERTY(VisibleAnywhere, Category = "Pipe|Debug")
 	TArray<TObjectPtr<AActor>> ActorsToSendAirTo;
 
-	UPROPERTY(VisibleAnywhere, Category = "Pipe")
+	UPROPERTY(VisibleAnywhere, Category = "Pipe|Debug")
 	TMap<TObjectPtr<AActor>, bool> ReceiveAirMap;
 
 #if WITH_EDITORONLY_DATA
-	UPROPERTY(EditAnywhere, Category = "Spline")
+	UPROPERTY(EditAnywhere, Category = "Spline|Debug")
 	bool bShowDebugUpArrows = false;
 #endif
 };

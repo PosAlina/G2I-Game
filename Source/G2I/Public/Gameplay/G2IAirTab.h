@@ -4,11 +4,11 @@
 #include "G2I.h"
 #include "GameFramework/Actor.h"
 #include "Components/G2IPipesBoxComponent.h"
-#include "Interfaces/G2IAirReciever.h"
+#include "Interfaces/G2IAirRecieverInterface.h"
 #include "G2IAirTab.generated.h"
 
 UCLASS(Blueprintable, Placeable)
-class G2I_API AG2IAirTab : public AActor, public IG2IAirReciever
+class G2I_API AG2IAirTab : public AActor, public IG2IAirRecieverInterface
 {
 	GENERATED_BODY()
 	
@@ -18,7 +18,7 @@ public:
 
 	void OnConstruction(const FTransform& Transform) override;
 
-	void RecieveAir_Implementation(AActor* sender, bool bAirPassed) override;
+	void RecieveAir_Implementation(AActor* Sender, bool bAirPassed) override;
 
 	UFUNCTION(BlueprintCallable)
 	bool CheckIfEnoughAir();
@@ -27,7 +27,7 @@ public:
 	bool GetActivated() const;
 
 	UFUNCTION(BlueprintCallable)
-	void ChangeActivated(bool newActivated);
+	void ChangeActivated(bool bNewActivated);
 
 	UFUNCTION(BlueprintCallable)
 	void ActivateActors();

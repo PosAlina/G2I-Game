@@ -15,20 +15,26 @@ AG2IPipe::AG2IPipe()
 
 void AG2IPipe::OnConstruction(const FTransform& Transform)
 {
+	if (!SplineComponent)
+	{
+		UE_LOG(LogG2I, Error, TEXT("SplineComponent is null in %s"), *GetActorNameOrLabel());
+		return;
+	}
+
 	// Setting up arrays
 
 	//  *** Remove when custom spline metadata gets fixed ***
 	if (PointParams.Num() < SplineComponent->GetNumberOfSplinePoints())
 	{
-		int diff = SplineComponent->GetNumberOfSplinePoints() - PointParams.Num();
+		int Diff = SplineComponent->GetNumberOfSplinePoints() - PointParams.Num();
 		PointParams.Reserve(SplineComponent->GetNumberOfSplinePoints());
-		for (int i = 0; i < diff; i++)
+		for (int i = 0; i < Diff; i++)
 			PointParams.AddDefaulted();
 	}
 	else if (PointParams.Num() > SplineComponent->GetNumberOfSplinePoints())
 	{
-		int diff = PointParams.Num() - SplineComponent->GetNumberOfSplinePoints();
-		PointParams.RemoveAt<int>(SplineComponent->GetNumberOfSplinePoints(), diff, true);
+		int Diff = PointParams.Num() - SplineComponent->GetNumberOfSplinePoints();
+		PointParams.RemoveAt<int>(SplineComponent->GetNumberOfSplinePoints(), Diff, true);
 	}
 	//  *** End of the custom metadata crutch ***
 
@@ -92,13 +98,13 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 		// *    Pipes Connections
 		if (GetSendToOtherPipeAtSplinePoint(PointIndex))
 		{
-			UG2IPipesBoxComponent* box = SpawnPipesBoxComponent(PointIndex, false);
-			sendingBoxComponents.Add(box);
+			UG2IPipesBoxComponent* Box = SpawnPipesBoxComponent(PointIndex, false);
+			sendingBoxComponents.Add(Box);
 		}
 		if (GetReceiveFromOtherPipeAtSplinePoint(PointIndex))
 		{
-			UG2IPipesBoxComponent* box = SpawnPipesBoxComponent(PointIndex, true);
-			sendingBoxComponents.Add(box);
+			UG2IPipesBoxComponent* Box = SpawnPipesBoxComponent(PointIndex, true);
+			sendingBoxComponents.Add(Box);
 		}
 
 		// Generating Mesh
@@ -115,27 +121,24 @@ void AG2IPipe::BeginPlay()
 	SpawnValves();
 	SpawnTechnicalHoles();
 	
-	// Forcing Overlap Events for pipes to connect to each other
+	// Checking world on null
 	if (!GetWorld())
 	{
-		UE_LOG(LogG2I, Warning, TEXT("No World during %s's BeginPlay"), *GetActorNameOrLabel());
-		FWorldDelegates::OnPostWorldInitialization.AddUObject(this, &AG2IPipe::OnPostWorldInit);
+		UE_LOG(LogG2I, Error, TEXT("No World during %s's BeginPlay"), *GetActorNameOrLabel());
+		return;
 	}
-	else if (GetWorld()->bBegunPlay)
+
+	// Forcing Overlap Events for pipes to connect to each other
+	if (GetWorld()->bBegunPlay)
 	{
-		UE_LOG(LogG2I, Warning, TEXT("World's BeginPlay already ended during %s's BeginPlay"), *GetActorNameOrLabel());
+		UE_LOG(LogG2I, Verbose, TEXT("World's BeginPlay already ended during %s's BeginPlay, starting ForceOverlaps"), *GetActorNameOrLabel());
 		ForceOverlaps();
 	}
 	else
 	{
-		UE_LOG(LogG2I, Warning, TEXT("World exists but still hasn't played BeginPlay during %s's BeginPlay"), *GetActorNameOrLabel());
+		UE_LOG(LogG2I, Verbose, TEXT("World exists but still hasn't played BeginPlay during %s's BeginPlay, subscribing to OnWorldBeginPlay"), *GetActorNameOrLabel());
 		GetWorld()->OnWorldBeginPlay.AddUObject(this, &AG2IPipe::ForceOverlaps);
 	}
-}
-
-void AG2IPipe::OnPostWorldInit(UWorld* World, FWorldInitializationValues WorldInitializationValues)
-{
-	GetWorld()->OnWorldBeginPlay.AddUObject(this, &AG2IPipe::ForceOverlaps);
 }
 
 void AG2IPipe::ForceOverlaps()
@@ -143,13 +146,13 @@ void AG2IPipe::ForceOverlaps()
 	UE_LOG(LogG2I, Log, TEXT("ForceOverlaps called in %s"), *GetActorNameOrLabel());
 
 	// Force call overlap events
-	for (UG2IPipesBoxComponent* box : sendingBoxComponents)
+	for (UG2IPipesBoxComponent* Box : sendingBoxComponents)
 	{
 		TArray<UPrimitiveComponent*> OverlappingComponents;
-		box->GetOverlappingComponents(OverlappingComponents);
+		Box->GetOverlappingComponents(OverlappingComponents);
 
-		for (UPrimitiveComponent* otherComp : OverlappingComponents)
-			OnPipeBeginOverlap(box, nullptr, otherComp, 0, false, FHitResult());
+		for (UPrimitiveComponent* OtherComp : OverlappingComponents)
+			OnPipeBeginOverlap(Box, nullptr, OtherComp, 0, false, FHitResult());
 	}
 
 	SendAir();
@@ -157,38 +160,40 @@ void AG2IPipe::ForceOverlaps()
 
 void AG2IPipe::SpawnValves()
 {
-	for (int i = 0; i < SplineComponent->GetNumberOfSplinePoints() - 1; i++)
-	{
-		if (GetHasValveAtSplinePoint(i))
-			SpawnValve(i);
-	}
+	if (ensure(SplineComponent))
+		for (int i = 0; i < SplineComponent->GetNumberOfSplinePoints() - 1; i++)
+		{
+			if (GetHasValveAtSplinePoint(i))
+				SpawnValve(i);
+		}
 }
 
 void AG2IPipe::SpawnTechnicalHoles()
 {
-	for (int i = 0; i < SplineComponent->GetNumberOfSplinePoints() - 1; i++)
-	{
-		if (GetHasTechnicalHoleAtSplinePoint(i))
-			SpawnTechnicalHole(i);
-	}
+	if (ensure(SplineComponent))
+		for (int i = 0; i < SplineComponent->GetNumberOfSplinePoints() - 1; i++)
+		{
+			if (GetHasTechnicalHoleAtSplinePoint(i))
+				SpawnTechnicalHole(i);
+		}
 }
 
-void AG2IPipe::RecieveAir_Implementation(AActor* sender, bool bAirPassed)
+void AG2IPipe::RecieveAir_Implementation(AActor* Sender, bool bAirPassed)
 {
-	if (ActorsToSendAirTo.Contains(sender))
+	if (ActorsToSendAirTo.Contains(Sender))
 	{
 		UE_LOG(LogG2I, Warning, TEXT("Loop detected in %s!"), *GetActorNameOrLabel());
 		return;
 	}
 
 	// Set new value in ResieveAir Map
-	ReceiveAirMap.Add(sender, bAirPassed);
+	ReceiveAirMap.Add(Sender, bAirPassed);
 
 	// If at least one sender has air - then this pipe also has air
 	// so we look for TRUE value in our map
-	for (auto& resievedPair : ReceiveAirMap)
+	for (auto& ResievedPair : ReceiveAirMap)
 	{
-		if (!resievedPair.Value)
+		if (!ResievedPair.Value)
 			continue;
 		
 		ChangeAirPassed(true);
@@ -202,34 +207,34 @@ void AG2IPipe::OnPipeBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* O
 {
 	UE_LOG(LogG2I, Log, TEXT("Overlap in %s Actor"), *GetActorNameOrLabel());
 
-	UG2IPipesBoxComponent* box = Cast<UG2IPipesBoxComponent>(OverlappedComp);
-	UG2IPipesBoxComponent* otherBox = Cast<UG2IPipesBoxComponent>(OtherComp);
+	UG2IPipesBoxComponent* Box = Cast<UG2IPipesBoxComponent>(OverlappedComp);
+	UG2IPipesBoxComponent* OtherBox = Cast<UG2IPipesBoxComponent>(OtherComp);
 
-	if (box && otherBox)
+	if (ensure(Box && OtherBox))
 	{
-		if (!otherBox->Owner)
+		if (!OtherBox->Owner)
 		{
-			UE_LOG(LogG2I, Warning, TEXT("Owner in Box Component %s is NULL."), *otherBox->GetName());
+			UE_LOG(LogG2I, Warning, TEXT("Owner in Box Component %s is NULL."), *OtherBox->GetName());
 			return;
 		}
 
-		if (!box->bRecieves && otherBox->bRecieves)
-			ActorsToSendAirTo.AddUnique(otherBox->Owner);
-		else if (box->bRecieves && !otherBox->bRecieves)
-			ReceiveAirMap.Add(otherBox->Owner, false);
+		if (!Box->bRecieves && OtherBox->bRecieves)
+			ActorsToSendAirTo.AddUnique(OtherBox->Owner);
+		else if (Box->bRecieves && !OtherBox->bRecieves)
+			ReceiveAirMap.Add(OtherBox->Owner, false);
 	}
 }
 
 void AG2IPipe::OnPipeEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	UE_LOG(LogG2I, Log, TEXT("End overlap in %s Actor"), *GetActorNameOrLabel());
+	UE_LOG(LogG2I, Verbose, TEXT("End overlap in %s Actor"), *GetActorNameOrLabel());
 
-	if (UG2IPipesBoxComponent* box = Cast<UG2IPipesBoxComponent>(OtherComp))
+	if (UG2IPipesBoxComponent* Box = Cast<UG2IPipesBoxComponent>(OtherComp))
 	{
-		if (box->bRecieves)
-			ActorsToSendAirTo.Remove(box->Owner);
+		if (Box->bRecieves)
+			ActorsToSendAirTo.Remove(Box->Owner);
 		else
-			ReceiveAirMap.Remove(box->Owner);
+			ReceiveAirMap.Remove(Box->Owner);
 	}
 }
 
@@ -238,20 +243,20 @@ TObjectPtr<UG2IPipesSplineMetadata> AG2IPipe::GetSplineMetadata() const
 	return SplineMetadata;
 }
 
-void AG2IPipe::ChangeAirPassed(bool newAirPassed)
+void AG2IPipe::ChangeAirPassed(bool bNewAirPassed)
 {
-	if (bHasAirPassed != newAirPassed)
+	if (bHasAirPassed != bNewAirPassed)
 	{
-		bHasAirPassed = newAirPassed;
+		bHasAirPassed = bNewAirPassed;
 		SendAir();
 	}
 }
 
-void AG2IPipe::ChangeCanAirPass(bool newCanAirPass)
+void AG2IPipe::ChangeCanAirPass(bool bNewCanAirPass)
 {
-	if (bCanAirPassThrough != newCanAirPass)
+	if (bCanAirPassThrough != bNewCanAirPass)
 	{
-		bCanAirPassThrough = newCanAirPass;
+		bCanAirPassThrough = bNewCanAirPass;
 		SendAir();
 	}
 }
@@ -283,7 +288,7 @@ void AG2IPipe::CheckIfAirCanPass()
 
 bool AG2IPipe::GetAir() const
 {
-	UE_LOG(LogG2I, Log, TEXT("bAir changed to %d in %s Actor"), bHasAirPassed && bCanAirPassThrough, *GetActorNameOrLabel());
+	UE_LOG(LogG2I, Verbose, TEXT("bAir changed to %d in %s Actor"), bHasAirPassed && bCanAirPassThrough, *GetActorNameOrLabel());
 	return bHasAirPassed && bCanAirPassThrough;
 }
 
@@ -423,15 +428,19 @@ bool AG2IPipe::GetReceiveFromOtherPipeAtSplinePoint(int32 PointIndex)
 UG2IPipesBoxComponent* AG2IPipe::SpawnPipesBoxComponent(int32 PointIndex, bool bRecieves)
 {
 	UG2IPipesBoxComponent* collisionBox = (UG2IPipesBoxComponent*)(AddComponentByClass(UG2IPipesBoxComponent::StaticClass(), false, SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local), false));
-	collisionBox->SetBoxExtent(FVector(CollisionBoxExtent));
-	collisionBox->bRecieves = bRecieves;
-	collisionBox->Owner = this;
-	collisionBox->PointIndex = PointIndex;
-	collisionBox->SetGenerateOverlapEvents(true);
-	collisionBox->SetCollisionObjectType(ECC_GameTraceChannel3);					 // Pipes Custom Collision
-	collisionBox->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Overlap); // Pipes Custom Collision
-	collisionBox->OnComponentBeginOverlap.AddDynamic(this, &AG2IPipe::OnPipeBeginOverlap);
-	collisionBox->OnComponentEndOverlap.AddDynamic(this, &AG2IPipe::OnPipeEndOverlap);
+	
+	if (ensure(collisionBox))
+	{
+		collisionBox->SetBoxExtent(FVector(CollisionBoxExtent));
+		collisionBox->bRecieves = bRecieves;
+		collisionBox->Owner = this;
+		collisionBox->PointIndex = PointIndex;
+		collisionBox->SetGenerateOverlapEvents(true);
+		collisionBox->SetCollisionObjectType(ECC_GameTraceChannel3);					 // Pipes Custom Collision
+		collisionBox->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Overlap); // Pipes Custom Collision
+		collisionBox->OnComponentBeginOverlap.AddDynamic(this, &AG2IPipe::OnPipeBeginOverlap);
+		collisionBox->OnComponentEndOverlap.AddDynamic(this, &AG2IPipe::OnPipeEndOverlap);
+	}
 
 	return collisionBox;
 }
@@ -450,9 +459,16 @@ void AG2IPipe::SpawnTechnicalHole(int32 PointIndex)
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	// Spawn Hole Actor
-	AG2ITechnicalHole* Hole = GetWorld()->SpawnActor<AG2ITechnicalHole>(HoleClass, GetLocationBetweenPoints(PointIndex, PointIndex + 1, ESplineCoordinateSpace::World), FRotator(0.f), SpawnParams);
-	Hole->PointIndex = PointIndex;
-	HolesSet.Add(Hole);
+	if (GetWorld())
+	{
+		AG2ITechnicalHole* Hole = GetWorld()->SpawnActor<AG2ITechnicalHole>(HoleClass, GetLocationBetweenPoints(PointIndex, PointIndex + 1, ESplineCoordinateSpace::World), FRotator(0.f), SpawnParams);
+
+		if (ensure(Hole))
+		{
+			Hole->PointIndex = PointIndex;
+			HolesSet.Add(Hole);
+		}
+	}
 }
 
 void AG2IPipe::SpawnValve(int32 PointIndex)
@@ -469,90 +485,113 @@ void AG2IPipe::SpawnValve(int32 PointIndex)
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	// Spawn Valve Actor
-	AG2IValve* Valve = GetWorld()->SpawnActor<AG2IValve>(ValveClass, GetLocationBetweenPoints(PointIndex, PointIndex + 1, ESplineCoordinateSpace::World), GetValveRotationAtSplinePoint(PointIndex), SpawnParams);
-	Valve->OwnerActor = this;
-	Valve->bActivated = GetValveActivatedAtSplinePoint(PointIndex);
-	ValvesMap.Add(Valve, Valve->bActivated);
+	if (GetWorld())
+	{
+		AG2IValve* Valve = GetWorld()->SpawnActor<AG2IValve>(ValveClass, GetLocationBetweenPoints(PointIndex, PointIndex + 1, ESplineCoordinateSpace::World), GetValveRotationAtSplinePoint(PointIndex), SpawnParams);
+
+		if (ensure(Valve))
+		{
+			Valve->OwnerActor = this;
+			Valve->bActivated = GetValveActivatedAtSplinePoint(PointIndex);
+			ValvesMap.Add(Valve, Valve->bActivated);
+		}
+	}
 }
 
 void AG2IPipe::SpawnInteractableBoxComponent(int32 PointIndex)
 {
-	UBoxComponent* collisionBox = (UBoxComponent*)(AddComponentByClass(UBoxComponent::StaticClass(), false, SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local), false));
+	UBoxComponent* CollisionBox = (UBoxComponent*)(AddComponentByClass(UBoxComponent::StaticClass(), false, SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local), false));
 	
-	collisionBox->SetRelativeLocation(GetLocationBetweenPoints(PointIndex, PointIndex + 1));
-	collisionBox->SetBoxExtent(FVector(CollisionBoxExtent));
-	// TODO
-	/*collisionBox->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Overlap); // Pipes Custom Collision
-	collisionBox->OnComponentBeginOverlap.AddDynamic(this, &AG2IPipe::OnPipeBeginOverlap);
-	collisionBox->OnComponentEndOverlap.AddDynamic(this, &AG2IPipe::OnPipeEndOverlap);*/
+	if (ensure(CollisionBox))
+	{
+		CollisionBox->SetRelativeLocation(GetLocationBetweenPoints(PointIndex, PointIndex + 1));
+		CollisionBox->SetBoxExtent(FVector(CollisionBoxExtent));
+		// TODO
+		/*collisionBox->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Overlap); // Pipes Custom Collision
+		collisionBox->OnComponentBeginOverlap.AddDynamic(this, &AG2IPipe::OnPipeBeginOverlap);
+		collisionBox->OnComponentEndOverlap.AddDynamic(this, &AG2IPipe::OnPipeEndOverlap);*/
+	}
 }
 
 void AG2IPipe::GenerateMesh(UStaticMesh* Mesh, int32 PointIndex)
 {
 	USplineMeshComponent* SplineMesh = NewObject<USplineMeshComponent>(this, USplineMeshComponent::StaticClass());
-	SplineMesh->SetStaticMesh(Mesh);
-	SplineMesh->SetMobility(EComponentMobility::Stationary);
-	SplineMesh->CreationMethod = EComponentCreationMethod::UserConstructionScript;
-	SplineMesh->RegisterComponentWithWorld(GetWorld());
-	SplineMesh->AttachToComponent(SplineComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
-	// Applying Mesh Transform
-	FVector StartPoint, EndPoint, StartTangent, EndTangent;
-	SplineComponent->GetLocationAndTangentAtSplinePoint(PointIndex, StartPoint, StartTangent, ESplineCoordinateSpace::Local);
-	SplineComponent->GetLocationAndTangentAtSplinePoint(PointIndex + 1, EndPoint, EndTangent, ESplineCoordinateSpace::Local);
-
-	SplineMesh->SetStartAndEnd(StartPoint, StartTangent, EndPoint, EndTangent, true);
-	SplineMesh->SetCollisionProfileName(TEXT("BlockAll"));
-
-	SplineMesh->SetForwardAxis(ForwardAxis);
-	SplineMesh->SetSplineUpDir(SplineComponent->GetUpVectorAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local));
-
-	SplineMeshes.Add(SplineMesh);
-
-	// Debug Arrows
-#if WITH_EDITOR
-	if (bShowDebugUpArrows)
+	if (ensure(SplineMesh))
 	{
-		UArrowComponent* Arrow = (UArrowComponent*)(AddComponentByClass(UArrowComponent::StaticClass(), false, SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local), false));
-		Arrow->SetRelativeLocationAndRotation(SplineComponent->GetLocationAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local),
-			SplineMesh->GetSplineUpDir().Rotation());
-	}
+		SplineMesh->SetStaticMesh(Mesh);
+		SplineMesh->SetMobility(EComponentMobility::Stationary);
+		SplineMesh->CreationMethod = EComponentCreationMethod::UserConstructionScript;
+		SplineMesh->RegisterComponentWithWorld(GetWorld());
+		SplineMesh->AttachToComponent(SplineComponent, FAttachmentTransformRules::KeepRelativeTransform);
+
+		// Applying Mesh Transform
+		FVector StartPoint, EndPoint, StartTangent, EndTangent;
+		SplineComponent->GetLocationAndTangentAtSplinePoint(PointIndex, StartPoint, StartTangent, ESplineCoordinateSpace::Local);
+		SplineComponent->GetLocationAndTangentAtSplinePoint(PointIndex + 1, EndPoint, EndTangent, ESplineCoordinateSpace::Local);
+
+		SplineMesh->SetStartAndEnd(StartPoint, StartTangent, EndPoint, EndTangent, true);
+		SplineMesh->SetCollisionProfileName(TEXT("BlockAll"));
+
+		SplineMesh->SetForwardAxis(ForwardAxis);
+		SplineMesh->SetSplineUpDir(SplineComponent->GetUpVectorAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local));
+
+		SplineMeshes.Add(SplineMesh);
+
+		// Debug Arrows
+#if WITH_EDITOR
+		if (bShowDebugUpArrows)
+		{
+			UArrowComponent* Arrow = (UArrowComponent*)(AddComponentByClass(UArrowComponent::StaticClass(), false, SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local), false));
+			if (Arrow)
+				Arrow->SetRelativeLocationAndRotation(SplineComponent->GetLocationAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local),
+					SplineMesh->GetSplineUpDir().Rotation());
+		}
 #endif // Debug Arrows
+	}
 }
 
 void AG2IPipe::RegenerateMesh(UStaticMesh* Mesh, int32 PointIndex)
 {
-	TObjectPtr<USplineMeshComponent> SplineMesh = SplineMeshes[PointIndex];
-
-	// If Spline has SplineMeshComponent at needed point
-	if (SplineMesh)
+	if (ensure(SplineMeshes.IsValidIndex(PointIndex)))
 	{
-		if (Mesh) // If Mesh is valid
-			SplineMesh->SetStaticMesh(Mesh); // Switch Static Mesh
-		else
+		TObjectPtr<USplineMeshComponent> SplineMesh = SplineMeshes[PointIndex];
+
+		// If Spline has SplineMeshComponent at needed point
+		if (SplineMesh)
 		{
-			SplineMesh->DestroyComponent();  // Destroy SplineMeshComponent
-			SplineMeshes[PointIndex] = nullptr;
+			if (Mesh) // If Mesh is valid
+				SplineMesh->SetStaticMesh(Mesh); // Switch Static Mesh
+			else
+			{
+				SplineMesh->DestroyComponent();  // Destroy SplineMeshComponent
+				SplineMeshes[PointIndex] = nullptr;
+			}
 		}
+		else
+			GenerateMesh(Mesh, PointIndex); // Generate Spline Mesh Component and set SM
 	}
-	else
-		GenerateMesh(Mesh, PointIndex); // Generate Spline Mesh Component and set SM
 }
 
 FVector AG2IPipe::GetLocationBetweenPoints(int32 Point1, int32 Point2, ESplineCoordinateSpace::Type CoordSpace)
 {
-	float pointsMiddle = (SplineComponent->GetDistanceAlongSplineAtSplinePoint(Point1) + SplineComponent->GetDistanceAlongSplineAtSplinePoint(Point2)) / 2.f;
-	return SplineComponent->GetLocationAtDistanceAlongSpline(pointsMiddle, CoordSpace);
+	if (ensure(SplineComponent))
+	{
+		float PointsMiddle = (SplineComponent->GetDistanceAlongSplineAtSplinePoint(Point1) + SplineComponent->GetDistanceAlongSplineAtSplinePoint(Point2)) / 2.f;
+		return SplineComponent->GetLocationAtDistanceAlongSpline(PointsMiddle, CoordSpace);
+	}
+	else
+		return FVector();
 }
 
-void AG2IPipe::AddActorToSendAirTo(AActor* actor)
+void AG2IPipe::AddActorToSendAirTo(AActor* Actor)
 {
-	ActorsToSendAirTo.Add(actor);
+	ActorsToSendAirTo.Add(Actor);
 }
 
-void AG2IPipe::RemoveActorFromSendAirTo(AActor* actor)
+void AG2IPipe::RemoveActorFromSendAirTo(AActor* Actor)
 {
-	ActorsToSendAirTo.Remove(actor);
+	ActorsToSendAirTo.Remove(Actor);
 }
 
 void AG2IPipe::SendAir()
@@ -560,13 +599,13 @@ void AG2IPipe::SendAir()
 	for (int i = 0; i < ActorsToSendAirTo.Num(); i++)
 	{
 		// In Execute_RecieveAir we also call SendAir()
-		IG2IAirReciever::Execute_RecieveAir(ActorsToSendAirTo[i], this, GetAir());
+		IG2IAirRecieverInterface::Execute_RecieveAir(ActorsToSendAirTo[i], this, GetAir());
 	}
 }
 
-void AG2IPipe::OnValveActivationChanged(AG2IValve* Valve, bool newActivated)
+void AG2IPipe::OnValveActivationChanged(AG2IValve* Valve, bool bNewActivated)
 {
-	ValvesMap.Add(Valve, newActivated);
+	ValvesMap.Add(Valve, bNewActivated);
 
 	CheckIfAirCanPass();
 }
