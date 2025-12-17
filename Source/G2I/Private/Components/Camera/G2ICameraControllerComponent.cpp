@@ -180,7 +180,8 @@ bool UG2ICameraControllerComponent::SetCamera(const UCameraComponent& NewCamera)
 		return false;
 	}
 	
-	PlayerController->SetViewTargetWithBlend(OwnerActor, CameraDefaultsParameters->CameraTransitionTime);
+	PlayerController->SetViewTargetWithBlend(OwnerActor, CameraDefaultsParameters->CameraTransitionTime,
+		VTBlend_Linear, 0, true);
 	PlayerController->SetRotationTowardsCamera(NewCamera);
 	return true;
 }
