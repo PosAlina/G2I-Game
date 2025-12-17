@@ -20,6 +20,6 @@ class G2I_API IG2IThirdPersonCameraInputInterface
 public:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Actions)
-	void LookAction(const float Yaw);
+	void LookAction(const float Yaw, const float Pitch);
 
 };

@@ -14,7 +14,13 @@ class G2I_API UG2ICameraDefaultsParameters : public UDataAsset
 
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess, Units="s"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (Units="s"))
 	float CameraTransitionTime = 0.5f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bIsInvertedCameraHorizontalRotation = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bIsInvertedCameraVerticalRotation = false;
 	
 };

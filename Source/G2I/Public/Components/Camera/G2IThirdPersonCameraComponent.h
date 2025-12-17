@@ -7,6 +7,7 @@
 #include "Components/SceneComponent.h"
 #include "G2IThirdPersonCameraComponent.generated.h"
 
+class UG2ICameraDefaultsParameters;
 class ACharacter;
 class UCameraComponent;
 class USpringArmComponent;
@@ -32,7 +33,7 @@ private:
 	FRemoveCameraDelegate OnRemoveCameraDelegate;
 
 	UPROPERTY()
-	FRotator RotationDefault = FRotator::ZeroRotator;
+	TObjectPtr<UG2ICameraDefaultsParameters> CameraDefaultsParameters;
 	
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, Category="Components", meta = (AllowPrivateAccess = "true"))
@@ -66,7 +67,7 @@ public:
 	virtual FRemoveCameraDelegate& GetRemoveCameraDelegate() override;
 	
 	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void LookAction_Implementation(const float Yaw) override;
+	virtual void LookAction_Implementation(const float Yaw, const float Pitch) override;
 
 private:
 	

@@ -201,7 +201,8 @@ void AG2IPlayerController::Look(const FInputActionValue& Value)
 		{
 			const FVector2D LookAxisVector = Value.Get<FVector2D>();
 			const float Yaw = LookAxisVector.X;
-			IG2IThirdPersonCameraInputInterface::Execute_LookAction(Component, Yaw);
+			const float Pitch = LookAxisVector.Y;
+			IG2IThirdPersonCameraInputInterface::Execute_LookAction(Component, Yaw, Pitch);
 		}
 	}
 }
