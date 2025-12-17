@@ -1,6 +1,7 @@
 
 #include "Gameplay/G2ITechnicalHole.h"
 #include "Characters/G2ICharacterEngineer.h"
+#include "Components/G2IHoleInteractionComponent.h"
 #include "Gameplay/G2IPipe.h"
 
 // Sets default values
@@ -21,7 +22,7 @@ AG2ITechnicalHole::AG2ITechnicalHole()
 
 bool AG2ITechnicalHole::CanInteract_Implementation(const ACharacter* Interactor)
 {
-	if (Cast<AG2ICharacterEngineer>(Interactor))
+	if (Interactor->FindComponentByClass<UG2IHoleInteractionComponent>())
 		return true;
 
 	return false;
