@@ -2,6 +2,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "G2I.h"
+#include "G2IPlayerCameraManager.h"
 #include "Camera/G2IThirdPersonCameraInputInterface.h"
 #include "G2IPlayerState.h"
 #include "Engine/LocalPlayer.h"
@@ -65,12 +66,44 @@ void AG2IPlayerController::SetupInputComponent()
 	}
 }
 
+AG2IPlayerController::AG2IPlayerController()
+{
+	PlayerCameraManagerClass = AG2IPlayerCameraManager::StaticClass();
+}
+
 void AG2IPlayerController::OnPossess(APawn* NewPawn)
 {
 	Super::OnPossess(NewPawn);
 
 	SetupCharacterActorComponents();
 	SetupCamera();
+}
+
+void AG2IPlayerController::OnUnPossess()
+{
+	// Differs from the default function by the absence of setting of the view target in Player Controller
+	if (APawn *CurrentPawn = GetPawn())
+	{
+		if (GetLocalRole() == ROLE_Authority)
+		{
+			CurrentPawn->SetReplicates(true);
+		}
+		CurrentPawn->UnPossessed();
+	}
+	SetPawn(nullptr);
+}
+
+void AG2IPlayerController::SetViewTargetWithBlend(class AActor* NewViewTarget, float BlendTime,
+	enum EViewTargetBlendFunction BlendFunc, float BlendExp, bool bLockOutgoing)
+{
+	if (GetViewTarget() != this)
+	{
+		Super::SetViewTargetWithBlend(NewViewTarget, BlendTime, BlendFunc, BlendExp, bLockOutgoing);
+	}
+	else
+	{
+		SetViewTarget(NewViewTarget);
+	}
 }
 
 void AG2IPlayerController::SetRotationTowardsCamera(const UCameraComponent& Camera)
