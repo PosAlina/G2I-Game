@@ -20,7 +20,6 @@ public:
 	AG2IPipe();
 
 	// Generates Meshes, Interactable Objects & Pipes Connections
-	// TODO: SPLIT LOGIC IN FUNCTIONS TO BE ABLE TO CALL IT DURING RUNTIME
 	void OnConstruction(const FTransform& Transform) override;
 
 	void BeginPlay() override;

@@ -2,6 +2,7 @@
 #include "Gameplay/G2IValve.h"
 #include "G2I.h"
 #include "Characters/G2ICharacterEngineer.h"
+#include "Components/G2IValveInteractionComponent.h"
 #include "Gameplay/G2IPipe.h"
 
 AG2IValve::AG2IValve()
@@ -21,7 +22,7 @@ void AG2IValve::BeginPlay()
 
 bool AG2IValve::CanInteract_Implementation(const ACharacter* Interactor)
 {
-	if (Cast<AG2ICharacterEngineer>(Interactor))
+	if (Interactor->FindComponentByClass<UG2IValveInteractionComponent>())
 		return true;
 
 	return false;

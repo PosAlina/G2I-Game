@@ -28,7 +28,7 @@ void AG2IAirTab::OnConstruction(const FTransform& Transform)
 
 void AG2IAirTab::RecieveAir_Implementation(AActor* Sender, bool bAirPassed)
 {
-	UE_LOG(LogG2I, Warning, TEXT("RecieveAir called in %s"), *GetActorNameOrLabel());
+	UE_LOG(LogG2I, Log, TEXT("RecieveAir called in %s"), *GetActorNameOrLabel());
 	AirSendersMap.Add(Sender, bAirPassed);
 	ChangeActivated(CheckIfEnoughAir());
 }

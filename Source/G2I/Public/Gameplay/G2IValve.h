@@ -17,7 +17,7 @@ public:
 
 	void BeginPlay() override;
 
-	// Only Engineer can interact
+	// Only characters with UG2IValveInteractionComponent can interact
 	bool CanInteract_Implementation(const ACharacter* Interactor) override;
 
 	// Basic implementation works only for pipes,

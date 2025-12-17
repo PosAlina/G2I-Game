@@ -17,7 +17,7 @@ public:
 	// Sets default values for this actor's properties
 	AG2ITechnicalHole();
 
-	// Only Engineer can interact
+	// Only characters with UG2IHoleInteractionComponent can interact
 	bool CanInteract_Implementation(const ACharacter* Interactor) override;
 
 	// Basic implementation works only for pipes,
