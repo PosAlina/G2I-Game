@@ -1,0 +1,70 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Components/SplineComponent.h"
+#include "G2IPipesSplineComponent.generated.h"
+
+
+/*
+Struct that holds custom data per spline point.
+*/
+USTRUCT()
+struct FG2IPipesSplinePointParams
+{
+	GENERATED_BODY()
+
+public:
+
+	// Properties for generating meshes
+
+	UPROPERTY()
+	float TestValue = 0.0f;
+
+	UPROPERTY(EditAnywhere)
+	bool bHasPipe = true;
+
+	UPROPERTY(EditAnywhere)
+	bool bHasValve = false;
+
+	UPROPERTY(EditAnywhere, meta=(EditCondition = "bHasValve", EditConditionHides))
+	FRotator ValveRotation = FRotator(0.0, 0.0, 0.0);
+
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "bHasValve", EditConditionHides))
+	bool bValveActivated = false;
+
+	UPROPERTY(EditAnywhere)
+	bool bHasTechnicalHole = false;
+
+	UPROPERTY(EditAnywhere, meta=(ToolTip="Enables interaction with that pipe (i.e. Grab/Insert)"))
+	bool bCanInteractAtSplinePoint = false;
+
+	// Properties for connecting pipes
+
+	UPROPERTY(EditAnywhere)
+	bool bSendToOtherPipe = false;
+
+	UPROPERTY(EditAnywhere)
+	bool bReceiveFromOtherPipe = false;
+};
+
+/*
+Spline component for PIPES that uses custom point parameters.
+*/
+UCLASS(meta = (BlueprintSpawnableComponent))
+class G2I_API UG2IPipesSplineComponent : public USplineComponent
+{
+	GENERATED_BODY()
+
+public:
+	virtual USplineMetadata* GetSplinePointsMetadata();
+	virtual const USplineMetadata* GetSplinePointsMetadata() const;
+	virtual void PostLoad() override;
+	virtual void PostDuplicate(bool bDuplicateForPie) override;
+
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+	virtual void PostEditImport() override;
+#endif
+
+	void FixupPoints();
+};

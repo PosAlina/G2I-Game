@@ -16,4 +16,6 @@ AG2ICharacterEngineer::AG2ICharacterEngineer(const FObjectInitializer& ObjectIni
 	CameraControllerComp = CreateDefaultSubobject<UG2ICameraControllerComponent>(TEXT("CameraControllerComp"));
 	ThirdPersonCameraComp = CreateDefaultSubobject<UG2IThirdPersonCameraComponent>(TEXT("ThirdPersonCameraComp"));
 	FixedCamerasComp = CreateDefaultSubobject<UG2IFixedCamerasComponent>(TEXT("FixedCamerasComp"));
+	ValveInteractionComp = CreateDefaultSubobject<UG2IValveInteractionComponent>(FName("ValveInteractionComp"));
+	HoleInteractionComp = CreateDefaultSubobject<UG2IHoleInteractionComponent>(FName("HoleInteractionComp"));
 }

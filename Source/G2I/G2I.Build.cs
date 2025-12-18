@@ -20,6 +20,7 @@ public class G2I : ModuleRules
 			"UMG",
 			"Slate",
 			"AIModule",
+      "GameplayTags",
 			"CinematicCamera"
 		});
 
