@@ -19,8 +19,9 @@ public class G2I : ModuleRules
 			"GameplayStateTreeModule",
 			"UMG",
 			"Slate",
-			"AIModule"
-		});
+			"AIModule",
+            "GameplayTags"
+        });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 
