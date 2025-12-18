@@ -13,4 +13,6 @@ AG2ICharacterEngineer::AG2ICharacterEngineer()
 	CameraComp->SetupAttachment(RootComponent);
 	MovementComp = CreateDefaultSubobject<UG2ICharacterMovementComponent>(FName("MovementComp"));
 	InteractionComp = CreateDefaultSubobject<UG2IInteractionComponent>(FName("InteractionComp"));
+	ValveInteractionComp = CreateDefaultSubobject<UG2IValveInteractionComponent>(FName("ValveInteractionComp"));
+	HoleInteractionComp = CreateDefaultSubobject<UG2IHoleInteractionComponent>(FName("HoleInteractionComp"));
 }

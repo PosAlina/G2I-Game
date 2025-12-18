@@ -2,6 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Components/G2IValveInteractionComponent.h"
+#include "Components/G2IHoleInteractionComponent.h"
 #include "G2ICharacterEngineer.generated.h"
 
 class UG2ICharacterCollisionComponent;
@@ -31,6 +33,12 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
 	UG2IInteractionComponent* InteractionComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UG2IValveInteractionComponent> ValveInteractionComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UG2IHoleInteractionComponent> HoleInteractionComp;
 
 public:
 
