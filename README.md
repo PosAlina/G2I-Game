@@ -8,12 +8,12 @@
 
 ## Ссылка на текущий билд:
 
-* v1.2.2
+* v1.2.3
 * Прототипный уровень к питчингу (частично пофикшенный)
-* Дата отрезания: 10.12.2025
-* Дата последнего изменения: 16.12.2025
+* Дата создания: 10.12.2025
+* Дата последнего изменения: 19.12.2025
 
-https://drive.google.com/file/d/1AOmgAfjWVsVlmhJYoFG1oMMTBdAjIQof/view?usp=sharing
+https://drive.google.com/file/d/1IHIPVA57xPF7NGyFj2JZFRZJwty9GKAF/view?usp=sharing
 
 * Shipping - для игры
 * Development - для тестирования
