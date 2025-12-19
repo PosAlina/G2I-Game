@@ -11,6 +11,9 @@ struct FInputActionValue;
 class UInputAction;
 class UInputMappingContext;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUnPossessPawnDelegate, APawn *, Pawn);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPossessPawnDelegate, APawn *, Pawn);
+
 /**
  *  Basic PlayerController class for a third person game
  *  Manages input mappings
@@ -20,6 +23,14 @@ class G2I_API AG2IPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
+public:
+
+	UPROPERTY(BlueprintAssignable)
+	FUnPossessPawnDelegate OnUnPossessPawnDelegate;
+
+	UPROPERTY(BlueprintAssignable)
+	FPossessPawnDelegate OnPossessPawnDelegate;
+	
 private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
