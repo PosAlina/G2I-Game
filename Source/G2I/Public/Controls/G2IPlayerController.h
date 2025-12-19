@@ -27,7 +27,14 @@ private:
 	
 public:
 
+	AG2IPlayerController();
+
 	virtual void OnPossess(APawn *NewPawn) override;
+
+	virtual void OnUnPossess() override;
+
+	virtual void SetViewTargetWithBlend(AActor* NewViewTarget, float BlendTime = 0,
+		EViewTargetBlendFunction BlendFunc = VTBlend_Linear, float BlendExp = 0, bool bLockOutgoing = false) override;
 
 public:
 
