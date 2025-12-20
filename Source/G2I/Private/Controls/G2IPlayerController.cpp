@@ -75,14 +75,19 @@ void AG2IPlayerController::OnPossess(APawn* NewPawn)
 {
 	Super::OnPossess(NewPawn);
 
+	if (NewPawn && GetPawn() == NewPawn)
+	{
+		OnPossessPawnDelegate.Broadcast(NewPawn);
+	}
+	
 	SetupCharacterActorComponents();
 	SetupCamera();
 }
 
 void AG2IPlayerController::OnUnPossess()
 {
-	// Differs from the default function by the absence of setting of the view target in Player Controller
-	if (APawn *CurrentPawn = GetPawn())
+	APawn *CurrentPawn = GetPawn();
+	if (CurrentPawn)
 	{
 		if (GetLocalRole() == ROLE_Authority)
 		{
@@ -91,6 +96,11 @@ void AG2IPlayerController::OnUnPossess()
 		CurrentPawn->UnPossessed();
 	}
 	SetPawn(nullptr);
+
+	if (CurrentPawn && !GetPawn())
+	{
+		OnUnPossessPawnDelegate.Broadcast(CurrentPawn);
+	}
 }
 
 void AG2IPlayerController::SetViewTargetWithBlend(class AActor* NewViewTarget, float BlendTime,
