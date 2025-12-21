@@ -31,6 +31,12 @@ public:
 	void StopJumpingAction();
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Actions)
+	void ImpulseJumpAction(const float ImpulseStrength);
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Actions)
 	void ToggleCrouchAction();
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = State)
+	bool IsInAir();
 	
 };

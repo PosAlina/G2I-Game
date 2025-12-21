@@ -3,6 +3,7 @@
 #include "Components/G2ICharacterCollisionComponent.h"
 #include "Components/G2ICharacterMovementComponent.h"
 #include "Components/G2IInteractionComponent.h"
+#include "Components/SteamGlove/G2ISteamGloveComponent.h"
 #include "Components/Camera/G2ICameraControllerComponent.h"
 #include "Components/Camera/G2IFixedCamerasComponent.h"
 #include "Engine/World.h"
@@ -18,4 +19,5 @@ AG2ICharacterEngineer::AG2ICharacterEngineer(const FObjectInitializer& ObjectIni
 	FixedCamerasComp = CreateDefaultSubobject<UG2IFixedCamerasComponent>(TEXT("FixedCamerasComp"));
 	ValveInteractionComp = CreateDefaultSubobject<UG2IValveInteractionComponent>(FName("ValveInteractionComp"));
 	HoleInteractionComp = CreateDefaultSubobject<UG2IHoleInteractionComponent>(FName("HoleInteractionComp"));
+	SteamGloveComp = CreateDefaultSubobject<UG2ISteamGloveComponent>(FName("SteamGloveComp"));
 }
