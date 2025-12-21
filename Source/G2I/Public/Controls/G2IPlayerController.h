@@ -84,7 +84,7 @@ protected:
 	void Look(const FInputActionValue& Value);
 
 	UPROPERTY(VisibleAnywhere)
-	TSet<TObjectPtr<UActorComponent>> MovementComponents;
+	TObjectPtr<UActorComponent> MovementComponent;
 	
 	UPROPERTY(EditAnywhere, Category="Input")
 	TObjectPtr<UInputAction> MoveAction;
@@ -120,4 +120,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Data")
 	TMap<TObjectPtr<UInputAction>, FName> ActionToTagMap;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UActorComponent> SteamMovementComponent;
 };
