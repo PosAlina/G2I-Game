@@ -114,6 +114,17 @@ void UG2ICharacterMovementComponent::StopJumpingAction_Implementation()
 	Owner->StopJumping();
 }
 
+void UG2ICharacterMovementComponent::ImpulseJumpAction_Implementation(const float ImpulseStrength)
+{
+	const FVector JumpImpulse = FVector(0, 0, ImpulseStrength);
+	AddImpulse(JumpImpulse, true);
+}
+
+bool UG2ICharacterMovementComponent::IsInAir_Implementation()
+{
+	return IsFalling();
+}
+
 void UG2ICharacterMovementComponent::ToggleCrouchAction_Implementation()
 {
 	if (!ensure(Owner))

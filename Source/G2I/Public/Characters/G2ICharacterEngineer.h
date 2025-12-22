@@ -6,6 +6,7 @@
 #include "Components/G2IHoleInteractionComponent.h"
 #include "G2ICharacterEngineer.generated.h"
 
+class UG2ISteamGloveComponent;
 class UG2IFixedCamerasComponent;
 class UG2IThirdPersonCameraComponent;
 class UG2ICameraControllerComponent;
@@ -35,7 +36,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UG2IHoleInteractionComponent> HoleInteractionComp;
 
-public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Gadgets)
+	TObjectPtr<UG2ISteamGloveComponent> SteamGloveComp;
+	
 	/** Different behavior of camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	TObjectPtr<UG2ICameraControllerComponent> CameraControllerComp;
