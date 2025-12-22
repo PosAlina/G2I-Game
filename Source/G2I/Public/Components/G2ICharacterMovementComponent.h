@@ -3,13 +3,24 @@
 #include "CoreMinimal.h"
 #include "G2IMovementInputInterface.h"
 #include "Components/ActorComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "G2ICharacterMovementComponent.generated.h"
 
+class UCharacterMovementComponent;
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class G2I_API UG2ICharacterMovementComponent : public UActorComponent, public IG2IMovementInputInterface
+class G2I_API UG2ICharacterMovementComponent : public UCharacterMovementComponent, public IG2IMovementInputInterface
 {
 	GENERATED_BODY()
 
+private:
+
+	UPROPERTY()
+	TObjectPtr<ACharacter> Owner;
+
+	UPROPERTY()
+	TObjectPtr<UWorld> World;
+	
 protected:
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FJumpingDelegate);
 
@@ -28,9 +39,15 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FJumpingDelegate OnJumpDelegate;
 
+protected:
+	
+	UG2ICharacterMovementComponent();
+
 	virtual void BeginPlay() override;
 
 	virtual void OnRegister() override;
+
+public:
 
 	// Interface methods
 	UFUNCTION(BlueprintCallable, Category="Input")
@@ -41,6 +58,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void StopJumpingAction_Implementation() override;
+
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	void ImpulseJumpAction_Implementation(float ImpulseStrength);
+
+	UFUNCTION(BlueprintCallable, Category = State)
+	virtual bool IsInAir_Implementation() override;
 
 	UFUNCTION(BlueprintCallable, Category = Togglers)
 	void ToggleJump();
@@ -70,10 +93,16 @@ public:
 	UFUNCTION()
 	void HandleMovingInteraction(float SpeedChange);
 
+	bool CanUncrouch() const;
+
 protected:
 
 	void BindingToDelegates();
 	
 	UFUNCTION()
 	void PossessedByNewController(APawn *ChangedPawn);
+
+private:
+
+	void PreInitializationDefaults();
 };

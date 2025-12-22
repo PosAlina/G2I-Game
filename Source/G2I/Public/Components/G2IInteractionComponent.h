@@ -17,7 +17,7 @@ private:
 
 	/** Interaction Sphere */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	UBoxComponent* InteractionBox;
+	TObjectPtr<UBoxComponent> InteractionBox;
 
 	void BindingToDelegates();
 

@@ -1,16 +1,23 @@
 #include "G2ICharacterEngineer.h"
-#include "Engine/LocalPlayer.h"
-#include "Components/G2ICameraComponent.h"
+#include "Components/Camera/G2IThirdPersonCameraComponent.h"
 #include "Components/G2ICharacterCollisionComponent.h"
 #include "Components/G2ICharacterMovementComponent.h"
-#include "GameFramework/Controller.h"
 #include "Components/G2IInteractionComponent.h"
+#include "Components/SteamGlove/G2ISteamGloveComponent.h"
+#include "Components/Camera/G2ICameraControllerComponent.h"
+#include "Components/Camera/G2IFixedCamerasComponent.h"
+#include "Engine/World.h"
 
-AG2ICharacterEngineer::AG2ICharacterEngineer()
+AG2ICharacterEngineer::AG2ICharacterEngineer(const FObjectInitializer& ObjectInitializer)
+	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UG2ICharacterMovementComponent>(
+		CharacterMovementComponentName))
 {
 	CollisionComp = CreateDefaultSubobject<UG2ICharacterCollisionComponent>(TEXT("CollisionComp"));
-	CameraComp = CreateDefaultSubobject<UG2ICameraComponent>(FName("CameraComp"));
-	CameraComp->SetupAttachment(RootComponent);
-	MovementComp = CreateDefaultSubobject<UG2ICharacterMovementComponent>(FName("MovementComp"));
-	InteractionComp = CreateDefaultSubobject<UG2IInteractionComponent>(FName("InteractionComp"));
+	InteractionComp = CreateDefaultSubobject<UG2IInteractionComponent>(TEXT("InteractionComp"));
+	CameraControllerComp = CreateDefaultSubobject<UG2ICameraControllerComponent>(TEXT("CameraControllerComp"));
+	ThirdPersonCameraComp = CreateDefaultSubobject<UG2IThirdPersonCameraComponent>(TEXT("ThirdPersonCameraComp"));
+	FixedCamerasComp = CreateDefaultSubobject<UG2IFixedCamerasComponent>(TEXT("FixedCamerasComp"));
+	ValveInteractionComp = CreateDefaultSubobject<UG2IValveInteractionComponent>(FName("ValveInteractionComp"));
+	HoleInteractionComp = CreateDefaultSubobject<UG2IHoleInteractionComponent>(FName("HoleInteractionComp"));
+	SteamGloveComp = CreateDefaultSubobject<UG2ISteamGloveComponent>(FName("SteamGloveComp"));
 }

@@ -19,7 +19,9 @@ public class G2I : ModuleRules
 			"GameplayStateTreeModule",
 			"UMG",
 			"Slate",
-			"AIModule"
+			"AIModule",
+      "GameplayTags",
+			"CinematicCamera"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
@@ -34,7 +36,9 @@ public class G2I : ModuleRules
 			"G2I/Public/Game",
 			"G2I/Public/Gameplay",
 			"G2I/Public/Interfaces",
-			"G2I/Public/UI"
+			"G2I/Public/UI",
+			"G2I/Public/Components",
+			"G2I/Public/Components/SteamGlove"
         });
 		
 		PrivateIncludePaths.AddRange(new string[] {
@@ -47,7 +51,9 @@ public class G2I : ModuleRules
 			"G2I/Private/Game",
 			"G2I/Private/Gameplay",
 			"G2I/Private/Interfaces",
-			"G2I/Private/UI"
+			"G2I/Private/UI",
+			"G2I/Private/Components",
+			"G2I/Private/Components/SteamGlove"
         });
 
 		// Uncomment if you are using Slate UI
