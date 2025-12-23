@@ -68,7 +68,7 @@ void UG2IThirdPersonCameraComponent::LookAction_Implementation(const float Yaw, 
 	const float TargetYaw = CameraDefaultsParameters->bIsInvertedCameraHorizontalRotation ? -Yaw : Yaw;
 	Owner->AddControllerYawInput(TargetYaw);
 
-	const float TargetPitch = CameraDefaultsParameters->bIsInvertedCameraVerticalRotation ? -Pitch : Pitch;
+	const float TargetPitch = CameraDefaultsParameters->bIsInvertedCameraVerticalRotation ? Pitch : -Pitch;
 	Owner->AddControllerPitchInput(TargetPitch);
 }
 
