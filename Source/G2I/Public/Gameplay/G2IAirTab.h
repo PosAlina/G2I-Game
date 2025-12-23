@@ -16,6 +16,8 @@ public:
 	// Sets default values for this actor's properties
 	AG2IAirTab();
 
+	void BeginPlay() override;
+
 	void OnConstruction(const FTransform& Transform) override;
 
 	void RecieveAir_Implementation(AActor* Sender, bool bAirPassed) override;

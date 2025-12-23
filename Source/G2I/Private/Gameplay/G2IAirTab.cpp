@@ -17,6 +17,11 @@ AG2IAirTab::AG2IAirTab()
 	BoxComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Overlap); // Pipes Custom Collision
 }
 
+void AG2IAirTab::BeginPlay()
+{
+	bActivated ? ActivateActors() : DeactivateActors();
+}
+
 void AG2IAirTab::OnConstruction(const FTransform& Transform)
 {
 	BoxComponent->Owner = this;
