@@ -494,6 +494,8 @@ void AG2IPipe::SpawnValve(int32 PointIndex)
 			Valve->OwnerActor = this;
 			Valve->bActivated = GetValveActivatedAtSplinePoint(PointIndex);
 			ValvesMap.Add(Valve, Valve->bActivated);
+
+			Valve->PassActivationToPipe();
 		}
 	}
 }
