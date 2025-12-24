@@ -11,6 +11,7 @@
 #include "Components/G2ICharacterMovementComponent.h"
 #include "Components/Camera/G2ICameraControllerComponent.h"
 #include "GameFramework/Pawn.h"
+#include "SteamGlove/G2ISteamMovementInputInterface.h"
 
 void AG2IPlayerController::SetupInputComponent()
 {
@@ -75,14 +76,19 @@ void AG2IPlayerController::OnPossess(APawn* NewPawn)
 {
 	Super::OnPossess(NewPawn);
 
+	if (NewPawn && GetPawn() == NewPawn)
+	{
+		OnPossessPawnDelegate.Broadcast(NewPawn);
+	}
+	
 	SetupCharacterActorComponents();
 	SetupCamera();
 }
 
 void AG2IPlayerController::OnUnPossess()
 {
-	// Differs from the default function by the absence of setting of the view target in Player Controller
-	if (APawn *CurrentPawn = GetPawn())
+	APawn *CurrentPawn = GetPawn();
+	if (CurrentPawn)
 	{
 		if (GetLocalRole() == ROLE_Authority)
 		{
@@ -91,6 +97,11 @@ void AG2IPlayerController::OnUnPossess()
 		CurrentPawn->UnPossessed();
 	}
 	SetPawn(nullptr);
+
+	if (CurrentPawn && !GetPawn())
+	{
+		OnUnPossessPawnDelegate.Broadcast(CurrentPawn);
+	}
 }
 
 void AG2IPlayerController::SetViewTargetWithBlend(class AActor* NewViewTarget, float BlendTime,
@@ -122,8 +133,9 @@ TObjectPtr<UG2ICameraDefaultsParameters> AG2IPlayerController::GetCameraDefaults
 void AG2IPlayerController::SetupCharacterActorComponents()
 {
 	ThirdPersonCameraComponents.Empty();
-	MovementComponents.Empty();
 	InteractionComponents.Empty();
+	MovementComponent = nullptr;
+	SteamMovementComponent = nullptr;
 	
 	if (const APawn *CurrentCharacter = GetPawn())
 	{
@@ -142,12 +154,17 @@ void AG2IPlayerController::SetupCharacterActorComponents()
 			
 			if (Component->Implements<UG2IMovementInputInterface>())
 			{
-				MovementComponents.Add(Component);
+				MovementComponent = Component;
 			}
 
 			if (Component->Implements<UG2IInteractionInputInterface>())
 			{
 				InteractionComponents.Add(Component);
+			}
+
+			if (Component->Implements<UG2ISteamMovementInputInterface>())
+			{
+				SteamMovementComponent = Component;
 			}
 		}
 	}
@@ -201,76 +218,99 @@ void AG2IPlayerController::Look(const FInputActionValue& Value)
 		{
 			const FVector2D LookAxisVector = Value.Get<FVector2D>();
 			const float Yaw = LookAxisVector.X;
-			IG2IThirdPersonCameraInputInterface::Execute_LookAction(Component, Yaw);
+			const float Pitch = LookAxisVector.Y;
+			IG2IThirdPersonCameraInputInterface::Execute_LookAction(Component, Yaw, Pitch);
 		}
 	}
 }
 
 void AG2IPlayerController::Move(const FInputActionValue& Value)
 {
-	for (UActorComponent *Component : MovementComponents)
+	if (!ensure(MovementComponent))
 	{
-		if (Component->Implements<UG2IMovementInputInterface>())
-		{
-			const FVector2D MovementVector = Value.Get<FVector2D>();
-			const float Right = MovementVector.X;
-			const float Forward = MovementVector.Y;
-			const FRotator Rotation = GetControlRotation();
-			IG2IMovementInputInterface::Execute_MoveAction(Component, Right, Forward, Rotation);
-		}
-		else
-		{
-			UE_LOG(LogG2I, Warning, TEXT("In Movement Components array %s contains component which not "
-								"implemented needed interface"), *Component->GetName());
-		}
+		UE_LOG(LogG2I, Warning, TEXT("Pawn doesn't have component with movement interface in %s"), *GetName());
+		return;
+	}
+	
+	if (MovementComponent->Implements<UG2IMovementInputInterface>())
+	{
+		const FVector2D MovementVector = Value.Get<FVector2D>();
+		const float Right = MovementVector.X;
+		const float Forward = MovementVector.Y;
+		const FRotator Rotation = GetControlRotation();
+		IG2IMovementInputInterface::Execute_MoveAction(MovementComponent, Right, Forward, Rotation);
+	}
+	else
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s does not implemented movement interface"),
+			*MovementComponent->GetName());
 	}
 }
 
 void AG2IPlayerController::Jump(const FInputActionValue& Value)
 {
-	for (UActorComponent *Component : MovementComponents)
+	if (!ensure(MovementComponent))
 	{
-		if (Component->Implements<UG2IMovementInputInterface>())
+		UE_LOG(LogG2I, Warning, TEXT("Pawn doesn't have component with movement interface in %s"), *GetName());
+		return;
+	}
+	
+	if (MovementComponent->Implements<UG2IMovementInputInterface>())
+	{
+		if (!IG2IMovementInputInterface::Execute_IsInAir(MovementComponent))
 		{
-			IG2IMovementInputInterface::Execute_JumpAction(Component);
+			IG2IMovementInputInterface::Execute_JumpAction(MovementComponent);
 		}
 		else
 		{
-			UE_LOG(LogG2I, Warning, TEXT("In Movement Components array %s contains component which not "
-								"implemented needed interface"), *Component->GetName());
+			if (SteamMovementComponent && SteamMovementComponent->Implements<UG2ISteamMovementInputInterface>())
+			{
+				IG2ISteamMovementInputInterface::Execute_SteamJumpAction(SteamMovementComponent);
+			}
 		}
+	}
+	else
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s does not implemented movement interface"),
+			*MovementComponent->GetName());
 	}
 }
 
 void AG2IPlayerController::StopJumping(const FInputActionValue& Value)
 {
-	for (UActorComponent *Component : MovementComponents)
+	if (!ensure(MovementComponent))
 	{
-		if (Component->Implements<UG2IMovementInputInterface>())
-		{
-			IG2IMovementInputInterface::Execute_StopJumpingAction(Component);
-		}
-		else
-		{
-			UE_LOG(LogG2I, Warning, TEXT("In Movement Components array %s contains component which not "
-								"implemented needed interface"), *Component->GetName());
-		}
+		UE_LOG(LogG2I, Warning, TEXT("Pawn doesn't have component with movement interface in %s"), *GetName());
+		return;
+	}
+	
+	if (MovementComponent->Implements<UG2IMovementInputInterface>())
+	{
+		IG2IMovementInputInterface::Execute_StopJumpingAction(MovementComponent);
+	}
+	else
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s does not implemented movement interface"),
+			*MovementComponent->GetName());
 	}
 }
 
 void AG2IPlayerController::ToggleCrouch(const FInputActionValue& Value)
 {
-	for (UActorComponent *Component : MovementComponents)
+	if (!ensure(MovementComponent))
 	{
-		if (Component->Implements<UG2IMovementInputInterface>())
-		{
-			IG2IMovementInputInterface::Execute_ToggleCrouchAction(Component);
-		}
-		else
-		{
-			UE_LOG(LogG2I, Warning, TEXT("In Movement Components array %s contains component which not "
-								"implemented needed interface"), *Component->GetName());
-		}
+		UE_LOG(LogG2I, Warning, TEXT("Pawn doesn't have component with movement interface in %s"), *GetName());
+		return;
+	}
+	
+	if (MovementComponent->Implements<UG2IMovementInputInterface>())
+	{
+		IG2IMovementInputInterface::Execute_ToggleCrouchAction(MovementComponent);
+	}
+	else
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s does not implemented movement interface"),
+			*MovementComponent->GetName());
 	}
 }
 

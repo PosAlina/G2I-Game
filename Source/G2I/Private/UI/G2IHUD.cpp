@@ -4,7 +4,7 @@
 #include "G2IPlayerController.h"
 #include "Blueprint/UserWidget.h"
 
-inline void AG2IHUD::BeginPlay()
+void AG2IHUD::BeginPlay()
 {
 	Super::BeginPlay();
 	InitHud();
