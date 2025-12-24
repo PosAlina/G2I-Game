@@ -1,5 +1,7 @@
 ﻿#include "Components/Camera/G2IThirdPersonCameraComponent.h"
 #include "G2I.h"
+#include "G2ICameraDefaultsParameters.h"
+#include "G2IPlayerController.h"
 #include "Camera/CameraComponent.h"
 #include "Camera/G2ICameraControllerInputInterface.h"
 #include "Components/G2ICharacterMovementComponent.h"
@@ -46,7 +48,7 @@ FRemoveCameraDelegate& UG2IThirdPersonCameraComponent::GetRemoveCameraDelegate()
 	return OnRemoveCameraDelegate;
 }
 
-void UG2IThirdPersonCameraComponent::LookAction_Implementation(const float Yaw)
+void UG2IThirdPersonCameraComponent::LookAction_Implementation(const float Yaw, const float Pitch)
 {
 	if (!ensure(Owner))
 	{
@@ -62,8 +64,12 @@ void UG2IThirdPersonCameraComponent::LookAction_Implementation(const float Yaw)
 			return;
 		}
 	}
-	
-	Owner->AddControllerYawInput(Yaw);
+
+	const float TargetYaw = CameraDefaultsParameters->bIsInvertedCameraHorizontalRotation ? -Yaw : Yaw;
+	Owner->AddControllerYawInput(TargetYaw);
+
+	const float TargetPitch = CameraDefaultsParameters->bIsInvertedCameraVerticalRotation ? Pitch : -Pitch;
+	Owner->AddControllerPitchInput(TargetPitch);
 }
 
 void UG2IThirdPersonCameraComponent::SetupDefaults()
@@ -83,6 +89,35 @@ void UG2IThirdPersonCameraComponent::SetupDefaults()
 	{
 		UE_LOG(LogG2I, Log, TEXT("%s has camera controller %s in %s"), *Owner->GetName(),
 			*CameraController->GetName(), *GetName());
+	}
+
+	const UWorld *World = GetWorld();
+	if (!ensure(World))
+	{
+		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
+		return;
+	}
+
+	APlayerController *LocalPlayerController = World->GetFirstPlayerController();
+	if (!ensure(LocalPlayerController))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Local player controller doesn't exist in %s"), *GetName());
+		return;
+	}
+
+	AG2IPlayerController *PlayerController = Cast<AG2IPlayerController>(LocalPlayerController);
+	if (!ensure(PlayerController))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Player Controller doesn't exist in %s"), *GetName());
+		return;
+	}
+	
+	CameraDefaultsParameters = PlayerController->GetCameraDefaultsParameters();
+	if (!ensure(CameraDefaultsParameters))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s can not return camera defaults parameters in %s"),
+			*PlayerController->GetName(), *GetName());
+		return;
 	}
 }
 

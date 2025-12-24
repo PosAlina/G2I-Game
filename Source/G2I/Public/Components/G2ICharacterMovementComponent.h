@@ -59,6 +59,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void StopJumpingAction_Implementation() override;
 
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	void ImpulseJumpAction_Implementation(float ImpulseStrength);
+
+	UFUNCTION(BlueprintCallable, Category = State)
+	virtual bool IsInAir_Implementation() override;
+
 	UFUNCTION(BlueprintCallable, Category = Togglers)
 	void ToggleJump();
 
