@@ -5,5 +5,4 @@
 UG2ISteamGloveComponent::UG2ISteamGloveComponent()
 {
 	ReloadingComp = CreateDefaultSubobject<UG2IReloadingComponent>(FName("ReloadingComp"));
-	SteamMovementComp = CreateDefaultSubobject<UG2ISteamMovementComponent>(FName("SteamMovementComp"));
 }
