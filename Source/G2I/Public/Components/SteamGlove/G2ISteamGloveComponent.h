@@ -16,9 +16,6 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Gadgets)
 	TObjectPtr<UG2IReloadingComponent> ReloadingComp;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Gadgets)
-	TObjectPtr<UG2ISteamMovementComponent> SteamMovementComp;
 	
 public:
 	
