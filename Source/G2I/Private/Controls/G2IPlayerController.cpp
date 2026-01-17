@@ -4,7 +4,6 @@
 #include "G2I.h"
 #include "G2IPlayerCameraManager.h"
 #include "Camera/G2IThirdPersonCameraInputInterface.h"
-#include "G2ICameraInputInterface.h"
 #include "G2IGadgetInterface.h"
 #include "G2IPlayerState.h"
 #include "Engine/LocalPlayer.h"
@@ -170,6 +169,8 @@ void AG2IPlayerController::SetupCharacterActorComponents()
 			if (Component->Implements<UG2ISteamMovementInputInterface>())
 			{
 				SteamMovementComponent = Component;
+			}
+			
 			if (Component->Implements<UG2IGadgetInterface>())
 			{
 				GadgetComponents.Add(Component);
