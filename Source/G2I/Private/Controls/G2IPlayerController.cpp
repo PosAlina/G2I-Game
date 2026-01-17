@@ -140,6 +140,7 @@ void AG2IPlayerController::SetupCharacterActorComponents()
 	InteractionComponents.Empty();
 	MovementComponent = nullptr;
 	SteamMovementComponent = nullptr;
+	GadgetComponents.Empty();
 	
 	if (const APawn *CurrentCharacter = GetPawn())
 	{
