@@ -2,16 +2,18 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "G2I.h"
+#include "G2IAimingInterface.h"
 #include "G2IPlayerCameraManager.h"
-#include "Camera/G2IThirdPersonCameraInputInterface.h"
+#include "G2IThirdPersonCameraInputInterface.h"
 #include "G2IPlayerState.h"
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
-#include "Components/G2IInteractionComponent.h"
-#include "Components/G2ICharacterMovementComponent.h"
-#include "Components/Camera/G2ICameraControllerComponent.h"
+#include "G2IInteractionComponent.h"
+#include "G2ICharacterMovementComponent.h"
+#include "G2ICameraControllerComponent.h"
 #include "GameFramework/Pawn.h"
-#include "SteamGlove/G2ISteamMovementInputInterface.h"
+#include "G2ISteamMovementInputInterface.h"
+#include "G2ISteamShotInputInterface.h"
 
 void AG2IPlayerController::SetupInputComponent()
 {
@@ -54,6 +56,11 @@ void AG2IPlayerController::SetupInputComponent()
 				for (const auto& InteractAction : InteractActions) {
 					EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &ThisClass::Interact);
 				}
+
+				EnhancedInputComponent->BindAction(TakeAimAction, ETriggerEvent::Started, this, &ThisClass::StartAiming);
+				EnhancedInputComponent->BindAction(TakeAimAction, ETriggerEvent::Completed, this, &ThisClass::StopAiming);
+
+				EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &ThisClass::Shoot);
 			}
 			else
 			{
@@ -136,6 +143,8 @@ void AG2IPlayerController::SetupCharacterActorComponents()
 	InteractionComponents.Empty();
 	MovementComponent = nullptr;
 	SteamMovementComponent = nullptr;
+	AimingComponent = nullptr;
+	SteamShotComponent = nullptr;
 	
 	if (const APawn *CurrentCharacter = GetPawn())
 	{
@@ -165,6 +174,16 @@ void AG2IPlayerController::SetupCharacterActorComponents()
 			if (Component->Implements<UG2ISteamMovementInputInterface>())
 			{
 				SteamMovementComponent = Component;
+			}
+
+			if (Component->Implements<UG2IAimingInterface>())
+			{
+				AimingComponent = Component;
+			}
+
+			if (Component->Implements<UG2ISteamShotInputInterface>())
+			{
+				SteamShotComponent = Component;
 			}
 		}
 	}
@@ -352,6 +371,40 @@ void AG2IPlayerController::Interact(const FInputActionInstance& Instance)
 		{
 			UE_LOG(LogG2I, Warning, TEXT("In Interaction Components array %s contains component which not "
 				"implemented needed interface"), *Component->GetName());
+		}
+	}
+}
+
+void AG2IPlayerController::StartAiming(const FInputActionValue& Value)
+{
+	if (AimingComponent && AimingComponent->Implements<UG2IAimingInterface>())
+	{
+		IG2IAimingInterface::Execute_StartAimingAction(AimingComponent);
+	}
+}
+
+void AG2IPlayerController::StopAiming(const FInputActionValue& Value)
+{
+	if (AimingComponent && AimingComponent->Implements<UG2IAimingInterface>())
+	{
+		IG2IAimingInterface::Execute_StopAimingAction(AimingComponent);
+	}
+}
+
+void AG2IPlayerController::Shoot(const FInputActionValue& Value)
+{
+	if (AimingComponent && AimingComponent->Implements<UG2IAimingInterface>())
+	{
+		if (!IG2IAimingInterface::Execute_IsAiming(AimingComponent))
+		{
+			return;
+		}
+		
+		if (SteamShotComponent && SteamShotComponent->Implements<UG2ISteamShotInputInterface>()
+			&& SteamShotComponent == IG2IAimingInterface::Execute_GetCurrentComponentUsingAim(AimingComponent))
+		{
+			const FG2IHitInfo AimLineHitInfo = IG2IAimingInterface::Execute_GetAimLineHitInfo(AimingComponent);
+			IG2ISteamShotInputInterface::Execute_ShootAction(SteamShotComponent, AimLineHitInfo);
 		}
 	}
 }
