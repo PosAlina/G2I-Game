@@ -1,8 +1,8 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "Camera/G2ICameraInterface.h"
-#include "Camera/G2IThirdPersonCameraInputInterface.h"
+#include "G2ICameraInterface.h"
+#include "G2IThirdPersonCameraInputInterface.h"
 #include "Components/ActorComponent.h"
 #include "Components/SceneComponent.h"
 #include "G2IThirdPersonCameraComponent.generated.h"
@@ -69,9 +69,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void LookAction_Implementation(const float Yaw, const float Pitch) override;
 
+protected:
+
+	UFUNCTION()
+	void SetDefaultCameraLocation();
+
+	UFUNCTION()
+	void SetAimCameraLocation();
+
 private:
 	
 	void SetupDefaults();
+
+	void BindDelegates();
 
 	void PreInitializeDefaults();
 
