@@ -1,10 +1,10 @@
-﻿#include "Components/Camera/G2IThirdPersonCameraComponent.h"
+﻿#include "G2IThirdPersonCameraComponent.h"
 #include "G2I.h"
+#include "G2IAimingComponent.h"
 #include "G2ICameraDefaultsParameters.h"
 #include "G2IPlayerController.h"
 #include "Camera/CameraComponent.h"
-#include "Camera/G2ICameraControllerInputInterface.h"
-#include "Components/G2ICharacterMovementComponent.h"
+#include "G2ICameraControllerInputInterface.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/SpringArmComponent.h"
 
@@ -19,6 +19,7 @@ void UG2IThirdPersonCameraComponent::BeginPlay()
 	Super::BeginPlay();
 	
 	SetupDefaults();
+	BindDelegates();
 }
 
 void UG2IThirdPersonCameraComponent::OnRegister()
@@ -121,6 +122,21 @@ void UG2IThirdPersonCameraComponent::SetupDefaults()
 	}
 }
 
+void UG2IThirdPersonCameraComponent::BindDelegates()
+{
+	if (!ensure(Owner))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Owner isn't character in %s"), *GetName());
+		return;
+	}
+
+	if (UG2IAimingComponent *AimingComponent = Owner->FindComponentByClass<UG2IAimingComponent>())
+	{
+		AimingComponent->OnStartAimingDelegate.AddDynamic(this, &ThisClass::SetAimCameraLocation);
+		AimingComponent->OnFinishAimingDelegate.AddDynamic(this, &ThisClass::SetDefaultCameraLocation);
+	}
+}
+
 void UG2IThirdPersonCameraComponent::PreInitializeDefaults()
 {
 	AActor *OwnerActor = GetOwner();
@@ -160,8 +176,9 @@ void UG2IThirdPersonCameraComponent::InitializeCameraBoom()
 		UE_LOG(LogG2I, Error, TEXT("Spring arm isn't exist in %s"), *GetName());
 		return;
 	}
-	
-	ThirdPersonCameraBoom->TargetArmLength = 400.0f;
+
+	ThirdPersonCameraBoom->TargetArmLength = 220.0f;
+	ThirdPersonCameraBoom->SocketOffset = FVector(0.f, 80.f, 70.f);
 	ThirdPersonCameraBoom->bUsePawnControlRotation = true;
 }
 
@@ -175,4 +192,44 @@ void UG2IThirdPersonCameraComponent::InitializeFollowCamera()
 	}
 	
 	ThirdPersonFollowCamera->bUsePawnControlRotation = false;
+}
+
+void UG2IThirdPersonCameraComponent::SetDefaultCameraLocation()
+{
+	if (!ensure(ThirdPersonCameraBoom))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Spring arm isn't exist in %s"), *GetName());
+		return;
+	}
+	
+	if (CameraDefaultsParameters)
+	{
+		ThirdPersonCameraBoom->TargetArmLength = CameraDefaultsParameters->DefaultTargetArm;
+		ThirdPersonCameraBoom->SocketOffset = FVector(0, CameraDefaultsParameters->DefaultHorizontalOffset, CameraDefaultsParameters->DefaultVerticalOffset);
+	}
+	else
+	{
+		ThirdPersonCameraBoom->TargetArmLength = 220.0f;
+		ThirdPersonCameraBoom->SocketOffset = FVector(0.f, 80.f, 70.f);
+	}
+}
+
+void UG2IThirdPersonCameraComponent::SetAimCameraLocation()
+{
+	if (!ensure(ThirdPersonCameraBoom))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Spring arm isn't exist in %s"), *GetName());
+		return;
+	}
+	
+	if (CameraDefaultsParameters)
+	{
+		ThirdPersonCameraBoom->TargetArmLength = CameraDefaultsParameters->AimTargetArm;
+		ThirdPersonCameraBoom->SocketOffset = FVector(0, CameraDefaultsParameters->AimHorizontalOffset, CameraDefaultsParameters->AimVerticalOffset);
+	}
+	else
+	{
+		ThirdPersonCameraBoom->TargetArmLength = 160.0f;
+		ThirdPersonCameraBoom->SocketOffset = FVector(0.f, 80.f, 70.f);
+	}
 }
