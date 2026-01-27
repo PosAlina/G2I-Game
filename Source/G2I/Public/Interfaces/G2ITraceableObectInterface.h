@@ -17,7 +17,7 @@ class G2I_API IG2ITraceableObectInterface
 	GENERATED_BODY()
 public:
 
-    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Trace")
+    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interactions")
     void OnShoot(const FHitResult& HitResult, AActor* Character);
 
 };
