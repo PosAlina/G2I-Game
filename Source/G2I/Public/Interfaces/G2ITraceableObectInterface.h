@@ -6,7 +6,7 @@
 #include "UObject/Interface.h"
 #include "G2ITraceableObectInterface.generated.h"
 
-UINTERFACE(MinimalAPI)
+UINTERFACE(MinimalAPI, Blueprintable)
 class UG2ITraceableObectInterface : public UInterface
 {
 	GENERATED_BODY()
