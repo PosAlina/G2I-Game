@@ -61,6 +61,10 @@ void AG2IPlayerController::SetupInputComponent()
 				EnhancedInputComponent->BindAction(TakeAimAction, ETriggerEvent::Completed, this, &ThisClass::StopAiming);
 
 				EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &ThisClass::Shoot);
+
+				EnhancedInputComponent->BindAction(ToggleFollowAIBehindPlayerAction, ETriggerEvent::Started,
+					this, &ThisClass::ToggleFollowAIBehindPlayer);
+
 			}
 			else
 			{
@@ -407,4 +411,10 @@ void AG2IPlayerController::Shoot(const FInputActionValue& Value)
 			IG2ISteamShotInputInterface::Execute_ShootAction(SteamShotComponent, AimLineHitInfo);
 		}
 	}
+}
+
+void AG2IPlayerController::ToggleFollowAIBehindPlayer(const FInputActionValue& Value)
+{
+	bIsFollowingAIBehindPlayer = !bIsFollowingAIBehindPlayer;
+	OnToggleFollowAIBehindPlayerDelegate.Broadcast(bIsFollowingAIBehindPlayer);
 }
