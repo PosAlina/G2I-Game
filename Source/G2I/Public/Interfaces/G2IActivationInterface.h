@@ -6,7 +6,7 @@
 #include "G2IActivationInterface.generated.h"
 
 // This class does not need to be modified.
-UINTERFACE(MinimalAPI)
+UINTERFACE(MinimalAPI, Blueprintable)
 class UG2IActivationInterface : public UInterface
 {
 	GENERATED_BODY()
