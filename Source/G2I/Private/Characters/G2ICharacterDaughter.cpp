@@ -29,3 +29,27 @@ AG2ICharacterDaughter::AG2ICharacterDaughter(const FObjectInitializer& ObjectIni
 
 	MovementComp->SetCanPassThroughObject(true);
 }
+
+void AG2ICharacterDaughter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	OnPossessedDelegate.Broadcast(NewController);
+}
+
+void AG2ICharacterDaughter::UnPossessed()
+{
+	Super::UnPossessed();
+
+	OnUnPossessedDelegate.Broadcast();
+}
+
+FPossessedDelegate& AG2ICharacterDaughter::GetPossessedDelegate()
+{
+	return OnPossessedDelegate;
+}
+
+FUnPossessedDelegate& AG2ICharacterDaughter::GetUnPossessedDelegate()
+{
+	return OnUnPossessedDelegate;
+}

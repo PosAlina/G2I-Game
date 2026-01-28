@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
+#include "G2ICharacterInterface.h"
 #include "GameFramework/Character.h"
 #include "G2ICharacterDaughter.generated.h"
 
@@ -16,7 +17,7 @@ class UG2IInteractionComponent;
  *  Implements a controllable orbiting camera
  */
 UCLASS(Blueprintable)
-class AG2ICharacterDaughter : public ACharacter
+class AG2ICharacterDaughter : public ACharacter, public IG2ICharacterInterface
 {
 	GENERATED_BODY()
 
@@ -38,9 +39,27 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	TObjectPtr<UG2IFixedCamerasComponent> FixedCamerasComp;
 
+private:
+
+	UPROPERTY(BlueprintAssignable)
+	FPossessedDelegate OnPossessedDelegate;
+
+	UPROPERTY(BlueprintAssignable)
+	FUnPossessedDelegate OnUnPossessedDelegate;
+
 public:
 
 	explicit AG2ICharacterDaughter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+	virtual void PossessedBy(AController* NewController) override;
+	
+	virtual void UnPossessed() override;
+	
+	UFUNCTION()
+	virtual FPossessedDelegate& GetPossessedDelegate() override;
+
+	UFUNCTION()
+	virtual FUnPossessedDelegate& GetUnPossessedDelegate() override;
 	
 };
 
