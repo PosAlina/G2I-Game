@@ -6,6 +6,7 @@
 #include "G2ISteamShotComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "G2ICameraControllerComponent.h"
+#include "G2ICharacterInterface.h"
 
 UG2IAimingComponent::UG2IAimingComponent()
 {
@@ -92,11 +93,21 @@ void UG2IAimingComponent::SetupDefaults()
 
 void UG2IAimingComponent::BindDelegates()
 {
-	const AActor *Owner = GetOwner();
+	AActor *Owner = GetOwner();
 	if (!ensure(Owner))
 	{
 		UE_LOG(LogG2I, Error, TEXT("Owner doesn't exist in %s"), *GetName());
 		return;
+	}
+
+	if (IG2ICharacterInterface *CharacterOwner = Cast<IG2ICharacterInterface>(Owner))
+	{
+		CharacterOwner->GetUnPossessedDelegate().AddDynamic(this, &ThisClass::StopAimingAction_Implementation);
+	}
+	else
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Owner %s of %s doesn't implement %s interface"),
+			*Owner->GetActorNameOrLabel(), *GetName(), *UG2ICharacterInterface::StaticClass()->GetName());
 	}
 	
 	if (UG2ICameraControllerComponent *CameraControllerComponent = Owner->FindComponentByClass<UG2ICameraControllerComponent>())
