@@ -6,6 +6,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "G2ICharacterMovementComponent.generated.h"
 
+enum class EG2ICameraTypeEnum : uint8;
 class UCharacterMovementComponent;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -32,6 +33,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Crouch)
 	bool bIsCrouchState = false;
+
+	bool bCanRotationTowardsCamera = false;
+
+	bool bWantsRotationTowardsCamera = false;
 
 public:
 	
@@ -102,7 +107,18 @@ protected:
 	UFUNCTION()
 	void PossessedByNewController(APawn *ChangedPawn);
 
+	UFUNCTION()
+	void EnableRotationTowardsCamera();
+
+	UFUNCTION()
+	void DisableRotationTowardsCamera();
+
+	UFUNCTION()
+	void SetAbilityRotationTowardsCamera(EG2ICameraTypeEnum CurrentCamera);
+
 private:
 
 	void PreInitializationDefaults();
+
+	void BindingOwnerComponentsDelegates();
 };

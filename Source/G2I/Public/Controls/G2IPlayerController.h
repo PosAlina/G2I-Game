@@ -123,4 +123,22 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UActorComponent> SteamMovementComponent;
+
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> TakeAimAction;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UActorComponent> AimingComponent;
+
+	void StartAiming(const FInputActionValue& Value);
+
+	void StopAiming(const FInputActionValue& Value);
+
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> ShootAction;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UActorComponent> SteamShotComponent;
+
+	void Shoot(const FInputActionValue& Value);
 };
