@@ -22,5 +22,22 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bIsInvertedCameraVerticalRotation = false;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float DefaultTargetArm = 220.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float DefaultHorizontalOffset = 100.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float DefaultVerticalOffset = 70.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float AimTargetArm = 160.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float AimHorizontalOffset = 80.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float AimVerticalOffset = 70.f;
 };

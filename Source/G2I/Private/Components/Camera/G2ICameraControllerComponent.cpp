@@ -1,11 +1,11 @@
-#include "Components/Camera/G2ICameraControllerComponent.h"
+#include "G2ICameraControllerComponent.h"
 #include "G2I.h"
 #include "G2ICameraDefaultsParameters.h"
 #include "G2IPlayerController.h"
 #include "Camera/CameraComponent.h"
-#include "Camera/G2ICameraInterface.h"
-#include "Camera/G2IFixedCamerasInputInterface.h"
-#include "Camera/G2IThirdPersonCameraInputInterface.h"
+#include "G2ICameraInterface.h"
+#include "G2IFixedCamerasInputInterface.h"
+#include "G2IThirdPersonCameraInputInterface.h"
 #include "Engine/World.h"
 #include "GameFramework/Character.h"
 
@@ -164,7 +164,7 @@ bool UG2ICameraControllerComponent::IsOwnerControllable() const
 }
 
 
-bool UG2ICameraControllerComponent::SetCamera(const UCameraComponent& NewCamera) const
+bool UG2ICameraControllerComponent::SetCamera(const UCameraComponent& NewCamera)
 {
 	AActor *OwnerActor = NewCamera.GetOwner();
 	if (!OwnerActor)
@@ -183,6 +183,17 @@ bool UG2ICameraControllerComponent::SetCamera(const UCameraComponent& NewCamera)
 	PlayerController->SetViewTargetWithBlend(OwnerActor, CameraDefaultsParameters->CameraTransitionTime,
 		VTBlend_Linear, 0, true);
 	PlayerController->SetRotationTowardsCamera(NewCamera);
+
+	if (OwnerActor == Owner.Get())
+	{
+		CurrentCameraType = EG2ICameraTypeEnum::ThirdPersonCamera;
+	}
+	else
+	{
+		CurrentCameraType = EG2ICameraTypeEnum::FixedCamera;
+	}
+	OnSetCameraTypeDelegate.Broadcast(CurrentCameraType);
+	
 	return true;
 }
 
