@@ -98,8 +98,8 @@ protected:
 	
 	void StopJumping(const FInputActionValue& Value);
 
-	UPROPERTY(EditAnywhere, Category="Input")
-	TObjectPtr<UInputAction> ToggleCrouchAction;
+	/*UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> ToggleCrouchAction;*/
 
 	void ToggleCrouch(const FInputActionValue& Value);
 
