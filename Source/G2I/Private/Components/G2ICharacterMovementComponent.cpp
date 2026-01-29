@@ -7,6 +7,7 @@
 #include "GameFramework/PlayerController.h"
 #include "G2IAimingComponent.h"
 #include "G2ICameraControllerComponent.h"
+#include "G2ICameraStateEnums.h"
 #include "Components/CapsuleComponent.h"
 
 UG2ICharacterMovementComponent::UG2ICharacterMovementComponent()
@@ -474,19 +475,23 @@ void UG2ICharacterMovementComponent::DisableRotationTowardsCamera()
 	Owner->bUseControllerRotationRoll = false;
 }
 
-void UG2ICharacterMovementComponent::SetAbilityRotationTowardsCamera(EG2ICameraTypeEnum CurrentCamera)
+void UG2ICharacterMovementComponent::SetAbilityRotationTowardsCamera(
+	EG2ICameraTypeEnum CurrentCameraType, EG2ICameraBlendState CurrentBlendState)
 {
-	if (CurrentCamera == EG2ICameraTypeEnum::ThirdPersonCamera)
+	if (CurrentCameraType == EG2ICameraTypeEnum::ThirdPersonCamera && CurrentBlendState == EG2ICameraBlendState::Finish)
 	{
 		bCanRotationTowardsCamera = true;
 		if (bWantsRotationTowardsCamera)
 		{
 			EnableRotationTowardsCamera();
 		}
+		return;
 	}
-	else
+	
+	if (CurrentCameraType == EG2ICameraTypeEnum::FixedCamera && CurrentBlendState == EG2ICameraBlendState::Start)
 	{
 		bCanRotationTowardsCamera = false;
 		DisableRotationTowardsCamera();
+		return;
 	}
 }
