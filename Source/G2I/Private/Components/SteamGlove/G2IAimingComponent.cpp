@@ -6,6 +6,7 @@
 #include "G2ISteamShotComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "G2ICameraControllerComponent.h"
+#include "G2ICameraStateEnums.h"
 #include "G2ICharacterInterface.h"
 
 UG2IAimingComponent::UG2IAimingComponent()
@@ -178,17 +179,19 @@ UActorComponent *UG2IAimingComponent::GetCurrentComponentUsingAim_Implementation
 	return nullptr;
 }
 
-void UG2IAimingComponent::SetAbilityAiming(EG2ICameraTypeEnum CurrentCameraType)
+void UG2IAimingComponent::SetAbilityAiming(EG2ICameraTypeEnum CurrentCameraType, EG2ICameraBlendState CurrentBlendState)
 {
-	if (CurrentCameraType == EG2ICameraTypeEnum::ThirdPersonCamera)
+	if (CurrentCameraType == EG2ICameraTypeEnum::ThirdPersonCamera && CurrentBlendState == EG2ICameraBlendState::Finish)
 	{
 		bCanAiming = true;
 		if (bWantsAiming)
 		{
 			StartAimingAction_Implementation();
 		}
+		return;
 	}
-	else
+
+	if (CurrentCameraType == EG2ICameraTypeEnum::FixedCamera && CurrentBlendState == EG2ICameraBlendState::Start)
 	{
 		bCanAiming = false;
 		if (bIsAiming)
@@ -196,6 +199,7 @@ void UG2IAimingComponent::SetAbilityAiming(EG2ICameraTypeEnum CurrentCameraType)
 			StopAimingAction_Implementation();
 			bWantsAiming = true;
 		}
+		return;
 	}
 }
 
