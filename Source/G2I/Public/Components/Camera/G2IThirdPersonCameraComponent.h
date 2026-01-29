@@ -42,6 +42,12 @@ private:
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, Category="Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> ThirdPersonFollowCamera;
+
+	float DefaultTargetArmLength = 220.0f;
+	FVector DefaultSocketOffset = FVector(0.f, 100.f, 70.f);
+
+	float AimTargetArmLength = 160.0f;
+	FVector AimSocketOffset = FVector(0.f, 80.f, 70.f);
 	
 protected:
 
