@@ -21,3 +21,27 @@ AG2ICharacterEngineer::AG2ICharacterEngineer(const FObjectInitializer& ObjectIni
 	HoleInteractionComp = CreateDefaultSubobject<UG2IHoleInteractionComponent>(FName("HoleInteractionComp"));
 	SteamGloveComp = CreateDefaultSubobject<UG2ISteamGloveComponent>(FName("SteamGloveComp"));
 }
+
+void AG2ICharacterEngineer::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	OnPossessedDelegate.Broadcast(NewController);
+}
+
+void AG2ICharacterEngineer::UnPossessed()
+{
+	Super::UnPossessed();
+
+	OnUnPossessedDelegate.Broadcast();
+}
+
+FPossessedDelegate& AG2ICharacterEngineer::GetPossessedDelegate()
+{
+	return OnPossessedDelegate;
+}
+
+FUnPossessedDelegate& AG2ICharacterEngineer::GetUnPossessedDelegate()
+{
+	return OnUnPossessedDelegate;
+}
