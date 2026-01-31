@@ -13,6 +13,7 @@ class UInputMappingContext;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUnPossessPawnDelegate, APawn *, Pawn);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPossessPawnDelegate, APawn *, Pawn);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FToggleFollowAIBehindPlayerDelegate, bool, Value);
 
 /**
  *  Basic PlayerController class for a third person game
@@ -30,6 +31,12 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FPossessPawnDelegate OnPossessPawnDelegate;
+
+	UPROPERTY(BlueprintAssignable)
+	FToggleFollowAIBehindPlayerDelegate OnToggleFollowAIBehindPlayerDelegate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+	bool bIsFollowingAIBehindPlayer = true;
 	
 private:
 
@@ -141,4 +148,10 @@ protected:
 	TObjectPtr<UActorComponent> SteamShotComponent;
 
 	void Shoot(const FInputActionValue& Value);
+	
+	/** Enable/disable AI characters to follow the player */
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> ToggleFollowAIBehindPlayerAction;
+
+	void ToggleFollowAIBehindPlayer(const FInputActionValue& Value);
 };
