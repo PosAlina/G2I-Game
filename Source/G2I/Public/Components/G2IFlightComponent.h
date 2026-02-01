@@ -18,16 +18,14 @@ public:
 	float FlightHeight = 500.0f;
 
 	UPROPERTY(EditAnywhere)
-	float FlightSpeed = 100.0f;
+	float FlightVelocity = 100.0f;
+
+	UPROPERTY(EditAnywhere)
+	float FlightMaxVelocity = 200.0f;
 	
 	bool bIsOnMaxHeight = false;
-	int SpeedCoef = 100;
-
-protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
-
-public:	
+	int VelocityCoef = 100;
+	
 	virtual void Fly_Implementation(UActorComponent* MovementComponent, int Direction) override;
 	virtual void StopFly_Implementation(UActorComponent* MovementComponent) override;
 		

@@ -2,15 +2,7 @@
 
 
 #include "Components/G2IFlightComponent.h"
-
-#include "AITypes.h"
 #include "GameFramework/CharacterMovementComponent.h"
-
-void UG2IFlightComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
-}
 
 void UG2IFlightComponent::Fly_Implementation(UActorComponent* MovementComponent, int Direction)
 {
@@ -21,9 +13,15 @@ void UG2IFlightComponent::Fly_Implementation(UActorComponent* MovementComponent,
 		UCharacterMovementComponent* CharMovementComp = StaticCast<UCharacterMovementComponent*>(MovementComponent);
 		if (CharMovementComp)
 		{
+			int CurrentVelocity = CharMovementComp->Velocity.Z;
+			CharMovementComp->GravityScale = 0.0f;
+			
 			if (Direction > 0 && ActorLocation.Z < FlightHeight && !bIsOnMaxHeight)
 			{
-				CharMovementComp->AddForce(FVector(0, 0, FlightSpeed * SpeedCoef));
+				if (FMath::Abs(CurrentVelocity) < FlightMaxVelocity)
+				{
+					CharMovementComp->AddForce(FVector(0, 0, Direction * FlightVelocity * VelocityCoef));
+				}
 			}
 			else if (Direction > 0 && !bIsOnMaxHeight)
 			{
@@ -31,10 +29,14 @@ void UG2IFlightComponent::Fly_Implementation(UActorComponent* MovementComponent,
 				CharMovementComp->Velocity.Z = 0.0f;
 				bIsOnMaxHeight = true;
 			}
+			
 			if (Direction < 0)
 			{
 				bIsOnMaxHeight = false;
-				CharMovementComp->AddForce(FVector(0, 0, -FlightSpeed * SpeedCoef));
+				if (FMath::Abs(CurrentVelocity) < FlightMaxVelocity)
+				{
+					CharMovementComp->AddForce(FVector(0, 0, Direction * FlightVelocity * VelocityCoef));
+				}
 			}
 		}
 	}
@@ -47,6 +49,10 @@ void UG2IFlightComponent::StopFly_Implementation(UActorComponent* MovementCompon
 	{
 		CharMovementComp->ClearAccumulatedForces();
 		CharMovementComp->Velocity.Z = 0.0f;
+	}
+	if (CharMovementComp->IsMovingOnGround())
+	{
+		CharMovementComp->GravityScale = 1.0f;
 	}
 }
 
