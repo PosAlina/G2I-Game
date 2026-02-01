@@ -12,6 +12,9 @@ class UG2ICharacterCollisionComponent;
 class UG2IPassingThroughObjectsComponent;
 class UG2IThirdPersonCameraComponent;
 class UG2IInteractionComponent;
+class UG2ICharacterMovementComponent;
+class UG2IInventoryComponent;
+
 
 /**
  *  Second player`s character. Daughter.
@@ -29,6 +32,10 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UG2IInteractionComponent> InteractionComp;
+
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
+	UG2IInventoryComponent* InventoryComp;
 	
 	/** Different behavior of camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
