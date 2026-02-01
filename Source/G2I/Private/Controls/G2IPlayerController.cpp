@@ -11,7 +11,6 @@
 #include "G2IInteractionComponent.h"
 #include "G2ICharacterMovementComponent.h"
 #include "G2ICameraControllerComponent.h"
-#include "G2IFlightComponent.h"
 #include "G2IFlightInterface.h"
 #include "GameFramework/Pawn.h"
 #include "G2ISteamMovementInputInterface.h"
@@ -283,35 +282,19 @@ void AG2IPlayerController::Move(const FInputActionValue& Value)
 
 void AG2IPlayerController::FlyUp(const FInputActionValue& Value)
 {
-	if (FlightComponent && MovementComponent)
-	{
-		IG2IFlightInterface::Execute_Fly(FlightComponent, MovementComponent, 1);
-	}
-	else
-	{
-		UE_LOG(LogG2I, Log, TEXT("Pawn doesn't have component with fly interface in %s"), *GetName());
-		UE_LOG(LogG2I, Log, TEXT("Pawn doesn't have component with movement interface in %s"), *GetName());
-	}
+	Fly(1);
 }
 
 void AG2IPlayerController::FlyDown(const FInputActionValue& Value)
 {
-	if (FlightComponent && MovementComponent)
-	{
-		IG2IFlightInterface::Execute_Fly(FlightComponent, MovementComponent, -1);
-	}
-	else
-	{
-		UE_LOG(LogG2I, Log, TEXT("Pawn doesn't have component with fly interface in %s"), *GetName());
-		UE_LOG(LogG2I, Log, TEXT("Pawn doesn't have component with movement interface in %s"), *GetName());
-	}
+	Fly(-1);
 }
 
-void AG2IPlayerController::StopFly(const FInputActionValue& Value)
+void AG2IPlayerController::Fly(int Direction)
 {
 	if (FlightComponent && MovementComponent)
 	{
-		IG2IFlightInterface::Execute_StopFly(FlightComponent, MovementComponent);
+		IG2IFlightInterface::Execute_Fly(FlightComponent, MovementComponent, Direction);
 	}
 	else
 	{
