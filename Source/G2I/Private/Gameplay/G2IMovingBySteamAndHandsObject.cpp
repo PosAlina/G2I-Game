@@ -72,7 +72,7 @@ bool AG2IMovingBySteamAndHandsObject::CanInteract_Implementation(const ACharacte
 	return PossibleInteractors.Contains(Interactor);
 }
 
-void AG2IMovingBySteamAndHandsObject::Interact_Implementation(ACharacter* Interactor)
+void AG2IMovingBySteamAndHandsObject::Interact_Implementation(const ACharacter* Interactor)
 {
 	//TODO Later
 	/*if (!Interactor) {

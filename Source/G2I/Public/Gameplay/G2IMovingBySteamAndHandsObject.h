@@ -46,7 +46,7 @@ protected:
 	void BeginPlay() override;
 public:
 	bool CanInteract_Implementation(const ACharacter* Interactor) override;
-	void Interact_Implementation(ACharacter* Interactor) override;
+	void Interact_Implementation(const ACharacter* Interactor) override;
 	void OnShoot_Implementation(const FHitResult& HitResult, AActor* Character) override;
 	float GetSpeedChange_Implementation() override;
 };
