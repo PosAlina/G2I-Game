@@ -120,6 +120,8 @@ void UG2IThirdPersonCameraComponent::SetupDefaults()
 			*PlayerController->GetName(), *GetName());
 		return;
 	}
+
+	SetDefaultCameraLocation();
 }
 
 void UG2IThirdPersonCameraComponent::BindDelegates()
@@ -177,8 +179,7 @@ void UG2IThirdPersonCameraComponent::InitializeCameraBoom()
 		return;
 	}
 
-	ThirdPersonCameraBoom->TargetArmLength = 220.0f;
-	ThirdPersonCameraBoom->SocketOffset = FVector(0.f, 80.f, 70.f);
+	SetDefaultCameraLocation();
 	ThirdPersonCameraBoom->bUsePawnControlRotation = true;
 }
 
@@ -204,14 +205,11 @@ void UG2IThirdPersonCameraComponent::SetDefaultCameraLocation()
 	
 	if (CameraDefaultsParameters)
 	{
-		ThirdPersonCameraBoom->TargetArmLength = CameraDefaultsParameters->DefaultTargetArm;
-		ThirdPersonCameraBoom->SocketOffset = FVector(0, CameraDefaultsParameters->DefaultHorizontalOffset, CameraDefaultsParameters->DefaultVerticalOffset);
+		DefaultTargetArmLength = CameraDefaultsParameters->DefaultTargetArm;
+		DefaultSocketOffset = FVector(0, CameraDefaultsParameters->DefaultHorizontalOffset, CameraDefaultsParameters->DefaultVerticalOffset);
 	}
-	else
-	{
-		ThirdPersonCameraBoom->TargetArmLength = 220.0f;
-		ThirdPersonCameraBoom->SocketOffset = FVector(0.f, 80.f, 70.f);
-	}
+	ThirdPersonCameraBoom->TargetArmLength = DefaultTargetArmLength;
+	ThirdPersonCameraBoom->SocketOffset = DefaultSocketOffset;
 }
 
 void UG2IThirdPersonCameraComponent::SetAimCameraLocation()
@@ -224,12 +222,9 @@ void UG2IThirdPersonCameraComponent::SetAimCameraLocation()
 	
 	if (CameraDefaultsParameters)
 	{
-		ThirdPersonCameraBoom->TargetArmLength = CameraDefaultsParameters->AimTargetArm;
-		ThirdPersonCameraBoom->SocketOffset = FVector(0, CameraDefaultsParameters->AimHorizontalOffset, CameraDefaultsParameters->AimVerticalOffset);
+		AimTargetArmLength = CameraDefaultsParameters->AimTargetArm;
+		AimSocketOffset = FVector(0, CameraDefaultsParameters->AimHorizontalOffset, CameraDefaultsParameters->AimVerticalOffset);
 	}
-	else
-	{
-		ThirdPersonCameraBoom->TargetArmLength = 160.0f;
-		ThirdPersonCameraBoom->SocketOffset = FVector(0.f, 80.f, 70.f);
-	}
+	ThirdPersonCameraBoom->TargetArmLength = AimTargetArmLength;
+	ThirdPersonCameraBoom->SocketOffset = AimSocketOffset;
 }

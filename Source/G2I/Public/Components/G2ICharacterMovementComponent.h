@@ -6,6 +6,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "G2ICharacterMovementComponent.generated.h"
 
+enum class EG2ICameraBlendState : uint8;
 enum class EG2ICameraTypeEnum : uint8;
 class UCharacterMovementComponent;
 
@@ -114,7 +115,7 @@ protected:
 	void DisableRotationTowardsCamera();
 
 	UFUNCTION()
-	void SetAbilityRotationTowardsCamera(EG2ICameraTypeEnum CurrentCamera);
+	void SetAbilityRotationTowardsCamera(EG2ICameraTypeEnum CurrentCameraType, EG2ICameraBlendState CurrentBlendState);
 
 private:
 

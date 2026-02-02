@@ -7,6 +7,7 @@
 #include "G2IAimTypeEnum.h"
 #include "G2IAimingComponent.generated.h"
 
+enum class EG2ICameraBlendState : uint8;
 enum class EG2IAimType : uint8;
 enum class EG2ICameraTypeEnum : uint8;
 class UG2IAimingWidget;
@@ -101,7 +102,7 @@ public:
 protected:
 
 	UFUNCTION()
-	void SetAbilityAiming(EG2ICameraTypeEnum CurrentCameraType);
+	void SetAbilityAiming(EG2ICameraTypeEnum CurrentCameraType, EG2ICameraBlendState CurrentBlendState);
 	
 	UFUNCTION()
 	void SetAimDistance(const float NewAimDistance);
