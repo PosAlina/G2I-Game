@@ -30,9 +30,12 @@ void AG2IMovingByGearWithSplineActor::SetLocationAndRotationWithSpline(float Spl
 
 AG2IMovingByGearWithSplineActor::AG2IMovingByGearWithSplineActor()
 {
-	PrimaryActorTick.bCanEverTick = false;
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 	SplineComponent = CreateDefaultSubobject<USplineComponent>(TEXT("SplineToMoveComponent"));
+	if (!SplineComponent) {
+		UE_LOG(LogG2I, Warning, TEXT("SplineComponent was not created for %s"), *GetName());
+		return;
+	}
 	SplineComponent->SetupAttachment(RootComponent);
 }
 

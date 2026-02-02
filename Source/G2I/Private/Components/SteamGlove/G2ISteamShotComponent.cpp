@@ -29,6 +29,11 @@ void UG2ISteamShotComponent::ShootAction_Implementation(const FG2IHitInfo Target
 		
 		OnAimTypeAfterHitChangedDelegate.Broadcast(EG2IAimType::SuccessfulHitAim);
 		DrawDebugSphere(World, TargetHitInfo.HitResult.ImpactPoint, 8.0f, 12, FColor::Red, false, 1.f);
+		
+		if (!TargetHitInfo.HitResult.GetActor()) {
+			UE_LOG(LogG2I, Warning, TEXT("Shooting actor was deleted"));
+			return;
+		}
 		if (TargetHitInfo.HitResult.GetActor()->Implements<UG2ITraceableObectInterface>()) {
 			IG2ITraceableObectInterface::Execute_OnShoot(TargetHitInfo.HitResult.GetActor(), TargetHitInfo.HitResult, GetOwner());
 		}
