@@ -1,8 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "G2ICameraTypeEnum.h"
 #include "G2ICameraControllerInputInterface.h"
+#include "G2ICameraStateEnums.h"
 #include "Components/ActorComponent.h"
 #include "G2ICameraControllerComponent.generated.h"
 
@@ -12,7 +12,8 @@ class UCameraComponent;
 class UG2IFixedCamerasComponent;
 class UG2IThirdPersonCameraComponent;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSetCameraTypeDelegate, EG2ICameraTypeEnum, CurrentCameraType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSetCameraTypeDelegate, EG2ICameraTypeEnum, CurrentCameraType,
+	EG2ICameraBlendState, CurrentBlendState);
 
 UCLASS(ClassGroup=(Camera), meta=(BlueprintSpawnableComponent))
 class G2I_API UG2ICameraControllerComponent : public UActorComponent, public IG2ICameraControllerInputInterface
@@ -69,6 +70,11 @@ private:
 	UFUNCTION()
 	void RemoveCamera(UCameraComponent *RemovedCamera);
 
+	UFUNCTION()
+	void BroadcastCameraTypeAfterBlendFinish();
+
+	void BroadcastCameraTypeAtBlendStart();
+
 	bool IsOwnerControllable() const;
 
 	bool SetCamera(const UCameraComponent& NewCamera);
@@ -78,6 +84,7 @@ private:
 	void SetupDefaults();
 	
 	void BindDelegates();
+	void BindPlayerControllerDelegates();
 
 	void SetupCamerasDefaults();
 

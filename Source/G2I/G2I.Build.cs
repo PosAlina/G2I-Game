@@ -21,7 +21,8 @@ public class G2I : ModuleRules
 			"Slate",
 			"AIModule",
       "GameplayTags",
-			"CinematicCamera"
+			"CinematicCamera",
+			"NavigationSystem"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
@@ -30,6 +31,7 @@ public class G2I : ModuleRules
 			"G2I",
 			"G2I/Public",
 			"G2I/Public/AI",
+			"G2I/Public/AI/Navigation",
 			"G2I/Public/Controls",
 			"G2I/Public/Characters",
 			"G2I/Public/DataDefinitions",
@@ -51,6 +53,7 @@ public class G2I : ModuleRules
 			"G2I",
 			"G2I/Private",
 			"G2I/Private/AI",
+			"G2I/Private/AI/Navigation",
 			"G2I/Private/Controls",
 			"G2I/Private/Characters",
 			"G2I/Private/DataDefinitions",

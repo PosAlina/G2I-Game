@@ -142,6 +142,16 @@ void UG2ICameraControllerComponent::RemoveCamera(UCameraComponent* RemovedCamera
 	}
 }
 
+void UG2ICameraControllerComponent::BroadcastCameraTypeAfterBlendFinish()
+{
+	OnSetCameraTypeDelegate.Broadcast(CurrentCameraType, EG2ICameraBlendState::Finish);
+}
+
+void UG2ICameraControllerComponent::BroadcastCameraTypeAtBlendStart()
+{
+	OnSetCameraTypeDelegate.Broadcast(CurrentCameraType, EG2ICameraBlendState::Start);
+}
+
 bool UG2ICameraControllerComponent::IsOwnerControllable() const
 {
 	if (!ensure(Owner))
@@ -179,10 +189,6 @@ bool UG2ICameraControllerComponent::SetCamera(const UCameraComponent& NewCamera)
 		UE_LOG(LogG2I, Error, TEXT("Player Controller doesn't exist in %s"), *GetName());
 		return false;
 	}
-	
-	PlayerController->SetViewTargetWithBlend(OwnerActor, CameraDefaultsParameters->CameraTransitionTime,
-		VTBlend_Linear, 0, true);
-	PlayerController->SetRotationTowardsCamera(NewCamera);
 
 	if (OwnerActor == Owner.Get())
 	{
@@ -192,7 +198,11 @@ bool UG2ICameraControllerComponent::SetCamera(const UCameraComponent& NewCamera)
 	{
 		CurrentCameraType = EG2ICameraTypeEnum::FixedCamera;
 	}
-	OnSetCameraTypeDelegate.Broadcast(CurrentCameraType);
+	BroadcastCameraTypeAtBlendStart();
+	
+	PlayerController->SetViewTargetWithBlend(OwnerActor, CameraDefaultsParameters->CameraTransitionTime,
+		VTBlend_Linear, 0, true);
+	PlayerController->SetRotationTowardsCamera(NewCamera);
 	
 	return true;
 }
@@ -276,6 +286,8 @@ void UG2ICameraControllerComponent::SetupDefaults()
 
 void UG2ICameraControllerComponent::BindDelegates()
 {
+	BindPlayerControllerDelegates();
+	
 	if (!ensure(Owner))
 	{
 		UE_LOG(LogG2I, Error, TEXT("Owner doesn't exist in %s"), *GetName());
@@ -294,6 +306,25 @@ void UG2ICameraControllerComponent::BindDelegates()
 				&ThisClass::UG2ICameraControllerComponent::RemoveCamera);
 		}
 	}
+}
+
+void UG2ICameraControllerComponent::BindPlayerControllerDelegates()
+{
+	if (!ensure(PlayerController))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Player Controller doesn't exist in %s"), *GetName());
+		return;
+	}
+	
+	const APlayerCameraManager *PlayerCameraManager = PlayerController->PlayerCameraManager;
+	if (!ensure(PlayerCameraManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Player Controller %s doesn't have Player Camera Manager in %s"),
+			*PlayerController->GetActorNameOrLabel(), *GetName());
+		return;
+	}
+
+	PlayerCameraManager->OnBlendComplete().AddUObject(this, &ThisClass::BroadcastCameraTypeAfterBlendFinish);
 }
 
 void UG2ICameraControllerComponent::SetupCamerasDefaults()
