@@ -3,7 +3,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "G2I.h"
 #include "G2IAimingInterface.h"
-#include "G2IPlayerCameraManager.h"  
+#include "G2IPlayerCameraManager.h"
 #include "G2IThirdPersonCameraInputInterface.h"
 #include "G2IPlayerState.h"
 #include "Engine/LocalPlayer.h"
@@ -12,9 +12,12 @@
 #include "G2ICharacterMovementComponent.h"
 #include "G2ICameraControllerComponent.h"
 #include "G2IFlightInterface.h"
+#include "G2IGameInstance.h"
 #include "GameFramework/Pawn.h"
 #include "G2ISteamMovementInputInterface.h"
 #include "G2ISteamShotInputInterface.h"
+#include "G2IUIManager.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 void AG2IPlayerController::SetupInputComponent()
 {
@@ -69,6 +72,8 @@ void AG2IPlayerController::SetupInputComponent()
 				EnhancedInputComponent->BindAction(ToggleFollowAIBehindPlayerAction, ETriggerEvent::Started,
 					this, &ThisClass::ToggleFollowAIBehindPlayer);
 
+				EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Started,this, &ThisClass::CallPause);
+
 			}
 			else
 			{
@@ -80,6 +85,26 @@ void AG2IPlayerController::SetupInputComponent()
 			UE_LOG(LogG2I, Log, TEXT("Local character is not defined"));
 		}
 	}
+
+	const UWorld *World = GetWorld();
+	if (!ensure(World))
+	{
+		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
+		return;
+	}
+	const UG2IGameInstance *GameInstance = Cast<UG2IGameInstance>(World->GetGameInstance());
+	if (!ensure(GameInstance))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Game Instance doesn't exist in %s"), *GetName());
+		return;
+	}
+	UIManager = GameInstance->GetSubsystem<UG2IUIManager>();
+	if (!ensure(UIManager))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+			*UG2IUIManager::StaticClass()->GetName(), *GetName());
+	}
+	UIManager->OnPlayerControllerInitDelegate.Broadcast(this);
 }
 
 AG2IPlayerController::AG2IPlayerController()
@@ -132,6 +157,36 @@ void AG2IPlayerController::SetViewTargetWithBlend(class AActor* NewViewTarget, f
 	}
 }
 
+void AG2IPlayerController::CallPause(const FInputActionValue& Value)
+{
+	SetPause(true);
+}
+
+bool AG2IPlayerController::SetPause(bool bPause, FCanUnpause CanUnpauseDelegate)
+{
+	if (!Super::SetPause(bPause, CanUnpauseDelegate))
+	{
+		return false;
+	}
+
+	if (!ensure(UIManager))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+			*UG2IUIManager::StaticClass()->GetName(), *GetName());
+		return true;
+	}
+	if (bPause)
+	{
+		UIManager->OpenPauseWidget();
+	}
+	else
+	{
+		UIManager->ClosePauseWidget();
+	}
+	
+	return true;
+}
+
 void AG2IPlayerController::SetRotationTowardsCamera(const UCameraComponent& Camera)
 {
 	FVector NewCameraForwardVector = Camera.GetForwardVector();
@@ -143,6 +198,18 @@ void AG2IPlayerController::SetRotationTowardsCamera(const UCameraComponent& Came
 TObjectPtr<UG2ICameraDefaultsParameters> AG2IPlayerController::GetCameraDefaultsParameters()
 {
 	return CameraDefaultsParameters;
+}
+
+void AG2IPlayerController::QuitGame()
+{
+	const UWorld *World = GetWorld();
+	if (!ensure(World))
+	{
+		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
+		return;
+	}
+	
+	UKismetSystemLibrary::QuitGame(World, this, EQuitPreference::Quit, true);
 }
 
 void AG2IPlayerController::SetupCharacterActorComponents()
