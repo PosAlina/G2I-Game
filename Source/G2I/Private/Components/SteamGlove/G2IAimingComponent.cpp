@@ -1,11 +1,13 @@
 #include "G2IAimingComponent.h"
 #include "G2I.h"
-#include "G2IAimingWidget.h"
 #include "G2IMechanicUsingAimInterface.h"
 #include "G2IPlayerController.h"
 #include "G2ISteamShotComponent.h"
-#include "Blueprint/UserWidget.h"
 #include "G2ICameraControllerComponent.h"
+#include "G2ICameraStateEnums.h"
+#include "G2ICharacterInterface.h"
+#include "G2IGameInstance.h"
+#include "G2IUIManager.h"
 
 UG2IAimingComponent::UG2IAimingComponent()
 {
@@ -38,7 +40,12 @@ void UG2IAimingComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		{
 			bAimViewIsPending = false;
 			PendingAimViewElapsedTime = 0.f;
-			AimWidget->SetAimTexture(CurrentAimType);
+			if (!ensure(UIManager))
+			{
+				UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+					*UG2IUIManager::StaticClass()->GetName(), *GetName());
+			}
+			UIManager->ChangeAimingType(CurrentAimType);
 		}
 	}
 }
@@ -62,6 +69,16 @@ void UG2IAimingComponent::SetupDefaults()
 		return;
 	}
 
+	const UG2IGameInstance *GameInstance = Cast<UG2IGameInstance>(World->GetGameInstance());
+	if (ensure(GameInstance))
+	{
+		UIManager = GameInstance->GetSubsystem<UG2IUIManager>();
+	}
+	else
+	{
+		UE_LOG(LogG2I, Error, TEXT("Game Instance doesn't exist in %s"), *GetName());
+	}
+
 	APlayerController* FirstPlayerController = World->GetFirstPlayerController();
 	if (!ensure(FirstPlayerController))
 	{
@@ -75,28 +92,25 @@ void UG2IAimingComponent::SetupDefaults()
 		UE_LOG(LogG2I, Error, TEXT("Player Controller isn't target %s in %s"),
 			*AG2IPlayerController::StaticClass()->GetName(), *GetName());
 	}
-
-	if (!ensure(AimWidgetClass))
-	{
-		UE_LOG(LogG2I, Error, TEXT("Aim Widget Class doesn't determine in %s"), *GetName());
-		return;
-	}
-	
-	AimWidget = CreateWidget<UG2IAimingWidget>(World, AimWidgetClass);
-
-	if (!ensure(AimWidget))
-	{
-		UE_LOG(LogG2I, Error, TEXT("Aim Widget didn't created in %s"), *GetName());
-	}
 }
 
 void UG2IAimingComponent::BindDelegates()
 {
-	const AActor *Owner = GetOwner();
+	AActor *Owner = GetOwner();
 	if (!ensure(Owner))
 	{
 		UE_LOG(LogG2I, Error, TEXT("Owner doesn't exist in %s"), *GetName());
 		return;
+	}
+
+	if (IG2ICharacterInterface *CharacterOwner = Cast<IG2ICharacterInterface>(Owner))
+	{
+		CharacterOwner->GetUnPossessedDelegate().AddDynamic(this, &ThisClass::StopAimingAction_Implementation);
+	}
+	else
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Owner %s of %s doesn't implement %s interface"),
+			*Owner->GetActorNameOrLabel(), *GetName(), *UG2ICharacterInterface::StaticClass()->GetName());
 	}
 	
 	if (UG2ICameraControllerComponent *CameraControllerComponent = Owner->FindComponentByClass<UG2ICameraControllerComponent>())
@@ -119,12 +133,12 @@ void UG2IAimingComponent::StartAimingAction_Implementation()
 		OnStartAimingDelegate.Broadcast();
 		bIsAiming = true;
 
-		if (!ensure(AimWidget))
+		if (!ensure(UIManager))
 		{
-			UE_LOG(LogG2I, Error, TEXT("Aim Widget didn't created in %s"), *GetName());
-			return;
+			UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+				*UG2IUIManager::StaticClass()->GetName(), *GetName());
 		}
-		AimWidget->AddToViewport();
+		UIManager->OpenAimingWidget();
 	}
 }
 
@@ -136,12 +150,12 @@ void UG2IAimingComponent::StopAimingAction_Implementation()
 		OnFinishAimingDelegate.Broadcast();
 		bIsAiming = false;
 
-		if (!ensure(AimWidget))
+		if (!ensure(UIManager))
 		{
-			UE_LOG(LogG2I, Error, TEXT("Aim Widget didn't created in %s"), *GetName());
-			return;
+			UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+				*UG2IUIManager::StaticClass()->GetName(), *GetName());
 		}
-		AimWidget->RemoveFromParent();
+		UIManager->CloseAimingWidget();
 	}
 }
 
@@ -167,17 +181,19 @@ UActorComponent *UG2IAimingComponent::GetCurrentComponentUsingAim_Implementation
 	return nullptr;
 }
 
-void UG2IAimingComponent::SetAbilityAiming(EG2ICameraTypeEnum CurrentCameraType)
+void UG2IAimingComponent::SetAbilityAiming(EG2ICameraTypeEnum CurrentCameraType, EG2ICameraBlendState CurrentBlendState)
 {
-	if (CurrentCameraType == EG2ICameraTypeEnum::ThirdPersonCamera)
+	if (CurrentCameraType == EG2ICameraTypeEnum::ThirdPersonCamera && CurrentBlendState == EG2ICameraBlendState::Finish)
 	{
 		bCanAiming = true;
 		if (bWantsAiming)
 		{
 			StartAimingAction_Implementation();
 		}
+		return;
 	}
-	else
+
+	if (CurrentCameraType == EG2ICameraTypeEnum::FixedCamera && CurrentBlendState == EG2ICameraBlendState::Start)
 	{
 		bCanAiming = false;
 		if (bIsAiming)
@@ -185,6 +201,7 @@ void UG2IAimingComponent::SetAbilityAiming(EG2ICameraTypeEnum CurrentCameraType)
 			StopAimingAction_Implementation();
 			bWantsAiming = true;
 		}
+		return;
 	}
 }
 
@@ -196,13 +213,13 @@ void UG2IAimingComponent::SetAimDistance(const float NewAimDistance)
 void UG2IAimingComponent::SetPendingAimType(EG2IAimType NewAimType)
 {
 	bAimViewIsPending = true;
-	
-	if (!ensure(AimWidget))
+
+	if (!ensure(UIManager))
 	{
-		UE_LOG(LogG2I, Error, TEXT("Aim Widget didn't created in %s"), *GetName());
-		return;
+		UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+			*UG2IUIManager::StaticClass()->GetName(), *GetName());
 	}
-	AimWidget->SetAimTexture(NewAimType);
+	UIManager->ChangeAimingType(NewAimType);
 }
 
 void UG2IAimingComponent::ActivateCurrentComponentUsingAim()
@@ -228,14 +245,12 @@ void UG2IAimingComponent::SetAimType(const AActor* TargetActor)
 		{
 			if (!bAimViewIsPending)
 			{
-				if (!ensure(AimWidget))
+				if (!ensure(UIManager))
 				{
-					UE_LOG(LogG2I, Error, TEXT("Aim Widget didn't created in %s"), *GetName());
+					UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+						*UG2IUIManager::StaticClass()->GetName(), *GetName());
 				}
-				else
-				{
-					AimWidget->SetAimTexture(NewAimType);
-				}
+				UIManager->ChangeAimingType(NewAimType);
 			}
 			CurrentAimType = NewAimType;
 		}

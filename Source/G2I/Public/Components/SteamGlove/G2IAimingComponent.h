@@ -7,6 +7,8 @@
 #include "G2IAimTypeEnum.h"
 #include "G2IAimingComponent.generated.h"
 
+enum class EG2ICameraBlendState : uint8;
+class UG2IUIManager;
 enum class EG2IAimType : uint8;
 enum class EG2ICameraTypeEnum : uint8;
 class UG2IAimingWidget;
@@ -29,13 +31,6 @@ public:
 	FFinishAimingDelegate OnFinishAimingDelegate;
 	
 protected:
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = View)
-	TSubclassOf<UG2IAimingWidget> AimWidgetClass;
-	
-	UPROPERTY()
-	TObjectPtr<UG2IAimingWidget> AimWidget;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = View, meta = (Units = "s", ToolTip =
 		"After the event, the aim takes on a specific view for that time. Afterward, the aiming logic returns"))
 	float PendingAimViewMaxTime = 1.f;
@@ -55,6 +50,9 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<AG2IPlayerController> PlayerController;
+
+	UPROPERTY()
+	TObjectPtr<UG2IUIManager> UIManager;
 
 	UPROPERTY()
 	TArray<TObjectPtr<UActorComponent>> ComponentsUsingAim;
@@ -101,7 +99,7 @@ public:
 protected:
 
 	UFUNCTION()
-	void SetAbilityAiming(EG2ICameraTypeEnum CurrentCameraType);
+	void SetAbilityAiming(EG2ICameraTypeEnum CurrentCameraType, EG2ICameraBlendState CurrentBlendState);
 	
 	UFUNCTION()
 	void SetAimDistance(const float NewAimDistance);
