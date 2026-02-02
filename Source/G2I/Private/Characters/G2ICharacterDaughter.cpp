@@ -1,6 +1,7 @@
 ﻿#include "G2ICharacterDaughter.h"
 
 #include "G2I.h"
+#include "G2IFlightComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "Components/Camera/G2IThirdPersonCameraComponent.h"
 #include "Components/G2ICharacterMovementComponent.h"
@@ -19,6 +20,7 @@ AG2ICharacterDaughter::AG2ICharacterDaughter(const FObjectInitializer& ObjectIni
 	CameraControllerComp = CreateDefaultSubobject<UG2ICameraControllerComponent>(TEXT("CameraControllerComp"));
 	ThirdPersonCameraComp = CreateDefaultSubobject<UG2IThirdPersonCameraComponent>(TEXT("ThirdPersonCameraComp"));
 	FixedCamerasComp = CreateDefaultSubobject<UG2IFixedCamerasComponent>(TEXT("FixedCamerasComp"));
+	FlightComponent = CreateDefaultSubobject<UG2IFlightComponent>(TEXT("FlightComp"));
 
 	UG2ICharacterMovementComponent *MovementComp = Cast<UG2ICharacterMovementComponent>(GetCharacterMovement());
 	if (!ensure(MovementComp))
