@@ -19,10 +19,10 @@ private:
 	TObjectPtr<AActor> Owner;
 
 	UPROPERTY()
-	TMap<TObjectPtr<UStaticMeshComponent>, int> StaticMeshesMap;
+	TMap<TObjectPtr<UStaticMeshComponent>, int32> StaticMeshesMap;
 
 	// This can't be UPROPERTY
-	TMultiMap<int, UMaterialInterface*> MaterialsMap;
+	TMultiMap<int32, UMaterialInterface*> MaterialsMap;
 
 	UPROPERTY(EditAnywhere, Category = Materials)
 	TObjectPtr<UMaterialInterface> GhostMaterial;

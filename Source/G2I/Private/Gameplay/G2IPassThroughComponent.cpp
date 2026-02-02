@@ -86,7 +86,7 @@ void UG2IPassThroughComponent::PreInitializeDefaults()
 	TInlineComponentArray<UStaticMeshComponent*> StaticMeshComponents;
 	Owner->GetComponents<UStaticMeshComponent>(StaticMeshComponents, true);
 
-	int SMCount = 0;
+	int32 SMCount = 0;
 	for (UStaticMeshComponent* SMComponent : StaticMeshComponents)
 	{
 		StaticMeshesMap.Add(SMComponent, SMCount);
@@ -136,10 +136,10 @@ void UG2IPassThroughComponent::HideGhostMaterial(APawn* Pawn)
 
 		for (auto SMPair : StaticMeshesMap)
 		{
-			int SMCount = SMPair.Value;
+			int32 SMCount = SMPair.Value;
 			MaterialsMap.MultiFind(SMCount, MaterialsArray, false);
 
-			for (int i = 0; i < MaterialsArray.Num(); i++)
+			for (int32 i = 0; i < MaterialsArray.Num(); i++)
 				SMPair.Key->SetMaterial(i, MaterialsArray[i]);
 		}
 	}
@@ -182,10 +182,10 @@ void UG2IPassThroughComponent::ShowGhostMaterial(APawn* Pawn)
 
 		for (auto SMPair : StaticMeshesMap)
 		{
-			int SMCount = SMPair.Value;
+			int32 SMCount = SMPair.Value;
 			MaterialsMap.MultiFind(SMCount, MaterialsArray, false);
 
-			for (int i = 0; i < MaterialsArray.Num(); i++)
+			for (int32 i = 0; i < MaterialsArray.Num(); i++)
 				SMPair.Key->SetMaterial(i, GhostMaterial);
 		}
 	}
