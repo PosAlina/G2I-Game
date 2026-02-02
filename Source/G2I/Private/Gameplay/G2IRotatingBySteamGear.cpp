@@ -4,8 +4,6 @@
 
 AG2IRotatingBySteamGear::AG2IRotatingBySteamGear()
 {
-	PrimaryActorTick.bCanEverTick = false;
-
 	Timeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("SteamForceTimeline"));
 	TimelineValue = 0.0f;
 	TimelineCurve = nullptr;
@@ -19,9 +17,12 @@ void AG2IRotatingBySteamGear::BeginPlay()
 		UE_LOG(LogG2I, Warning, TEXT("TimelineCurve is not set for %s"), *GetName());
 		return;
 	}
-
 	TimelineUpdate.BindUFunction(this, FName("OnTimelineUpdate"));
 
+	if (!Timeline) {
+		UE_LOG(LogG2I, Warning, TEXT("Timeline is not exist for %s"), *GetName());
+		return;
+	}
 	Timeline->AddInterpFloat(TimelineCurve, TimelineUpdate);
 	Timeline->SetTimelineLengthMode(ETimelineLengthMode::TL_LastKeyFrame);
 	Timeline->SetLooping(false);

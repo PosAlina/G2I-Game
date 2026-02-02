@@ -6,8 +6,6 @@
 
 AG2IMovingBySteamAndHandsObject::AG2IMovingBySteamAndHandsObject()
 {
-	PrimaryActorTick.bCanEverTick = false;
-
 	Timeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("SteamForceTimeline"));
 	TimelineValue = 0.0f;
 	TimelineCurve = nullptr;
@@ -23,6 +21,10 @@ void AG2IMovingBySteamAndHandsObject::BeginPlay()
 	}
 	TimelineUpdate.BindUFunction(this, FName("OnTimelineUpdate"));
 
+	if (!Timeline) {
+		UE_LOG(LogG2I, Warning, TEXT("Timeline is not exist for %s"), *GetName());
+		return;
+	}
 	Timeline->AddInterpFloat(TimelineCurve, TimelineUpdate);
 	Timeline->SetTimelineLengthMode(ETimelineLengthMode::TL_LastKeyFrame);
 	Timeline->SetLooping(false);
@@ -121,10 +123,12 @@ void AG2IMovingBySteamAndHandsObject::OnShoot_Implementation(const FHitResult& H
 {
 	if (!Character) {
 		UE_LOG(LogG2I, Error, TEXT("Character not founded"));
+		return;
 	}
 
 	if (!Character->FindComponentByClass<UG2ISteamGloveComponent>()) {
 		UE_LOG(LogG2I, Warning, TEXT("Character %s don't have steam glove"), *Character->GetName());
+		return;
 	}
 
 	ForwardVector = HitResult.Location - HitResult.TraceStart;
