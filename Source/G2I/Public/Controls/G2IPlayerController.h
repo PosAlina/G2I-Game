@@ -147,6 +147,18 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UActorComponent> SteamShotComponent;
 
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UActorComponent> FlightComponent;
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> FlightDownAction;
+	
+
+	void FlyUp(const FInputActionValue& Value);
+	void FlyDown(const FInputActionValue& Value);
+	
+	void Fly(int Direction);
+
 	void Shoot(const FInputActionValue& Value);
 	
 	/** Enable/disable AI characters to follow the player */

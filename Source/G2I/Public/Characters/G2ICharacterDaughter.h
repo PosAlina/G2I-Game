@@ -5,6 +5,7 @@
 #include "GameFramework/Character.h"
 #include "G2ICharacterDaughter.generated.h"
 
+class UG2IFlightComponent;
 class UG2IFixedCamerasComponent;
 class UG2ICameraControllerComponent;
 class UG2ICharacterCollisionComponent;
@@ -39,6 +40,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	TObjectPtr<UG2IFixedCamerasComponent> FixedCamerasComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement)
+	TObjectPtr<UG2IFlightComponent> FlightComponent;
 private:
 
 	UPROPERTY(BlueprintAssignable)
