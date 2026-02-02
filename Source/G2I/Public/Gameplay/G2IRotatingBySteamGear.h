@@ -11,8 +11,10 @@ class G2I_API AG2IRotatingBySteamGear : public AActor, public IG2ITraceableObect
 {
 	GENERATED_BODY()
 private:
+	UPROPERTY()
 	FOnTimelineFloat TimelineUpdate;
 
+	UPROPERTY()
 	TObjectPtr<UTimelineComponent> Timeline;
 
 	float TimelineValue;
