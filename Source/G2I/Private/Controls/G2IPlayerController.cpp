@@ -2,16 +2,22 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "G2I.h"
+#include "G2IAimingInterface.h"
 #include "G2IPlayerCameraManager.h"
-#include "Camera/G2IThirdPersonCameraInputInterface.h"
+#include "G2IThirdPersonCameraInputInterface.h"
 #include "G2IPlayerState.h"
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
-#include "Components/G2IInteractionComponent.h"
-#include "Components/G2ICharacterMovementComponent.h"
-#include "Components/Camera/G2ICameraControllerComponent.h"
+#include "G2IInteractionComponent.h"
+#include "G2ICharacterMovementComponent.h"
+#include "G2ICameraControllerComponent.h"
+#include "G2IFlightInterface.h"
+#include "G2IGameInstance.h"
 #include "GameFramework/Pawn.h"
-#include "SteamGlove/G2ISteamMovementInputInterface.h"
+#include "G2ISteamMovementInputInterface.h"
+#include "G2ISteamShotInputInterface.h"
+#include "G2IUIManager.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 void AG2IPlayerController::SetupInputComponent()
 {
@@ -39,9 +45,12 @@ void AG2IPlayerController::SetupInputComponent()
 				EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
 
 				EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ThisClass::Jump);
+				EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ThisClass::FlyUp);
 				EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ThisClass::StopJumping);
-
-				EnhancedInputComponent->BindAction(ToggleCrouchAction, ETriggerEvent::Started, this, &ThisClass::ToggleCrouch);
+				EnhancedInputComponent->BindAction(FlightDownAction, ETriggerEvent::Triggered, this, &ThisClass::FlyDown);
+				EnhancedInputComponent->BindAction(FlightDownAction, ETriggerEvent::Completed, this, &ThisClass::StopJumping);
+				
+				//EnhancedInputComponent->BindAction(ToggleCrouchAction, ETriggerEvent::Started, this, &ThisClass::ToggleCrouch);
 
 				EnhancedInputComponent->BindAction(SwitchCameraBehaviorAction, ETriggerEvent::Started, this,
 					&ThisClass::SwitchCameraBehavior);
@@ -54,6 +63,17 @@ void AG2IPlayerController::SetupInputComponent()
 				for (const auto& InteractAction : InteractActions) {
 					EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &ThisClass::Interact);
 				}
+
+				EnhancedInputComponent->BindAction(TakeAimAction, ETriggerEvent::Started, this, &ThisClass::StartAiming);
+				EnhancedInputComponent->BindAction(TakeAimAction, ETriggerEvent::Completed, this, &ThisClass::StopAiming);
+
+				EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &ThisClass::Shoot);
+
+				EnhancedInputComponent->BindAction(ToggleFollowAIBehindPlayerAction, ETriggerEvent::Started,
+					this, &ThisClass::ToggleFollowAIBehindPlayer);
+
+				EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Started,this, &ThisClass::CallPause);
+
 			}
 			else
 			{
@@ -65,6 +85,26 @@ void AG2IPlayerController::SetupInputComponent()
 			UE_LOG(LogG2I, Log, TEXT("Local character is not defined"));
 		}
 	}
+
+	const UWorld *World = GetWorld();
+	if (!ensure(World))
+	{
+		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
+		return;
+	}
+	const UG2IGameInstance *GameInstance = Cast<UG2IGameInstance>(World->GetGameInstance());
+	if (!ensure(GameInstance))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Game Instance doesn't exist in %s"), *GetName());
+		return;
+	}
+	UIManager = GameInstance->GetSubsystem<UG2IUIManager>();
+	if (!ensure(UIManager))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+			*UG2IUIManager::StaticClass()->GetName(), *GetName());
+	}
+	UIManager->OnPlayerControllerInitDelegate.Broadcast(this);
 }
 
 AG2IPlayerController::AG2IPlayerController()
@@ -117,6 +157,36 @@ void AG2IPlayerController::SetViewTargetWithBlend(class AActor* NewViewTarget, f
 	}
 }
 
+void AG2IPlayerController::CallPause(const FInputActionValue& Value)
+{
+	SetPause(true);
+}
+
+bool AG2IPlayerController::SetPause(bool bPause, FCanUnpause CanUnpauseDelegate)
+{
+	if (!Super::SetPause(bPause, CanUnpauseDelegate))
+	{
+		return false;
+	}
+
+	if (!ensure(UIManager))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+			*UG2IUIManager::StaticClass()->GetName(), *GetName());
+		return true;
+	}
+	if (bPause)
+	{
+		UIManager->OpenPauseWidget();
+	}
+	else
+	{
+		UIManager->ClosePauseWidget();
+	}
+	
+	return true;
+}
+
 void AG2IPlayerController::SetRotationTowardsCamera(const UCameraComponent& Camera)
 {
 	FVector NewCameraForwardVector = Camera.GetForwardVector();
@@ -130,12 +200,27 @@ TObjectPtr<UG2ICameraDefaultsParameters> AG2IPlayerController::GetCameraDefaults
 	return CameraDefaultsParameters;
 }
 
+void AG2IPlayerController::QuitGame()
+{
+	const UWorld *World = GetWorld();
+	if (!ensure(World))
+	{
+		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
+		return;
+	}
+	
+	UKismetSystemLibrary::QuitGame(World, this, EQuitPreference::Quit, true);
+}
+
 void AG2IPlayerController::SetupCharacterActorComponents()
 {
 	ThirdPersonCameraComponents.Empty();
 	InteractionComponents.Empty();
 	MovementComponent = nullptr;
 	SteamMovementComponent = nullptr;
+	AimingComponent = nullptr;
+	SteamShotComponent = nullptr;
+	FlightComponent = nullptr;
 	
 	if (const APawn *CurrentCharacter = GetPawn())
 	{
@@ -165,6 +250,21 @@ void AG2IPlayerController::SetupCharacterActorComponents()
 			if (Component->Implements<UG2ISteamMovementInputInterface>())
 			{
 				SteamMovementComponent = Component;
+			}
+
+			if (Component->Implements<UG2IAimingInterface>())
+			{
+				AimingComponent = Component;
+			}
+
+			if (Component->Implements<UG2ISteamShotInputInterface>())
+			{
+				SteamShotComponent = Component;
+			}
+
+			if(Component->Implements<UG2IFlightInterface>())
+			{
+				FlightComponent = Component;
 			}
 		}
 	}
@@ -247,8 +347,40 @@ void AG2IPlayerController::Move(const FInputActionValue& Value)
 	}
 }
 
+void AG2IPlayerController::FlyUp(const FInputActionValue& Value)
+{
+	Fly(1);
+}
+
+void AG2IPlayerController::FlyDown(const FInputActionValue& Value)
+{
+	Fly(-1);
+}
+
+void AG2IPlayerController::Fly(int Direction)
+{
+	if (FlightComponent && MovementComponent)
+	{
+		IG2IFlightInterface::Execute_Fly(FlightComponent, MovementComponent, Direction);
+	}
+	else
+	{
+		UE_LOG(LogG2I, Log, TEXT("Pawn doesn't have component with fly interface in %s"), *GetName());
+		UE_LOG(LogG2I, Log, TEXT("Pawn doesn't have component with movement interface in %s"), *GetName());
+	}
+}
+
 void AG2IPlayerController::Jump(const FInputActionValue& Value)
 {
+	if (!FlightComponent)
+	{
+		UE_LOG(LogG2I, Log, TEXT("Pawn doesn't have component with fly interface in %s"), *GetName());
+	}
+	else
+	{
+		return;
+	}
+	
 	if (!ensure(MovementComponent))
 	{
 		UE_LOG(LogG2I, Warning, TEXT("Pawn doesn't have component with movement interface in %s"), *GetName());
@@ -278,6 +410,16 @@ void AG2IPlayerController::Jump(const FInputActionValue& Value)
 
 void AG2IPlayerController::StopJumping(const FInputActionValue& Value)
 {
+	if (!FlightComponent)
+	{
+		UE_LOG(LogG2I, Log, TEXT("Pawn doesn't have component with fly interface in %s"), *GetName());
+	}
+	else
+	{
+		IG2IFlightInterface::Execute_StopFly(FlightComponent, MovementComponent);
+		return;
+	}
+	
 	if (!ensure(MovementComponent))
 	{
 		UE_LOG(LogG2I, Warning, TEXT("Pawn doesn't have component with movement interface in %s"), *GetName());
@@ -354,4 +496,44 @@ void AG2IPlayerController::Interact(const FInputActionInstance& Instance)
 				"implemented needed interface"), *Component->GetName());
 		}
 	}
+}
+
+void AG2IPlayerController::StartAiming(const FInputActionValue& Value)
+{
+	if (AimingComponent && AimingComponent->Implements<UG2IAimingInterface>())
+	{
+		IG2IAimingInterface::Execute_StartAimingAction(AimingComponent);
+	}
+}
+
+void AG2IPlayerController::StopAiming(const FInputActionValue& Value)
+{
+	if (AimingComponent && AimingComponent->Implements<UG2IAimingInterface>())
+	{
+		IG2IAimingInterface::Execute_StopAimingAction(AimingComponent);
+	}
+}
+
+void AG2IPlayerController::Shoot(const FInputActionValue& Value)
+{
+	if (AimingComponent && AimingComponent->Implements<UG2IAimingInterface>())
+	{
+		if (!IG2IAimingInterface::Execute_IsAiming(AimingComponent))
+		{
+			return;
+		}
+		
+		if (SteamShotComponent && SteamShotComponent->Implements<UG2ISteamShotInputInterface>()
+			&& SteamShotComponent == IG2IAimingInterface::Execute_GetCurrentComponentUsingAim(AimingComponent))
+		{
+			const FG2IHitInfo AimLineHitInfo = IG2IAimingInterface::Execute_GetAimLineHitInfo(AimingComponent);
+			IG2ISteamShotInputInterface::Execute_ShootAction(SteamShotComponent, AimLineHitInfo);
+		}
+	}
+}
+
+void AG2IPlayerController::ToggleFollowAIBehindPlayer(const FInputActionValue& Value)
+{
+	bIsFollowingAIBehindPlayer = !bIsFollowingAIBehindPlayer;
+	OnToggleFollowAIBehindPlayerDelegate.Broadcast(bIsFollowingAIBehindPlayer);
 }

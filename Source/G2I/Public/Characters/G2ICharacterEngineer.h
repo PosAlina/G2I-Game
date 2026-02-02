@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "G2ICharacterInterface.h"
 #include "GameFramework/Character.h"
 #include "Components/G2IValveInteractionComponent.h"
 #include "Components/G2IHoleInteractionComponent.h"
@@ -12,13 +13,14 @@ class UG2IThirdPersonCameraComponent;
 class UG2ICameraControllerComponent;
 class UG2ICharacterCollisionComponent;
 class UG2IInteractionComponent;
+class UG2IInventoryComponent;
 
 /**
  *  First player`s character. Engineer.
  *  Implements a controllable orbiting camera
  */
 UCLASS(Blueprintable)
-class G2I_API AG2ICharacterEngineer : public ACharacter
+class G2I_API AG2ICharacterEngineer : public ACharacter, public IG2ICharacterInterface
 {
 	GENERATED_BODY()
 
@@ -49,9 +51,31 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	TObjectPtr<UG2IFixedCamerasComponent> FixedCamerasComp;
 
-protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
+	UG2IInventoryComponent* InventoryComp;
+
+
+private:
+
+	UPROPERTY(BlueprintAssignable)
+	FPossessedDelegate OnPossessedDelegate;
+
+	UPROPERTY(BlueprintAssignable)
+	FUnPossessedDelegate OnUnPossessedDelegate;
+
+public:
 
 	explicit AG2ICharacterEngineer(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+	virtual void PossessedBy(AController* NewController) override;
+	
+	virtual void UnPossessed() override;
+	
+	UFUNCTION()
+	virtual FPossessedDelegate& GetPossessedDelegate() override;
+
+	UFUNCTION()
+	virtual FUnPossessedDelegate& GetUnPossessedDelegate() override;
 	
 };
 
