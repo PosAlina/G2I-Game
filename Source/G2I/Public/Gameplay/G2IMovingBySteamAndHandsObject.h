@@ -21,7 +21,8 @@ private:
 	FVector ForwardVector;
 
 	float Multiplier;
-
+	
+	UPROPERTY()
 	TObjectPtr<UTimelineComponent> Timeline;
 
 	float TimelineValue;
