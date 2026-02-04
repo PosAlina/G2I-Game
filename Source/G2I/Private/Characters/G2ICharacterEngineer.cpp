@@ -2,7 +2,6 @@
 #include "Components/Camera/G2IThirdPersonCameraComponent.h"
 #include "Components/G2ICharacterCollisionComponent.h"
 #include "Components/G2ICharacterMovementComponent.h"
-#include "Components/G2IGlovePunchComponent.h"
 #include "GameFramework/Controller.h"
 #include "Components/G2IInteractionComponent.h"
 #include "Components/SteamGlove/G2ISteamGloveComponent.h"
@@ -17,10 +16,9 @@ AG2ICharacterEngineer::AG2ICharacterEngineer(const FObjectInitializer& ObjectIni
 	CollisionComp = CreateDefaultSubobject<UG2ICharacterCollisionComponent>(TEXT("CollisionComp"));
 	InteractionComp = CreateDefaultSubobject<UG2IInteractionComponent>(TEXT("InteractionComp"));
 	CameraControllerComp = CreateDefaultSubobject<UG2ICameraControllerComponent>(TEXT("CameraControllerComp"));
-	FixedCamerasComp = CreateDefaultSubobject<UG2IFixedCamerasComponent>(TEXT("FixedCamerasComp"));
 	ThirdPersonCameraComp = CreateDefaultSubobject<UG2IThirdPersonCameraComponent>(TEXT("ThirdPersonCameraComp"));
+	FixedCamerasComp = CreateDefaultSubobject<UG2IFixedCamerasComponent>(TEXT("FixedCamerasComp"));
 	ValveInteractionComp = CreateDefaultSubobject<UG2IValveInteractionComponent>(FName("ValveInteractionComp"));
 	HoleInteractionComp = CreateDefaultSubobject<UG2IHoleInteractionComponent>(FName("HoleInteractionComp"));
 	SteamGloveComp = CreateDefaultSubobject<UG2ISteamGloveComponent>(FName("SteamGloveComp"));
-	GadgetComp = CreateDefaultSubobject<UG2IGlovePunchComponent>(FName("GadgetComp"));
 }

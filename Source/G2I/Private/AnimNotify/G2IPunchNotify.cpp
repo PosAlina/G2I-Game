@@ -5,7 +5,7 @@
 
 #include "G2I.h"
 #include "G2IDestructibleActorInterface.h"
-#include "Components/G2IGlovePunchComponent.h"
+#include "Components/SteamGlove/G2IGlovePunchComponent.h"
 
 void UG2IPunchNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
                              const FAnimNotifyEventReference& EventReference)

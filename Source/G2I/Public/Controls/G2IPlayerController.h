@@ -125,10 +125,10 @@ protected:
 	TObjectPtr<UActorComponent> SteamMovementComponent;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* GadgetAction;
+	UInputAction* GlovePunchAction;
 
 	UPROPERTY(VisibleAnywhere)
-	TSet<UActorComponent*> GadgetComponents;
+	TObjectPtr<UActorComponent> GlovePunchComponent;
 	
-	void GadgetActivation(const FInputActionInstance& Instance);
+	void GlovePunchActivation(const FInputActionInstance& Instance);
 };

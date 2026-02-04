@@ -4,7 +4,7 @@
 #include "G2I.h"
 #include "G2IPlayerCameraManager.h"
 #include "Camera/G2IThirdPersonCameraInputInterface.h"
-#include "G2IGadgetInterface.h"
+#include "G2IGlovePunchInterface.h"
 #include "G2IPlayerState.h"
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
@@ -56,7 +56,7 @@ void AG2IPlayerController::SetupInputComponent()
 					EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &ThisClass::Interact);
 				}
 
-				EnhancedInputComponent->BindAction(GadgetAction, ETriggerEvent::Started, this, &ThisClass::GadgetActivation);
+				EnhancedInputComponent->BindAction(GlovePunchAction, ETriggerEvent::Started, this, &ThisClass::GlovePunchActivation);
 			}
 			else
 			{
@@ -139,7 +139,7 @@ void AG2IPlayerController::SetupCharacterActorComponents()
 	InteractionComponents.Empty();
 	MovementComponent = nullptr;
 	SteamMovementComponent = nullptr;
-	GadgetComponents.Empty();
+	GlovePunchComponent = nullptr;
 	
 	if (const APawn *CurrentCharacter = GetPawn())
 	{
@@ -171,9 +171,9 @@ void AG2IPlayerController::SetupCharacterActorComponents()
 				SteamMovementComponent = Component;
 			}
 			
-			if (Component->Implements<UG2IGadgetInterface>())
+			if (Component->Implements<UG2IGlovePunchInterface>())
 			{
-				GadgetComponents.Add(Component);
+				GlovePunchComponent = Component;
 			}
 		}
 	}
@@ -366,10 +366,7 @@ void AG2IPlayerController::Interact(const FInputActionInstance& Instance)
 }
 
 
-void AG2IPlayerController::GadgetActivation(const FInputActionInstance& Instance)
+void AG2IPlayerController::GlovePunchActivation(const FInputActionInstance& Instance)
 {
-	for (UActorComponent* Component : GadgetComponents)
-	{
-		IG2IGadgetInterface::Execute_GadgetActivation(Component);
-	}
+	IG2IGlovePunchInterface::Execute_GlovePunchActivation(GlovePunchComponent);
 }
