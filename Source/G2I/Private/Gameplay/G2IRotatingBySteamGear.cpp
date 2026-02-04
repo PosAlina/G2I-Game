@@ -1,6 +1,7 @@
 #include "Gameplay/G2IRotatingBySteamGear.h"
 #include "G2I.h"
 #include "Interfaces/G2IMovingByGearObjectInterface.h"
+#include "Components/G2IInventoryComponent.h"
 
 AG2IRotatingBySteamGear::AG2IRotatingBySteamGear()
 {
@@ -29,29 +30,32 @@ void AG2IRotatingBySteamGear::BeginPlay()
 }
 
 void AG2IRotatingBySteamGear::OnShoot_Implementation(const FHitResult& HitResult, AActor* Character) {
-	//Wrap into pushing with use of all axis
-	//Calculating direction based on trace and rotation normal
-	FVector HitVector = HitResult.ImpactPoint - HitResult.TraceStart;
-	HitVector.X = HitVector.Z;
-	HitVector.Z = 0;
-	FVector RotationNormal = { 1.0f, 0.0f, 0.0f };
-	float CosineValue = FVector::DotProduct(HitVector.GetSafeNormal(), RotationNormal.GetSafeNormal());
+	if (IsActive)
+	{
+		//Wrap into pushing with use of all axis
+		//Calculating direction based on trace and rotation normal
+		FVector HitVector = HitResult.ImpactPoint - HitResult.TraceStart;
+		HitVector.X = HitVector.Z;
+		HitVector.Z = 0;
+		FVector RotationNormal = { 1.0f, 0.0f, 0.0f };
+		float CosineValue = FVector::DotProduct(HitVector.GetSafeNormal(), RotationNormal.GetSafeNormal());
 
-	//Calculating direction based on HitNormal and axis Z
-	FVector HitNormal = HitResult.ImpactNormal;
-	HitNormal.X = 0;
-	FVector AxisZ = { 0.0f, 0.0f, 1.0f };
-	FVector CrossProductResult = FVector::CrossProduct(AxisZ, HitNormal);
+		//Calculating direction based on HitNormal and axis Z
+		FVector HitNormal = HitResult.ImpactNormal;
+		HitNormal.X = 0;
+		FVector AxisZ = { 0.0f, 0.0f, 1.0f };
+		FVector CrossProductResult = FVector::CrossProduct(AxisZ, HitNormal);
 
-	RotationSign = CrossProductResult.X * CosineValue;
+		RotationSign = CrossProductResult.X * CosineValue;
 
-	if (!Timeline) {
-		UE_LOG(LogG2I, Error, TEXT("Can't start timeline for %s"), *GetName());
-		return;
+		if (!Timeline) {
+			UE_LOG(LogG2I, Error, TEXT("Can't start timeline for %s"), *GetName());
+			return;
+		}
+
+		Timeline->Stop();
+		Timeline->PlayFromStart();
 	}
-
-	Timeline->Stop();
-	Timeline->PlayFromStart();
 }
 
 void AG2IRotatingBySteamGear::OnTimelineUpdate(float Output)
@@ -78,4 +82,22 @@ void AG2IRotatingBySteamGear::OnTimelineUpdate(float Output)
 		ActorRotator.Yaw = Output * RotationSpeed * FMath::Sign(RotationSign);
 	}
 	AddActorWorldRotation(ActorRotator);
+}
+
+void AG2IRotatingBySteamGear::Repair(AActor* Interactor)
+{
+	if (!Interactor)
+		return;
+
+	UG2IInventoryComponent* Inventory = Interactor->FindComponentByClass<UG2IInventoryComponent>();
+
+	if (!Inventory)
+		return;
+
+	if (Inventory->HasItemID(RequiredItemID))
+	{
+		IsActive = true;
+
+		Inventory->RemoveItemID(RequiredItemID);
+	}
 }

@@ -38,3 +38,13 @@ void UG2IInventoryComponent::DebugPrintCollectedItems() const
         }
     }
 }
+
+bool UG2IInventoryComponent::HasItemID(FName ItemID) const
+{
+	return CollectedItemIDs.Contains(ItemID);
+}
+
+bool UG2IInventoryComponent::RemoveItemID(FName ItemID)
+{
+	return CollectedItemIDs.RemoveSingle(ItemID) > 0;
+}
