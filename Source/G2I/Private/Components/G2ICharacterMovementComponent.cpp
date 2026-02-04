@@ -1,11 +1,13 @@
-﻿#include "Components/G2ICharacterMovementComponent.h"
+﻿#include "G2ICharacterMovementComponent.h"
 #include "G2I.h"
 #include "G2IPlayerState.h"
 #include "GameFramework/Character.h"
-#include "Components/G2IInteractionComponent.h"
+#include "G2IInteractionComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
-#include "G2I.h"
+#include "G2IAimingComponent.h"
+#include "G2ICameraControllerComponent.h"
+#include "G2ICameraStateEnums.h"
 #include "Components/CapsuleComponent.h"
 
 UG2ICharacterMovementComponent::UG2ICharacterMovementComponent()
@@ -55,9 +57,7 @@ void UG2ICharacterMovementComponent::PreInitializationDefaults()
 		return;
 	}
 	
-	Owner->bUseControllerRotationPitch = false;
-	Owner->bUseControllerRotationYaw = false;
-	Owner->bUseControllerRotationRoll = false;
+	DisableRotationTowardsCamera();
 
 	GetNavAgentPropertiesRef().bCanCrouch = true;
 
@@ -230,6 +230,8 @@ void UG2ICharacterMovementComponent::HandleMovingInteraction(float SpeedChange)
 }
 void UG2ICharacterMovementComponent::BindingToDelegates()
 {
+	BindingOwnerComponentsDelegates();
+	
 	if (!ensure(World))
 	{
 		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
@@ -251,7 +253,10 @@ void UG2ICharacterMovementComponent::BindingToDelegates()
 	}
 	
 	PlayerState->OnNewControllerPossessDelegate.AddDynamic(this, &ThisClass::PossessedByNewController);
-	
+}
+
+void UG2ICharacterMovementComponent::BindingOwnerComponentsDelegates()
+{
 	if (!ensure(Owner))
 	{
 		UE_LOG(LogG2I, Error, TEXT("Owner isn't character in %s"), *GetName());
@@ -264,8 +269,18 @@ void UG2ICharacterMovementComponent::BindingToDelegates()
 	else{
 		UE_LOG(LogG2I, Error, TEXT("Character dont't have Interaction Component"));
 	}
-}
 
+	if (UG2IAimingComponent *AimingComponent = Owner->FindComponentByClass<UG2IAimingComponent>())
+	{
+		AimingComponent->OnStartAimingDelegate.AddDynamic(this, &ThisClass::EnableRotationTowardsCamera);
+		AimingComponent->OnFinishAimingDelegate.AddDynamic(this, &ThisClass::DisableRotationTowardsCamera);
+	}
+
+	if (UG2ICameraControllerComponent *CameraControllerComponent = Owner->FindComponentByClass<UG2ICameraControllerComponent>())
+	{
+		CameraControllerComponent->OnSetCameraTypeDelegate.AddDynamic(this, &ThisClass::SetAbilityRotationTowardsCamera);
+	}
+}
 
 void UG2ICharacterMovementComponent::PossessedByNewController(APawn *ChangedPawn)
 {
@@ -423,4 +438,60 @@ bool UG2ICharacterMovementComponent::CanUncrouch() const
 	}
 						
 	return !bEncroached;
+}
+
+void UG2ICharacterMovementComponent::EnableRotationTowardsCamera()
+{
+	bWantsRotationTowardsCamera = true;
+	
+	if (!bCanRotationTowardsCamera)
+	{
+		return;
+	}
+	
+	if (!ensure(Owner))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Owner isn't character in %s"), *GetName());
+		return;
+	}
+	
+	Owner->bUseControllerRotationPitch = true;
+	Owner->bUseControllerRotationYaw = true;
+	Owner->bUseControllerRotationRoll = true;
+}
+
+void UG2ICharacterMovementComponent::DisableRotationTowardsCamera()
+{
+	bWantsRotationTowardsCamera = false;
+	
+	if (!ensure(Owner))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Owner isn't character in %s"), *GetName());
+		return;
+	}
+	
+	Owner->bUseControllerRotationPitch = false;
+	Owner->bUseControllerRotationYaw = false;
+	Owner->bUseControllerRotationRoll = false;
+}
+
+void UG2ICharacterMovementComponent::SetAbilityRotationTowardsCamera(
+	EG2ICameraTypeEnum CurrentCameraType, EG2ICameraBlendState CurrentBlendState)
+{
+	if (CurrentCameraType == EG2ICameraTypeEnum::ThirdPersonCamera && CurrentBlendState == EG2ICameraBlendState::Finish)
+	{
+		bCanRotationTowardsCamera = true;
+		if (bWantsRotationTowardsCamera)
+		{
+			EnableRotationTowardsCamera();
+		}
+		return;
+	}
+	
+	if (CurrentCameraType == EG2ICameraTypeEnum::FixedCamera && CurrentBlendState == EG2ICameraBlendState::Start)
+	{
+		bCanRotationTowardsCamera = false;
+		DisableRotationTowardsCamera();
+		return;
+	}
 }

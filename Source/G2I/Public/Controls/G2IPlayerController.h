@@ -4,6 +4,7 @@
 #include "GameFramework/PlayerController.h"
 #include "G2IPlayerController.generated.h"
 
+class UG2IUIManager;
 class UG2ICameraDefaultsParameters;
 class UCameraComponent;
 struct FInputActionInstance;
@@ -13,6 +14,7 @@ class UInputMappingContext;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUnPossessPawnDelegate, APawn *, Pawn);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPossessPawnDelegate, APawn *, Pawn);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FToggleFollowAIBehindPlayerDelegate, bool, Value);
 
 /**
  *  Basic PlayerController class for a third person game
@@ -30,11 +32,20 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FPossessPawnDelegate OnPossessPawnDelegate;
+
+	UPROPERTY(BlueprintAssignable)
+	FToggleFollowAIBehindPlayerDelegate OnToggleFollowAIBehindPlayerDelegate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+	bool bIsFollowingAIBehindPlayer = true;
 	
 private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UG2ICameraDefaultsParameters> CameraDefaultsParameters;
+
+	UPROPERTY()
+	TObjectPtr<UG2IUIManager> UIManager;
 	
 public:
 
@@ -47,11 +58,15 @@ public:
 	virtual void SetViewTargetWithBlend(AActor* NewViewTarget, float BlendTime = 0,
 		EViewTargetBlendFunction BlendFunc = VTBlend_Linear, float BlendExp = 0, bool bLockOutgoing = false) override;
 
+	virtual bool SetPause(bool bPause, FCanUnpause CanUnpauseDelegate = FCanUnpause()) override;
+
 public:
 
 	void SetRotationTowardsCamera(const UCameraComponent& Camera);
 
 	TObjectPtr<UG2ICameraDefaultsParameters> GetCameraDefaultsParameters();
+	
+	void QuitGame();
 
 protected:
 
@@ -98,8 +113,8 @@ protected:
 	
 	void StopJumping(const FInputActionValue& Value);
 
-	UPROPERTY(EditAnywhere, Category="Input")
-	TObjectPtr<UInputAction> ToggleCrouchAction;
+	/*UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> ToggleCrouchAction;*/
 
 	void ToggleCrouch(const FInputActionValue& Value);
 
@@ -124,6 +139,47 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UActorComponent> SteamMovementComponent;
 
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> TakeAimAction;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UActorComponent> AimingComponent;
+
+	void StartAiming(const FInputActionValue& Value);
+
+	void StopAiming(const FInputActionValue& Value);
+
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> ShootAction;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UActorComponent> SteamShotComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UActorComponent> FlightComponent;
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> FlightDownAction;
+	
+
+	void FlyUp(const FInputActionValue& Value);
+	void FlyDown(const FInputActionValue& Value);
+	
+	void Fly(int Direction);
+
+	void Shoot(const FInputActionValue& Value);
+	
+	/** Enable/disable AI characters to follow the player */
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> ToggleFollowAIBehindPlayerAction;
+
+	void ToggleFollowAIBehindPlayer(const FInputActionValue& Value);
+
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> PauseAction;
+
+	void CallPause(const FInputActionValue& Value);
+	
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* GlovePunchAction;
 
