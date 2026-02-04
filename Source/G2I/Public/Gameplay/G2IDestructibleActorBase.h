@@ -11,7 +11,6 @@ class G2I_API AG2IDestructibleActorBase : public AActor, public IG2IDestructible
 	GENERATED_BODY()
 	
 public:	
-	AG2IDestructibleActorBase();
 	virtual void DestroySelf_Implementation() override;
 
 };

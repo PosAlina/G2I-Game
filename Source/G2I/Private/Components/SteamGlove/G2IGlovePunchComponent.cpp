@@ -1,12 +1,8 @@
-#include "Components/G2IGlovePunchComponent.h"
+#include "Components/SteamGlove/G2IGlovePunchComponent.h"
 #include "G2I.h"
+#include "Chaos/CollisionResolutionUtil.h"
 #include "GameFramework/Character.h"
 #include "Kismet/KismetSystemLibrary.h"
-
-UG2IGlovePunchComponent::UG2IGlovePunchComponent()
-{
-	PrimaryComponentTick.bCanEverTick = false;
-}
 
 void UG2IGlovePunchComponent::ActivatePunch()
 {
@@ -35,7 +31,18 @@ void UG2IGlovePunchComponent::ActivatePunch()
 		return;
 	}
 
-	FVector PunchBoneLocation = Mesh->GetBoneLocation(PunchBoneName);
+	FVector PunchBoneLocation = FVector(0, 0, 0);
+
+	if (Mesh->GetBoneIndex(PunchBoneName) == INDEX_NONE)
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Bone is null"));
+		CurrentDefaultPunchLocation = Owner->GetActorTransform().TransformPosition(DefaultPunchLocation);
+		PunchBoneLocation = CurrentDefaultPunchLocation;
+	}
+	else
+	{
+		PunchBoneLocation = Mesh->GetBoneLocation(PunchBoneName);
+	}
 	
 	UKismetSystemLibrary::SphereOverlapActors(
 		World,
@@ -55,7 +62,7 @@ TArray<AActor*> UG2IGlovePunchComponent::GetActorsToDestroy()
 	return ActorsToDestroy;
 }
 
-void UG2IGlovePunchComponent::GadgetActivation_Implementation()
+void UG2IGlovePunchComponent::GlovePunchActivation_Implementation()
 {
 	AActor* Owner = GetOwner();
 	if (!Owner)

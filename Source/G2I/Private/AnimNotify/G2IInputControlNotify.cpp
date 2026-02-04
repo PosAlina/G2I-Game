@@ -4,7 +4,7 @@
 #include "AnimNotify/G2IInputControlNotify.h"
 
 #include "G2I.h"
-#include "Components/G2IGlovePunchComponent.h"
+#include "Components/SteamGlove/G2IGlovePunchComponent.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 

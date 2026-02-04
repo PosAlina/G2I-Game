@@ -10,8 +10,6 @@ class UG2ISteamGloveComponent;
 class UG2IFixedCamerasComponent;
 class UG2IThirdPersonCameraComponent;
 class UG2ICameraControllerComponent;
-class UG2IGlovePunchComponent;
-class UG2IGadgetInterface;
 class UG2ICharacterCollisionComponent;
 class UG2IInteractionComponent;
 
@@ -34,8 +32,6 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UG2IValveInteractionComponent> ValveInteractionComp;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Gadgets, meta = (AllowPrivateAccess = "true"))
-	UG2IGlovePunchComponent* GadgetComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UG2IHoleInteractionComponent> HoleInteractionComp;
