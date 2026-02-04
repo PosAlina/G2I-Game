@@ -69,13 +69,13 @@ void AG2IRotatingBySteamGear::OnTimelineUpdate(float Output)
 
 	FRotator ActorRotator = { 0.0f, 0.0f, 0.0f };
 	if (bRotateRoll) {
-		ActorRotator.Roll = Output * RotationSpeed * RotationSign;
+		ActorRotator.Roll = Output * RotationSpeed * FMath::Sign(RotationSign);
 	}
 	if (bRotatePitch) {
-		ActorRotator.Pitch = Output * RotationSpeed * RotationSign;
+		ActorRotator.Pitch = Output * RotationSpeed * FMath::Sign(RotationSign);
 	}
 	if (bRotateYaw) {
-		ActorRotator.Yaw = Output * RotationSpeed * RotationSign;
+		ActorRotator.Yaw = Output * RotationSpeed * FMath::Sign(RotationSign);
 	}
 	AddActorWorldRotation(ActorRotator);
 }
