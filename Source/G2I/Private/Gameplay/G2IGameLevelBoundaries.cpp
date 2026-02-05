@@ -35,7 +35,7 @@ void AG2IGameLevelBoundaries::NotifyActorEndOverlap(AActor* OtherActor)
 		const FVector RespawnLocation = ExitTriggerRespawnLocations[OtherActor->GetClass()]->GetActorLocation();
 		if (bUseTargetPointRotation)
 		{
-			const FRotator RespawnRotation = ExitTriggerRespawnLocations[OtherActor->GetClass()]->GetArrowComponent()->GetComponentRotation();
+			const FRotator RespawnRotation = ExitTriggerRespawnLocations[OtherActor->GetClass()]->ArrowComponent->GetComponentRotation();
 			OtherActor->SetActorLocationAndRotation(RespawnLocation, RespawnRotation);
 		}
 		else
