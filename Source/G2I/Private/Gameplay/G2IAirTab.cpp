@@ -80,3 +80,8 @@ void AG2IAirTab::DeactivateActors()
 	UE_LOG(LogG2I, Log, TEXT("Deactivated %d actors from %s"), ActorsToActivate.Num(), *GetActorNameOrLabel());
 }
 
+void AG2IAirTab::BeginPlay()
+{
+	bActivated ? ActivateActors() : DeactivateActors();
+}
+
