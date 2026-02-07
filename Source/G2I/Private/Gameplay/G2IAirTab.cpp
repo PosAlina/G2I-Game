@@ -60,7 +60,14 @@ void AG2IAirTab::ChangeActivated(bool bNewActivated)
 	{
 		UE_LOG(LogG2I, Log, TEXT("bActivated changed in %s to %d"), *GetActorNameOrLabel(), bNewActivated);
 		bActivated = bNewActivated;
-		bActivated ? ActivateActors() : DeactivateActors();
+		if (bActivated)
+		{
+			ActivateActors();
+		}
+		else 
+		{
+			DeactivateActors();
+		}
 	}
 }
 
@@ -82,6 +89,12 @@ void AG2IAirTab::DeactivateActors()
 
 void AG2IAirTab::BeginPlay()
 {
-	bActivated ? ActivateActors() : DeactivateActors();
+	if (bActivated)
+	{
+		ActivateActors();
+	}
+	else 
+	{
+		DeactivateActors();
+	}
 }
-
