@@ -32,25 +32,10 @@ void AG2IGameLevelBoundaries::NotifyActorEndOverlap(AActor* OtherActor)
 			}
 		}
 
-		const auto OtherActorClass = OtherActor->GetClass();
-		if (!ensure(OtherActorClass))
-		{
-			UE_LOG(LogG2I, Warning, TEXT("%s doesn't return class in %s"),
-				*OtherActor->GetActorNameOrLabel(), *GetActorNameOrLabel());
-			return;
-		}
-		const auto RespawnLocationPtr = ExitTriggerRespawnLocations.Find(OtherActorClass);
-		if (!ensure(RespawnLocationPtr))
-		{
-			UE_LOG(LogG2I, Warning, TEXT("%s doesn't return respawn location in %s"),
-				*OtherActor->GetActorNameOrLabel(), *GetActorNameOrLabel());
-			return;
-		}
-		const FVector RespawnLocation = (*RespawnLocationPtr)->GetActorLocation();
-
+		const FVector RespawnLocation = ExitTriggerRespawnLocations[OtherActor->GetClass()]->GetActorLocation();
 		if (bUseTargetPointRotation)
 		{
-			const FRotator RespawnRotation = (*RespawnLocationPtr)->GetActorRotation();
+			const FRotator RespawnRotation = ExitTriggerRespawnLocations[OtherActor->GetClass()]->ArrowComponent->GetComponentRotation();
 			OtherActor->SetActorLocationAndRotation(RespawnLocation, RespawnRotation);
 		}
 		else
