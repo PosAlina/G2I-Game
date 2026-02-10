@@ -2,9 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "Engine/TriggerBox.h"
+#include "Gameplay/G2IRespawnPoint.h"
 #include "G2IGameLevelBoundaries.generated.h"
-
-class ATargetPoint;
 
 UCLASS()
 class G2I_API AG2IGameLevelBoundaries : public ATriggerBox
@@ -17,8 +16,8 @@ public:
 	bool bUseTargetPointRotation = true;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Respawn")
-	TMap<TSubclassOf<AActor>, TObjectPtr<ATargetPoint>> ExitTriggerRespawnLocations;
-
+	TMap<TSubclassOf<AActor>, TObjectPtr<AG2IRespawnPoint>> ExitTriggerRespawnLocations;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Exit")
 	TArray<TObjectPtr<ATriggerBox>> ExitTriggerBoxes;
 

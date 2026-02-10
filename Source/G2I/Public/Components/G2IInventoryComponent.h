@@ -29,5 +29,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory Debug")
 	void DebugPrintCollectedItems() const;
+
+	bool HasItemID(FName ItemID) const;
+
+	bool RemoveItemID(FName ItemID);
 	
 };
