@@ -1,5 +1,6 @@
 #include "Components/SteamGlove/G2IGlovePunchComponent.h"
 #include "G2I.h"
+#include "G2IAimingComponent.h"
 #include "Chaos/CollisionResolutionUtil.h"
 #include "GameFramework/Character.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -69,6 +70,19 @@ void UG2IGlovePunchComponent::GlovePunchActivation_Implementation()
 	{
 		UE_LOG(LogG2I, Warning, TEXT("Owner is null"));
 		return;
+	}
+
+	UG2IAimingComponent* AimingComponent = Owner->FindComponentByClass<UG2IAimingComponent>();
+
+	if (!AimingComponent)
+	{
+		UE_LOG(LogG2I, Warning, TEXT("AimingComponent is null"));
+	}else
+	{
+		if (IG2IAimingInterface::Execute_IsAiming(AimingComponent))
+		{
+			return;
+		}
 	}
 
 	ACharacter* Character = Cast<ACharacter>(Owner);
