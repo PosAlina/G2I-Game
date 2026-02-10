@@ -31,6 +31,7 @@ bool AG2IValve::CanInteract_Implementation(const ACharacter* Interactor)
 void AG2IValve::Interact_Implementation(const ACharacter* Interactor)
 {
 	bActivated = !bActivated;
+	UE_LOG(LogG2I, Verbose, TEXT("%s Activation: %d"), *GetActorNameOrLabel(), bActivated);
 
 	// TODO play animation
 	// TODO play sound
@@ -40,11 +41,10 @@ void AG2IValve::Interact_Implementation(const ACharacter* Interactor)
 
 void AG2IValve::PassActivationToPipe()
 {
-	UE_LOG(LogG2I, Log, TEXT("%s PassActivationToPipe called"), *GetActorNameOrLabel());
+	UE_LOG(LogG2I, Verbose, TEXT("%s PassActivationToPipe called"), *GetActorNameOrLabel());
 
 	if (AG2IPipe* Pipe = Cast<AG2IPipe>(OwnerActor))
 	{
-		UE_LOG(LogG2I, Log, TEXT("%s Activation: %d"), *GetActorNameOrLabel(), bActivated);
 		Pipe->OnValveActivationChanged(this, bActivated);
 	}
 }

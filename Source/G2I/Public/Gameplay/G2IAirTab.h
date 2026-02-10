@@ -37,6 +37,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void DeactivateActors();
 
+protected:
+	virtual void BeginPlay() override;
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> StaticMeshComponent;

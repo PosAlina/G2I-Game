@@ -4,6 +4,7 @@
 #include "GameFramework/PlayerController.h"
 #include "G2IPlayerController.generated.h"
 
+class UG2IUIManager;
 class UG2ICameraDefaultsParameters;
 class UCameraComponent;
 struct FInputActionInstance;
@@ -42,6 +43,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UG2ICameraDefaultsParameters> CameraDefaultsParameters;
+
+	UPROPERTY()
+	TObjectPtr<UG2IUIManager> UIManager;
 	
 public:
 
@@ -54,11 +58,15 @@ public:
 	virtual void SetViewTargetWithBlend(AActor* NewViewTarget, float BlendTime = 0,
 		EViewTargetBlendFunction BlendFunc = VTBlend_Linear, float BlendExp = 0, bool bLockOutgoing = false) override;
 
+	virtual bool SetPause(bool bPause, FCanUnpause CanUnpauseDelegate = FCanUnpause()) override;
+
 public:
 
 	void SetRotationTowardsCamera(const UCameraComponent& Camera);
 
 	TObjectPtr<UG2ICameraDefaultsParameters> GetCameraDefaultsParameters();
+	
+	void QuitGame();
 
 protected:
 
@@ -147,6 +155,18 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UActorComponent> SteamShotComponent;
 
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UActorComponent> FlightComponent;
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> FlightDownAction;
+	
+
+	void FlyUp(const FInputActionValue& Value);
+	void FlyDown(const FInputActionValue& Value);
+	
+	void Fly(int Direction);
+
 	void Shoot(const FInputActionValue& Value);
 	
 	/** Enable/disable AI characters to follow the player */
@@ -154,4 +174,9 @@ protected:
 	TObjectPtr<UInputAction> ToggleFollowAIBehindPlayerAction;
 
 	void ToggleFollowAIBehindPlayer(const FInputActionValue& Value);
+
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> PauseAction;
+
+	void CallPause(const FInputActionValue& Value);
 };

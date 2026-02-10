@@ -1,6 +1,6 @@
 ﻿#include "G2ICharacterDaughter.h"
-
 #include "G2I.h"
+#include "G2IFlightComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "Components/Camera/G2IThirdPersonCameraComponent.h"
 #include "Components/G2ICharacterMovementComponent.h"
@@ -8,19 +8,35 @@
 #include "Components/G2ICharacterCollisionComponent.h"
 #include "Components/Camera/G2ICameraControllerComponent.h"
 #include "Components/Camera/G2IFixedCamerasComponent.h"
+#include "Components/G2IInventoryComponent.h"
 
 AG2ICharacterDaughter::AG2ICharacterDaughter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UG2ICharacterMovementComponent>(
 		CharacterMovementComponentName))
 {
 	CollisionComp = CreateDefaultSubobject<UG2ICharacterCollisionComponent>(TEXT("CollisionComp"));
+
 	InteractionComp = CreateDefaultSubobject<UG2IInteractionComponent>(TEXT("InteractionComp"));
+
+
+	InventoryComp = CreateDefaultSubobject<UG2IInventoryComponent>(TEXT("InventoryComp"));
+
+
+	if (!ensure(InventoryComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s hasn't inventory component %s"), *GetName(), *UG2IInventoryComponent::StaticClass()->GetName());
+		return;
+	}
+	InventoryComp->PickupItemTag = TEXT("Ghost");
 
 	CameraControllerComp = CreateDefaultSubobject<UG2ICameraControllerComponent>(TEXT("CameraControllerComp"));
 	ThirdPersonCameraComp = CreateDefaultSubobject<UG2IThirdPersonCameraComponent>(TEXT("ThirdPersonCameraComp"));
 	FixedCamerasComp = CreateDefaultSubobject<UG2IFixedCamerasComponent>(TEXT("FixedCamerasComp"));
+	FlightComponent = CreateDefaultSubobject<UG2IFlightComponent>(TEXT("FlightComp"));
 
-	UG2ICharacterMovementComponent *MovementComp = Cast<UG2ICharacterMovementComponent>(GetCharacterMovement());
+	UG2ICharacterMovementComponent* MovementComp =
+		Cast<UG2ICharacterMovementComponent>(GetCharacterMovement());
+
 	if (!ensure(MovementComp))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s hasn't movement component"), *GetName());

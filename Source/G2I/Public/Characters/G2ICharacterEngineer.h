@@ -13,6 +13,7 @@ class UG2IThirdPersonCameraComponent;
 class UG2ICameraControllerComponent;
 class UG2ICharacterCollisionComponent;
 class UG2IInteractionComponent;
+class UG2IInventoryComponent;
 
 /**
  *  First player`s character. Engineer.
@@ -49,6 +50,10 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	TObjectPtr<UG2IFixedCamerasComponent> FixedCamerasComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
+	UG2IInventoryComponent* InventoryComp;
+
 
 private:
 
