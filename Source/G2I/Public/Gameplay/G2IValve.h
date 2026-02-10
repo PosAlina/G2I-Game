@@ -24,7 +24,6 @@ public:
 	// override it if you want to extend the execution
 	void Interact_Implementation(const ACharacter* Interactor) override;
 
-private:
 	UFUNCTION()
 	void PassActivationToPipe();
 
