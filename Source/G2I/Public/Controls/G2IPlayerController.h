@@ -179,4 +179,12 @@ protected:
 	TObjectPtr<UInputAction> PauseAction;
 
 	void CallPause(const FInputActionValue& Value);
+	
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* GlovePunchAction;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UActorComponent> GlovePunchComponent;
+	
+	void GlovePunchActivation(const FInputActionInstance& Instance);
 };

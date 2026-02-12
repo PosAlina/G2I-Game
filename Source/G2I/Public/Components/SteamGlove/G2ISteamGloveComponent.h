@@ -8,6 +8,7 @@ class UG2ISteamShotComponent;
 class UG2IAimingComponent;
 class UG2ISteamMovementComponent;
 class UG2IReloadingComponent;
+class UG2IGlovePunchComponent;
 
 UCLASS(ClassGroup=(SteamGlove), meta=(BlueprintSpawnableComponent))
 class G2I_API UG2ISteamGloveComponent : public USceneComponent
@@ -41,6 +42,9 @@ protected:
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attachment)
 	FName AttachBoneNameShotComponent = FName("upperarm_r");
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Gadgets)
+	TObjectPtr<UG2IGlovePunchComponent> GlovePunchComp;
 	
 public:
 	
