@@ -41,10 +41,22 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Data")
 	bool bRotateYaw = false;
+
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+	FName RequiredItemID;
+
+	
 	
 public:
 	void OnShoot_Implementation(const FHitResult& HitResult, AActor* Character);
 	AG2IRotatingBySteamGear();
+
+
+	UFUNCTION(BlueprintCallable, Category = "Interaction")
+	void Repair(AActor* Interactor);
+
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+	bool IsActive = false;
 
 	void BeginPlay() override;
 };
