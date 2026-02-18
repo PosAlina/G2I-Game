@@ -4,6 +4,14 @@
 #include "Components/ActorComponent.h"
 #include "G2IInvisibleForCharactersComponent.generated.h"
 
+USTRUCT(BlueprintType)
+struct FG2ICollisionResponsesInfo
+{
+	GENERATED_BODY()
+
+	TMap<ECollisionChannel, ECollisionResponse> ResponseMap;
+};
+
 /**
  * To make an actor invisible to a specific characters,
  * you need to add this component to the actor
@@ -24,6 +32,9 @@ private:
 	UPROPERTY()
 	TObjectPtr<AActor> Owner;
 
+	UPROPERTY()
+	TMap<TObjectPtr<UPrimitiveComponent>, FG2ICollisionResponsesInfo> DefaultCollisionResponses;
+
 public:
 
 	virtual void BeginPlay() override;
@@ -39,5 +50,7 @@ private:
 
 	UFUNCTION()
 	void ShowActorsForCharacter(APawn *Pawn);
+
+	ECollisionChannel GetPlayerPawnCollision(APawn *Pawn);
 	
 };

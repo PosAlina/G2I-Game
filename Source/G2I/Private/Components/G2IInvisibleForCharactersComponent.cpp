@@ -1,7 +1,9 @@
 #include "G2IInvisibleForCharactersComponent.h"
 #include "G2I.h"
+#include "G2ICharacterCollisionComponent.h"
 #include "G2IPlayerController.h"
 #include "GameFramework/Character.h"
+#include "Components/CapsuleComponent.h"
 
 void UG2IInvisibleForCharactersComponent::BeginPlay()
 {
@@ -71,7 +73,20 @@ void UG2IInvisibleForCharactersComponent::HideActorsForCharacter(APawn *Pawn)
 	{
 		if (Pawn->GetClass() == CharacterClass.Get())
 		{
-			Owner->SetActorEnableCollision(false);
+			const ECollisionChannel CharacterCollisionChannel = GetPlayerPawnCollision(Pawn);
+			for (UActorComponent *Component : Owner->GetComponents())
+			{
+				if (TObjectPtr<UPrimitiveComponent> PrimitiveComponent = Cast<UPrimitiveComponent>(Component))
+				{
+					FG2ICollisionResponsesInfo CollisionResponsesInfoForComponent;
+					CollisionResponsesInfoForComponent.ResponseMap.Add(CharacterCollisionChannel,
+						PrimitiveComponent->GetCollisionResponseToChannel(CharacterCollisionChannel));
+					DefaultCollisionResponses.Add(PrimitiveComponent, CollisionResponsesInfoForComponent);
+					
+					PrimitiveComponent->SetCollisionResponseToChannel(CharacterCollisionChannel, ECR_Ignore);
+				}
+			}
+			
 			Owner->SetActorHiddenInGame(true);
 			break;
 		}
@@ -97,9 +112,41 @@ void UG2IInvisibleForCharactersComponent::ShowActorsForCharacter(APawn *Pawn)
 	{
 		if (Pawn->GetClass() == CharacterClass.Get())
 		{
-			Owner->SetActorEnableCollision(true);
+			const ECollisionChannel CharacterCollisionChannel = GetPlayerPawnCollision(Pawn);
+			for (UActorComponent *Component : Owner->GetComponents())
+			{
+				if (TObjectPtr<UPrimitiveComponent> PrimitiveComponent = Cast<UPrimitiveComponent>(Component))
+				{
+					if (FG2ICollisionResponsesInfo *CollisionResponsesForComponent
+						= DefaultCollisionResponses.Find(PrimitiveComponent))
+					{
+						if (const ECollisionResponse *CollisionResponseForComponent =
+							CollisionResponsesForComponent->ResponseMap.Find(CharacterCollisionChannel))
+						{
+							PrimitiveComponent->SetCollisionResponseToChannel(
+								CharacterCollisionChannel, *CollisionResponseForComponent);
+						}
+					}
+				}
+			}
+			
 			Owner->SetActorHiddenInGame(false);
 			break;
 		}
 	}
+}
+
+ECollisionChannel UG2IInvisibleForCharactersComponent::GetPlayerPawnCollision(APawn* Pawn)
+{
+	const ACharacter *Character = Cast<ACharacter>(Pawn);
+	UPrimitiveComponent *CharacterCollision;
+	if (UG2ICharacterCollisionComponent *CollisionComponent = Character->FindComponentByClass<UG2ICharacterCollisionComponent>())
+	{
+		CharacterCollision = CollisionComponent->GetCollisionComponent();
+	}
+	else
+	{
+		CharacterCollision = Cast<UPrimitiveComponent>(Character->GetCapsuleComponent());
+	}
+	return CharacterCollision->GetCollisionObjectType();
 }
