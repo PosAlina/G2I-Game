@@ -1,12 +1,18 @@
-#include "G2IOverlapActorChecker.h"
+#include "G2IOverlapActorsActivator.h"
 #include "G2I.h"
 #include "G2IActivationInterface.h"
 #include "Kismet/GameplayStatics.h"
 
-void AG2IOverlapActorChecker::NotifyActorBeginOverlap(AActor* OtherActor)
+void AG2IOverlapActorsActivator::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	Super::NotifyActorBeginOverlap(OtherActor);
 
+	if (!ensure(OtherActor))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("In %s begin overlap nullptr actor"), *GetActorNameOrLabel());
+		return;
+	}
+	
 	if (bEnableActivateBeginOverlappingActors)
 	{
 		if (OtherActor->Implements<UG2IActivationInterface>() && OtherActor->ActorHasTag(CheckerTag))
@@ -31,9 +37,15 @@ void AG2IOverlapActorChecker::NotifyActorBeginOverlap(AActor* OtherActor)
 	}
 }
 
-void AG2IOverlapActorChecker::NotifyActorEndOverlap(AActor* OtherActor)
+void AG2IOverlapActorsActivator::NotifyActorEndOverlap(AActor* OtherActor)
 {
 	Super::NotifyActorEndOverlap(OtherActor);
+
+	if (!ensure(OtherActor))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("In %s end overlap nullptr actor"), *GetActorNameOrLabel());
+		return;
+	}
 
 	if (bEnableDeactivateEndOverlappingActors)
 	{
@@ -59,7 +71,7 @@ void AG2IOverlapActorChecker::NotifyActorEndOverlap(AActor* OtherActor)
 	}
 }
 
-void AG2IOverlapActorChecker::BeginPlay()
+void AG2IOverlapActorsActivator::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -76,6 +88,12 @@ void AG2IOverlapActorChecker::BeginPlay()
 		GetOverlappingActors(OverlappingActors);
 		for (AActor *OtherActor : OverlappingActors)
 		{
+			if (!ensure(OtherActor))
+			{
+				UE_LOG(LogG2I, Warning, TEXT("In %s in begin play nullptr overlapping actor"), *GetActorNameOrLabel());
+				return;
+			}
+			
 			if (OtherActor->Implements<UG2IActivationInterface>() && OtherActor->ActorHasTag(CheckerTag))
 			{
 				IG2IActivationInterface::Execute_Activate(OtherActor);
