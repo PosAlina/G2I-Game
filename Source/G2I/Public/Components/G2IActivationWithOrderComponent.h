@@ -17,16 +17,16 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Activation with order",
 		meta = (Tooltip="Can it be activated twice (e.g. deactivated, calcelled, etc.)?"))
-	bool bCanBeReactivated;
+	bool bCanBeReactivated = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Activation with order")
-	bool bActivated;
+	bool bActivated = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Activation with order")
 	TArray<int32> ActivatedIndexes;
 
 public:	
-	UG2IActivationWithOrderComponent();
+	UG2IActivationWithOrderComponent() = default;
 
 	UFUNCTION(BlueprintCallable, Category = "Activation with order")
 	void Activated();
@@ -39,7 +39,4 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Activation with order")
 	void Restored();
-
-protected:
-	virtual void BeginPlay() override;
 };

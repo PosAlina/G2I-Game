@@ -1,10 +1,6 @@
 
 #include "Components/G2IActivationWithOrderComponent.h"
 
-UG2IActivationWithOrderComponent::UG2IActivationWithOrderComponent()
-{
-}
-
 void UG2IActivationWithOrderComponent::Activated()
 {
 	if (bActivated)
@@ -36,9 +32,4 @@ void UG2IActivationWithOrderComponent::Restored()
 {
 	ActivatedIndexes.Empty();
 	bActivated = false;
-}
-
-void UG2IActivationWithOrderComponent::BeginPlay()
-{
-	Super::BeginPlay();
 }

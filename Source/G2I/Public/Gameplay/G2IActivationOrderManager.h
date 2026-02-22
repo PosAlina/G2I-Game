@@ -16,12 +16,12 @@ public:
 	// Order in this array sets the order of activation
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Activation with order",
 		meta = (ToolTip = "Add here actors that will be activated, in needed order. Actors must include ActivationWithOder component."))
-	TArray<TObjectPtr<AActor>> ActorsActivatingArray;
+	TArray<TObjectPtr<AActor>> CorrectOrderOfActors;
 
 protected:
 	// Array that holds already activated actors
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Activation with order",
-		meta = (ToolTip = "Add here actors that will be activated, in needed order. Actors must include ActivationWithOder component."))
+		meta = (ToolTip = "Actors are added here when activated, then this array is compared to the CorrectOrderOfActors."))
 	TArray<TObjectPtr<AActor>> ActivatedActorsArray;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Activation with order")

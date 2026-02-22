@@ -20,11 +20,14 @@ void AG2IActivationOrderManager::OrderFailed()
 	CurrentIndex = 0;
 	for (AActor* Actor : ActivatedActorsArray)
 	{
-		if (auto* ActivationComponent = Actor->GetComponentByClass<UG2IActivationWithOrderComponent>())
-			ActivationComponent->Restored();
+		if (Actor)
+		{
+			if (auto* ActivationComponent = Actor->GetComponentByClass<UG2IActivationWithOrderComponent>())
+				ActivationComponent->Restored();
+		}
 	}
 	ActivatedActorsArray.Empty();
-	UE_LOG(LogG2I, Warning, TEXT("Order failed in %s"), *GetActorNameOrLabel());
+	UE_LOG(LogG2I, Log, TEXT("Order failed in %s"), *GetActorNameOrLabel());
 }
 
 void AG2IActivationOrderManager::OrderCancelled()
@@ -32,11 +35,14 @@ void AG2IActivationOrderManager::OrderCancelled()
 	CurrentIndex = 0;
 	for (AActor* Actor : ActivatedActorsArray)
 	{
-		if (auto* ActivationComponent = Actor->GetComponentByClass<UG2IActivationWithOrderComponent>())
-			ActivationComponent->Restored();
+		if (Actor)
+		{
+			if (auto* ActivationComponent = Actor->GetComponentByClass<UG2IActivationWithOrderComponent>())
+				ActivationComponent->Restored();
+		}
 	}
 	ActivatedActorsArray.Empty();
-	UE_LOG(LogG2I, Warning, TEXT("Order calcelled in %s"), *GetActorNameOrLabel());
+	UE_LOG(LogG2I, Log, TEXT("Order calcelled in %s"), *GetActorNameOrLabel());
 }
 
 void AG2IActivationOrderManager::BeginPlay()
@@ -44,20 +50,23 @@ void AG2IActivationOrderManager::BeginPlay()
 	Super::BeginPlay();
 	
 	BindToAllDelegates();
-	NumberOfActors = ActorsActivatingArray.Num();
+	NumberOfActors = CorrectOrderOfActors.Num();
 	ActivatedActorsArray.Reserve(NumberOfActors);
 }
 
 void AG2IActivationOrderManager::BindToAllDelegates()
 {
-	for (AActor* Actor : ActorsActivatingArray)
+	for (AActor* Actor : CorrectOrderOfActors)
 	{
-		if (auto* ActivationComponent = Actor->GetComponentByClass<UG2IActivationWithOrderComponent>())
+		if (Actor)
 		{
-			ActivationComponent->OnActivatedDelegate.BindUObject(this, &AG2IActivationOrderManager::OnActorActivated);
+			if (auto* ActivationComponent = Actor->GetComponentByClass<UG2IActivationWithOrderComponent>())
+			{
+				ActivationComponent->OnActivatedDelegate.BindUObject(this, &AG2IActivationOrderManager::OnActorActivated);
+			}
+			else
+				UE_LOG(LogG2I, Error, TEXT("Failed to get ActivationWithOrder component from %s actor in %s"), *Actor->GetActorNameOrLabel(), *GetActorNameOrLabel());
 		}
-		else
-			UE_LOG(LogG2I, Error, TEXT("Failed to get ActivationWithOrder component from %s actor in %s"), *Actor->GetActorNameOrLabel(), *GetActorNameOrLabel());
 	}
 }
 
@@ -77,7 +86,7 @@ void AG2IActivationOrderManager::CheckIfOrderCompleted()
 
 	for (int32 i = 0; i < NumberOfActors; i++)
 	{
-		if (ActorsActivatingArray[i] != ActivatedActorsArray[i])
+		if (CorrectOrderOfActors[i] != ActivatedActorsArray[i])
 		{
 			OrderFailed();
 			return;
