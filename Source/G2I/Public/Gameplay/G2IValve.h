@@ -32,7 +32,10 @@ protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable)
-	void ApplyLocalRotation();
+	virtual void ApplyLocalRotation();
+
+	UFUNCTION(BlueprintCallable)
+	virtual void ChangeActivation();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Valve")

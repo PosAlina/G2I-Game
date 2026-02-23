@@ -48,14 +48,7 @@ bool AG2IValve::CanInteract_Implementation(const ACharacter* Interactor)
 
 void AG2IValve::Interact_Implementation(const ACharacter* Interactor)
 {
-	bActivated = !bActivated;
-	DeltaRotation *= -1.;
-	UE_LOG(LogG2I, Verbose, TEXT("%s Activation: %d"), *GetActorNameOrLabel(), bActivated);
-
-	SetActorTickEnabled(true);
-	
-	// TODO play sound
-
+	ChangeActivation();
 	PassActivationToPipe();
 }
 
@@ -73,7 +66,7 @@ void AG2IValve::ApplyLocalRotation()
 {
 	StaticMeshComponent->AddLocalRotation(DeltaRotation);
 	CurrentRotation += DeltaRotation;
-	
+
 	if (CurrentRotation.Pitch > MaxRotation.Pitch ||
 		CurrentRotation.Roll > MaxRotation.Roll ||
 		CurrentRotation.Yaw > MaxRotation.Yaw)
@@ -83,4 +76,16 @@ void AG2IValve::ApplyLocalRotation()
 		CurrentRotation.Roll < MinRotation.Roll ||
 		CurrentRotation.Yaw < MinRotation.Yaw)
 		SetActorTickEnabled(false);
+}
+
+void AG2IValve::ChangeActivation()
+{
+	bActivated = !bActivated;
+	DeltaRotation *= -1.;
+	UE_LOG(LogG2I, Verbose, TEXT("%s Activation: %d"), *GetActorNameOrLabel(), bActivated);
+
+	if (StaticMeshComponent)
+		SetActorTickEnabled(true);
+
+	// TODO play sound
 }
