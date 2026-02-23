@@ -12,6 +12,7 @@ AG2IActivationOrderManager::AG2IActivationOrderManager()
 
 void AG2IActivationOrderManager::OrderCompleted()
 {
+	OnActivationWithOrderEndedDelegate.Broadcast(this, true);
 	UE_LOG(LogG2I, Log, TEXT("Order completed successfully in %s"), *GetActorNameOrLabel());
 }
 
@@ -27,6 +28,7 @@ void AG2IActivationOrderManager::OrderFailed()
 		}
 	}
 	ActivatedActorsArray.Empty();
+	OnActivationWithOrderEndedDelegate.Broadcast(this, false);
 	UE_LOG(LogG2I, Log, TEXT("Order failed in %s"), *GetActorNameOrLabel());
 }
 
@@ -42,6 +44,7 @@ void AG2IActivationOrderManager::OrderCancelled()
 		}
 	}
 	ActivatedActorsArray.Empty();
+	OnActivationWithOrderEndedDelegate.Broadcast(this, false);
 	UE_LOG(LogG2I, Log, TEXT("Order calcelled in %s"), *GetActorNameOrLabel());
 }
 
@@ -81,7 +84,7 @@ void AG2IActivationOrderManager::OnActorActivated(AActor* ActivatedActor, bool b
 
 void AG2IActivationOrderManager::CheckIfOrderCompleted()
 {
-	if (CurrentIndex + 1 < NumberOfActors)
+	if (CurrentIndex < NumberOfActors)
 		return;
 
 	for (int32 i = 0; i < NumberOfActors; i++)
