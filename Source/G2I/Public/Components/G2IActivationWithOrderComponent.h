@@ -16,7 +16,7 @@ public:
 	FOnActivatedDelegate OnActivatedDelegate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Activation with order",
-		meta = (Tooltip="Can it be activated twice (e.g. deactivated, calcelled, etc.)?"))
+		meta = (Tooltip="Can it be activated multiple times (e.g. deactivated, calcelled, etc.)?"))
 	bool bCanBeReactivated = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Activation with order")
@@ -29,14 +29,14 @@ public:
 	UG2IActivationWithOrderComponent() = default;
 
 	UFUNCTION(BlueprintCallable, Category = "Activation with order")
-	void Activated();
+	virtual void Activated();
 
 	UFUNCTION(BlueprintCallable, Category = "Activation with order")
-	void Accepted(int32 AtIndex);
+	virtual void Accepted(int32 AtIndex);
 
 	UFUNCTION(BlueprintCallable, Category = "Activation with order")
-	void Declined();
+	virtual void Declined();
 
 	UFUNCTION(BlueprintCallable, Category = "Activation with order")
-	void Restored();
+	virtual void Restored();
 };
