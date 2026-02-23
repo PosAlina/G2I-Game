@@ -10,7 +10,7 @@ struct FG2IActivatedActors
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Activation)
-	TSet<TObjectPtr<AActor>> SetOfActivatedActors;;
+	TSet<TObjectPtr<AActor>> SetOfActivatedActors;
 };
 
 /**
@@ -24,7 +24,7 @@ class G2I_API AG2IActorsActivatorByOverlappingActors : public ATriggerBox
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Overlapping activator")
-	TMap<FName, FG2IActivatedActors> ActivatedActorsByCheckerTag;;
+	TMap<FName, FG2IActivatedActors> ActivatedActorsByCheckerTag;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Overlapping activator")
 	bool bEnableActivateBeginOverlappingActors = true;
