@@ -15,7 +15,7 @@ class G2I_API AG2IValve : public AActor, public IG2IInteractiveObjectInterface
 public:	
 	AG2IValve();
 
-	void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 
 	// Only characters with UG2IValveInteractionComponent can interact
 	bool CanInteract_Implementation(const ACharacter* Interactor) override;
@@ -27,6 +27,13 @@ public:
 	UFUNCTION()
 	void PassActivationToPipe();
 
+protected:
+
+	virtual void BeginPlay() override;
+
+	UFUNCTION(BlueprintCallable)
+	void ApplyLocalRotation();
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Valve")
 	bool bActivated;
@@ -36,4 +43,24 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> StaticMeshComponent;
+
+	// Used for animation
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Valve")
+	FRotator DeltaRotation = FRotator(0., 5., 0.);
+
+	// Used for animation
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Valve")
+	FRotator MaxRotation = FRotator(0., 90., 0.);
+
+	// Used for animation
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Valve")
+	FRotator MinRotation = FRotator(0., 0., 0.);
+
+protected:
+
+	UPROPERTY()
+	FRotator CurrentRotation = FRotator(0.);
+
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<USceneComponent> SceneRootComponent;
 };

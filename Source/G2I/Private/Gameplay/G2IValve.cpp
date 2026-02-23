@@ -7,16 +7,34 @@
 
 AG2IValve::AG2IValve()
 {
+	PrimaryActorTick.TickInterval = 0.05f;
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = false;
+
+	SceneRootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root Component"));
+
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Static Mesh Component"));
 	StaticMeshComponent->SetGenerateOverlapEvents(true);
+	StaticMeshComponent->SetMobility(EComponentMobility::Movable);
 
-	if (StaticMeshComponent)
-		SetRootComponent(StaticMeshComponent);
+	if (SceneRootComponent)
+	{
+		SetRootComponent(SceneRootComponent);
+		if (StaticMeshComponent)
+			StaticMeshComponent->AttachToComponent(SceneRootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	}
+}
+
+void AG2IValve::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	ApplyLocalRotation();
 }
 
 void AG2IValve::BeginPlay()
 {
 	Super::BeginPlay();
+	DeltaRotation *= -1.;
 	PassActivationToPipe();
 }
 
@@ -31,9 +49,11 @@ bool AG2IValve::CanInteract_Implementation(const ACharacter* Interactor)
 void AG2IValve::Interact_Implementation(const ACharacter* Interactor)
 {
 	bActivated = !bActivated;
+	DeltaRotation *= -1.;
 	UE_LOG(LogG2I, Verbose, TEXT("%s Activation: %d"), *GetActorNameOrLabel(), bActivated);
 
-	// TODO play animation
+	SetActorTickEnabled(true);
+	
 	// TODO play sound
 
 	PassActivationToPipe();
@@ -47,4 +67,20 @@ void AG2IValve::PassActivationToPipe()
 	{
 		Pipe->OnValveActivationChanged(this, bActivated);
 	}
+}
+
+void AG2IValve::ApplyLocalRotation()
+{
+	StaticMeshComponent->AddLocalRotation(DeltaRotation);
+	CurrentRotation += DeltaRotation;
+	
+	if (CurrentRotation.Pitch > MaxRotation.Pitch ||
+		CurrentRotation.Roll > MaxRotation.Roll ||
+		CurrentRotation.Yaw > MaxRotation.Yaw)
+		SetActorTickEnabled(false);
+
+	if (CurrentRotation.Pitch < MinRotation.Pitch ||
+		CurrentRotation.Roll < MinRotation.Roll ||
+		CurrentRotation.Yaw < MinRotation.Yaw)
+		SetActorTickEnabled(false);
 }
