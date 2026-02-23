@@ -4,6 +4,9 @@
 #include "GameFramework/Actor.h"
 #include "Components/G2IActivationWithOrderComponent.h"
 #include "G2IActivationOrderManager.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActivationWithOrderEndedDelegate, AActor*, ManagerActor, bool, bSuccess);
+
 // Manager for the actors with ActivationWithOrder component.
 // One for the puzzle
 UCLASS()
@@ -17,6 +20,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Activation with order",
 		meta = (ToolTip = "Add here actors that will be activated, in needed order. Actors must include ActivationWithOder component."))
 	TArray<TObjectPtr<AActor>> CorrectOrderOfActors;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnActivationWithOrderEndedDelegate OnActivationWithOrderEndedDelegate;
 
 protected:
 	// Array that holds already activated actors
@@ -37,13 +43,13 @@ public:
 	AG2IActivationOrderManager();
 
 	UFUNCTION(BlueprintCallable, Category = "Activation with order")
-	void OrderCompleted();
+	virtual void OrderCompleted();
 
 	UFUNCTION(BlueprintCallable, Category = "Activation with order")
-	void OrderFailed();
+	virtual void OrderFailed();
 
 	UFUNCTION(BlueprintCallable, Category = "Activation with order")
-	void OrderCancelled();
+	virtual void OrderCancelled();
 
 protected:
 	virtual void BeginPlay() override;
@@ -54,7 +60,7 @@ protected:
 	// Handles Activation/Reactivation logic.
 	// By default - ignores reactivation
 	UFUNCTION()
-	void OnActorActivated(AActor* ActivatedActor, bool bReactivation, UG2IActivationWithOrderComponent* ActivationComponent);
+	virtual void OnActorActivated(AActor* ActivatedActor, bool bReactivation, UG2IActivationWithOrderComponent* ActivationComponent);
 
 	UFUNCTION(BlueprintCallable, Category = "Activation with order")
 	void CheckIfOrderCompleted();
