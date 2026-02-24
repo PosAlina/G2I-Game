@@ -12,6 +12,8 @@ void AG2IValveWithActivationOrder::BeginPlay()
 	Super::BeginPlay();
 
 	bStartActivation = bActivated;
+	if (bStartActivation)
+		ActivationsNum = 1;
 }
 
 void AG2IValveWithActivationOrder::KeepActivation()
@@ -61,7 +63,17 @@ void AG2IValveWithActivationOrder::Activate_Implementation()
 
 void AG2IValveWithActivationOrder::Deactivate_Implementation()
 {
-	ActivationsNum = 0;
-	if (bStartActivation != bActivated)
-		ChangeActivation();
+	// Restore valve start position
+	if (ActivationsNum != 0)
+	{
+		if (bStartActivation)
+			ActivationsNum = 1;
+		else
+			ActivationsNum = 0;
+
+		if (bActivated)
+			ChangeActivation();
+		else
+			KeepActivation();
+	}
 }
