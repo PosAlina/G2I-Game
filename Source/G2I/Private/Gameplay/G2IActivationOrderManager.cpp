@@ -13,6 +13,7 @@ AG2IActivationOrderManager::AG2IActivationOrderManager()
 void AG2IActivationOrderManager::OrderCompleted()
 {
 	OnActivationWithOrderEndedDelegate.Broadcast(this, true);
+	UnbindToAllDelegates();
 	UE_LOG(LogG2I, Log, TEXT("Order completed successfully in %s"), *GetActorNameOrLabel());
 }
 
@@ -66,6 +67,22 @@ void AG2IActivationOrderManager::BindToAllDelegates()
 			if (auto* ActivationComponent = Actor->GetComponentByClass<UG2IActivationWithOrderComponent>())
 			{
 				ActivationComponent->OnActivatedDelegate.BindUObject(this, &AG2IActivationOrderManager::OnActorActivated);
+			}
+			else
+				UE_LOG(LogG2I, Error, TEXT("Failed to get ActivationWithOrder component from %s actor in %s"), *Actor->GetActorNameOrLabel(), *GetActorNameOrLabel());
+		}
+	}
+}
+
+void AG2IActivationOrderManager::UnbindToAllDelegates()
+{
+	for (AActor* Actor : CorrectOrderOfActors)
+	{
+		if (Actor)
+		{
+			if (auto* ActivationComponent = Actor->GetComponentByClass<UG2IActivationWithOrderComponent>())
+			{
+				ActivationComponent->OnActivatedDelegate.Unbind();
 			}
 			else
 				UE_LOG(LogG2I, Error, TEXT("Failed to get ActivationWithOrder component from %s actor in %s"), *Actor->GetActorNameOrLabel(), *GetActorNameOrLabel());
