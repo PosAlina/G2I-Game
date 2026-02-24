@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "Components/G2IActivationWithOrderComponent.h"
 #include "Interfaces/G2IActivationInterface.h"
-#include "G2IActivationOrderSMeshComponent.generated.h"
+#include "G2IOwnerActivationOrderComponent.generated.h"
 
 /**
  * ActivationWithOrder component that on accepted/declined
@@ -11,7 +11,7 @@
  * and ignores ActivatedIndexes array from it's parent.
  */
 UCLASS()
-class G2I_API UG2IActivationOrderSMeshComponent : public UG2IActivationWithOrderComponent
+class G2I_API UG2IOwnerActivationOrderComponent : public UG2IActivationWithOrderComponent
 {
 	GENERATED_BODY()
 

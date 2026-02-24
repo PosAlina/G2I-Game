@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Gameplay/G2IValve.h"
-#include "Components/G2IActivationOrderSMeshComponent.h"
+#include "Components/G2IOwnerActivationOrderComponent.h"
 #include "Interfaces/G2IActivationInterface.h"
 #include "G2IValveWithActivationOrder.generated.h"
 
@@ -18,7 +18,7 @@ class G2I_API AG2IValveWithActivationOrder : public AG2IValve, public IG2IActiva
 
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Activation with order")
-	TObjectPtr<UG2IActivationOrderSMeshComponent> ActivationOrderSMeshComponent;
+	TObjectPtr<UG2IOwnerActivationOrderComponent> ActivationOrderSMeshComponent;
 
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Activation with order")
