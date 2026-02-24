@@ -4,7 +4,7 @@
 
 AG2IValveWithActivationOrder::AG2IValveWithActivationOrder()
 {
-	ActivationOrderSMeshComponent = CreateDefaultSubobject<UG2IActivationOrderSMeshComponent>(TEXT("ActivationComponent"));
+	ActivationOrderSMeshComponent = CreateDefaultSubobject<UG2IOwnerActivationOrderComponent>(TEXT("ActivationComponent"));
 }
 
 void AG2IValveWithActivationOrder::BeginPlay()
