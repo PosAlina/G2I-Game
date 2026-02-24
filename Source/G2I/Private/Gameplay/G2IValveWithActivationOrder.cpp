@@ -55,15 +55,21 @@ void AG2IValveWithActivationOrder::ApplyLocalRotation()
 	StaticMeshComponent->AddLocalRotation(DeltaRotation);
 	CurrentRotation += DeltaRotation;
 
-	if (CurrentRotation.Pitch > (MaxRotation.Pitch * (ActivationsNum + 1)) ||
-		CurrentRotation.Roll > (MaxRotation.Roll * (ActivationsNum + 1)) ||
-		CurrentRotation.Yaw > (MaxRotation.Yaw * (ActivationsNum + 1)))
+	if (CurrentRotation.Pitch > MaxRotation.Pitch * (ActivationsNum + !bActivated) ||
+		CurrentRotation.Roll > MaxRotation.Roll * (ActivationsNum + !bActivated) ||
+		CurrentRotation.Yaw > MaxRotation.Yaw * (ActivationsNum + !bActivated))
+	{
+		CurrentRotation = MaxRotation * (ActivationsNum + !bActivated);
 		SetActorTickEnabled(false);
+	}
 
-	if (CurrentRotation.Pitch < (MinRotation.Pitch + MaxRotation.Pitch * ActivationsNum) ||
-		CurrentRotation.Roll < (MinRotation.Roll + MaxRotation.Roll * ActivationsNum) ||
-		CurrentRotation.Yaw < (MinRotation.Yaw + MaxRotation.Yaw * ActivationsNum))
+	if (CurrentRotation.Pitch < MinRotation.Pitch + MaxRotation.Pitch * (ActivationsNum - bActivated) ||
+		CurrentRotation.Roll < MinRotation.Roll + MaxRotation.Roll * (ActivationsNum - bActivated) ||
+		CurrentRotation.Yaw < MinRotation.Yaw + MaxRotation.Yaw * (ActivationsNum - bActivated))
+	{
+		CurrentRotation = MinRotation * (ActivationsNum - bActivated);
 		SetActorTickEnabled(false);
+	}
 }
 
 void AG2IValveWithActivationOrder::Interact_Implementation(const ACharacter* Interactor)
