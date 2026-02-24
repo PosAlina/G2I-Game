@@ -70,12 +70,18 @@ void AG2IValve::ApplyLocalRotation()
 	if (CurrentRotation.Pitch > MaxRotation.Pitch ||
 		CurrentRotation.Roll > MaxRotation.Roll ||
 		CurrentRotation.Yaw > MaxRotation.Yaw)
+	{
+		CurrentRotation = MaxRotation;
 		SetActorTickEnabled(false);
+	}
 
 	if (CurrentRotation.Pitch < MinRotation.Pitch ||
 		CurrentRotation.Roll < MinRotation.Roll ||
 		CurrentRotation.Yaw < MinRotation.Yaw)
+	{
+		CurrentRotation = MinRotation;
 		SetActorTickEnabled(false);
+	}
 }
 
 void AG2IValve::ChangeActivation()
