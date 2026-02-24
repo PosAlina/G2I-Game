@@ -38,7 +38,7 @@ public:
 	// Switches activation (same as interaction with AG2IValve)
 	virtual void Activate_Implementation() override;
 
-	// Switches to the start activation (e.g. Restore)
+	// Restores start condition
 	virtual void Deactivate_Implementation() override;
 
 protected:
