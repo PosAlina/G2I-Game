@@ -1,12 +1,18 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "G2IGameInstance.h"
-#include "G2IUIDisplayManager.h"
-#include "G2IWidgetsCatalog.h"
-#include "UObject/Object.h"
+#include "G2IAimTypeEnum.h"
 #include "G2IUIManager.generated.h"
 
+class UInputAction;
+enum class EG2IWidgetNames : uint8;
+class UG2IUserWidget;
+class UG2IWorldHintKeyWidgetComponent;
+class UG2IWidgetsCatalog;
+class UG2IUIDisplayManager;
+class AG2IPlayerController;
+class UG2IGameInstance;
+class UG2IWorldHintWidgetComponent;
 class AG2IPlayerState;
 class UG2IUIInputHandler;
 
@@ -55,6 +61,14 @@ public:
 
 	void OpenHUD() const;
 
+	// ==================== WIDGETS ====================
+	UG2IUserWidget *CreateWidgetByName(EG2IWidgetNames WidgetName) const;
+	
+	// ==================== WORLD WIDGETS ====================
+	void OpenWorldWidget(UG2IWorldHintWidgetComponent *WidgetComponent) const;
+	void CloseWorldWidget(UG2IWorldHintWidgetComponent *WidgetComponent) const;
+	bool CanSeeWorldWidget(UG2IWorldHintWidgetComponent *WidgetComponent) const;
+
 	// ==================== AIMING WIDGET ====================
 	void InitializeAimingWidget() const;
 	void OpenAimingWidget() const;
@@ -72,4 +86,8 @@ public:
 
 	UFUNCTION()
 	void SetMechanicsDescriptionByCharacter(APawn *Pawn);
+	
+	// ====================KEY HINT WIDGET ====================
+	void SetKeyByInputAction(UG2IWorldHintWidgetComponent *WidgetComponent, UInputAction* InputAction) const;
+	void SetKeyWidgetSize(UG2IWorldHintKeyWidgetComponent *WidgetComponent) const;
 };
