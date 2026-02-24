@@ -2,9 +2,11 @@
 
 #include "CoreMinimal.h"
 #include "G2IInteractionInputInterface.h"
+#include "G2IUIManager.h"
 #include "Components/ActorComponent.h"
 #include "G2IInteractionComponent.generated.h"
 
+class UInputAction;
 class UBoxComponent;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -23,6 +25,19 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Data", meta = (AllowPrivateAccess = "true"))
 	bool bCanInteract = true;
+
+	UPROPERTY()
+	TObjectPtr<UG2IUIManager> UIManager;
+
+	UPROPERTY()
+	TObjectPtr<ACharacter> Owner;
+
+	UPROPERTY()
+	TObjectPtr<AG2IPlayerController> PlayerController;
+
+	UPROPERTY()
+	TMap<TObjectPtr<UInputAction>, FName> TagOfInteractionActions;
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	float InteractionBoxLength = 100.f;
@@ -48,4 +63,22 @@ public:
 
 	UFUNCTION()
 	void HandleLanded(const FHitResult& Hit);
+
+protected:
+
+	UFUNCTION()
+	void OnInteractionBoxBeginOverlap(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnInteractionBoxEndOverlap(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex);
+
+private:
+
+	void SetupDefaults();
+
+	void OpenKeyHintByActor(AActor* OtherActor);
+	
+	void CloseKeyHintByActor(AActor* OtherActor);
+
+	void SetTagOfInteractionActions();
 };
