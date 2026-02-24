@@ -57,6 +57,9 @@ protected:
 	UFUNCTION()
 	void BindToAllDelegates();
 
+	UFUNCTION()
+	void UnbindToAllDelegates();
+
 	// Handles Activation/Reactivation logic.
 	// By default - ignores reactivation
 	UFUNCTION()

@@ -82,7 +82,7 @@ void AG2IValve::ChangeActivation()
 {
 	bActivated = !bActivated;
 	DeltaRotation *= -1.;
-	UE_LOG(LogG2I, Verbose, TEXT("%s Activation: %d"), *GetActorNameOrLabel(), bActivated);
+	UE_LOG(LogG2I, Log, TEXT("%s Activation: %d"), *GetActorNameOrLabel(), bActivated);
 
 	if (StaticMeshComponent)
 		SetActorTickEnabled(true);

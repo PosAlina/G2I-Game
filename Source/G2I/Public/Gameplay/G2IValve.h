@@ -49,11 +49,11 @@ public:
 
 	// Used for animation
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Valve")
-	FRotator DeltaRotation = FRotator(0., 5., 0.);
+	FRotator DeltaRotation = FRotator(5., 0., 0.);
 
 	// Used for animation
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Valve")
-	FRotator MaxRotation = FRotator(0., 90., 0.);
+	FRotator MaxRotation = FRotator(90., 0., 0.);
 
 	// Used for animation
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Valve")
@@ -61,7 +61,7 @@ public:
 
 protected:
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	FRotator CurrentRotation = FRotator(0.);
 
 	UPROPERTY(BlueprintReadOnly)
