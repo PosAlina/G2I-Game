@@ -1,11 +1,12 @@
 #include "G2IUIManager.h"
 #include "G2I.h"
-#include "G2IAimTypeEnum.h"
 #include "G2IGameInstance.h"
 #include "G2IPlayerController.h"
+#include "G2IUIDisplayManager.h"
 #include "G2IUIInputHandler.h"
 #include "G2IWidgetsEnums.h"
 #include "G2IWidgetsCatalog.h"
+#include "G2IWorldHintKeyWidgetComponent.h"
 
 void UG2IUIManager::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -68,6 +69,70 @@ void UG2IUIManager::InitializeDefaultsWidgets()
 void UG2IUIManager::OpenHUD() const
 {
 	OpenTrainingWidget();
+}
+
+void UG2IUIManager::OpenWorldWidget(UG2IWorldHintWidgetComponent* WidgetComponent) const
+{
+	if (!ensure(WidgetComponent))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Attempting to open nullptr widget component in %s"), *GetName());
+		return;
+	}
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
+			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		return;
+	}
+
+	DisplayManager->ShowWorldWidget(*WidgetComponent);
+}
+
+void UG2IUIManager::CloseWorldWidget(UG2IWorldHintWidgetComponent* WidgetComponent) const
+{
+	if (!ensure(WidgetComponent))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Attempting to close nullptr widget component in %s"), *GetName());
+		return;
+	}
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
+			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		return;
+	}
+
+	DisplayManager->HideWorldWidget(*WidgetComponent);
+}
+
+bool UG2IUIManager::CanSeeWorldWidget(UG2IWorldHintWidgetComponent *WidgetComponent) const
+{
+	if (!ensure(WidgetComponent))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Attempting to check visibility of nullptr widget component in %s"),
+			*GetName());
+		return false;
+	}
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
+			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		return false;
+	}
+
+	return DisplayManager->IsVisibleWorldWidget(*WidgetComponent);
+}
+
+UG2IUserWidget* UG2IUIManager::CreateWidgetByName(const EG2IWidgetNames WidgetName) const
+{
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
+			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		return nullptr;
+	}
+
+	return DisplayManager->CreateNewWidget(WidgetName);
 }
 
 void UG2IUIManager::InitializeAimingWidget() const
@@ -228,4 +293,51 @@ void UG2IUIManager::SetMechanicsDescriptionByCharacter(APawn *Pawn)
 		}
 	}
 	DisplayManager->SetText(EG2IWidgetNames::TrainingScreen, "CharacterDescriptionTextBlock", Description);
+}
+
+void UG2IUIManager::SetKeyByInputAction(UG2IWorldHintWidgetComponent* WidgetComponent, UInputAction* InputAction) const
+{
+	if (!ensure(InputAction))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Attempting to set key of undefined input action in widget in %s"),
+			*GetName());
+		return;
+	}
+	if (!ensure(WidgetComponent))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Attempting to set key for %s in nullptr widget component in %s"),
+			*InputAction->GetName(), *GetName());
+		return;
+	}
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
+			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		return;
+	}
+	if (!ensure(PlayerController))
+	{
+		UE_LOG(LogG2I, Error, TEXT("PlayerController doesn't exist in %s"), *GetName());
+		return;
+	}
+
+	UG2IUserWidget *Widget = WidgetComponent->FindOrAddWidgetByName(EG2IWidgetNames::KeyHint);
+	const FName Key = PlayerController->GetKeyName(InputAction);
+	DisplayManager->SetText(Widget, "KeyTextBlock", Key.ToString());
+}
+
+void UG2IUIManager::SetKeyWidgetSize(UG2IWorldHintKeyWidgetComponent* WidgetComponent) const
+{
+	if (!ensure(WidgetComponent))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Attempting to set key in nullptr widget component in %s"), *GetName());
+		return;
+	}
+	if (!ensure(WidgetsCatalog))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"), *UG2IWidgetsCatalog::StaticClass()->GetName(), *GetName());
+		return;
+	}
+
+	WidgetComponent->SetWidgetSize(WidgetsCatalog->KeyWidgetDefaultSize);
 }
