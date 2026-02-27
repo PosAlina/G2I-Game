@@ -48,21 +48,21 @@ public:
 	TObjectPtr<UStaticMeshComponent> StaticMeshComponent;
 
 	// Used for animation
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Valve")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Valve|Animation")
 	FRotator DeltaRotation = FRotator(5., 0., 0.);
 
 	// Used for animation
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Valve")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Valve|Animation")
 	FRotator MaxRotation = FRotator(90., 0., 0.);
 
 	// Used for animation
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Valve")
-	FRotator MinRotation = FRotator(0., 0., 0.);
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Valve|Animation")
+	FRotator MinRotation = FRotator::ZeroRotator;
 
 protected:
 
-	UPROPERTY(VisibleAnywhere)
-	FRotator CurrentRotation = FRotator(0.);
+	UPROPERTY(VisibleAnywhere, Category = "Valve|Animation")
+	FRotator CurrentRotation = FRotator::ZeroRotator;
 
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<USceneComponent> SceneRootComponent;
