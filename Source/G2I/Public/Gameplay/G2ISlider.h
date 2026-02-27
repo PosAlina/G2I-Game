@@ -22,59 +22,12 @@ class G2I_API AG2ISlider : public AActor, public IG2IInteractiveObjectInterface
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	AG2ISlider();
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UStaticMeshComponent> SliderBaseSM;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UStaticMeshComponent> SliderSM;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UBoxComponent> SliderCol;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (MakeEditWidget = true))
-	FVector SliderStartLocation = {0.0f, 0.0f, 0.0f};
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (MakeEditWidget = true))
-	FVector SliderEndLocation = {0.0f, 0.0f, 0.0f};
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float SliderMoveSpeed = 35.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float BlendTime = 0.5f;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<EZoneColor> CorrectSequence;
-
-	int IndexInCorrectSequence = 0;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UCameraComponent> ViewCamera;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UInputMappingContext> SliderIMC;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UInputMappingContext> DefaultIMC;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UInputAction> MoveSliderAction;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UInputAction> SliderExitAction;
-
-private:
-	bool bIsSliderActive = false;
-	bool bIsPuzzleComplete = false;
-	UPROPERTY()
-	TObjectPtr<AActor> OriginalViewTarget;
-	UPROPERTY()
-	TObjectPtr<APlayerController> PC;
-	UPROPERTY()
-	TObjectPtr<UWorld> World;
+	virtual void Interact_Implementation(const ACharacter* Interactor) override;
+	virtual bool CanInteract_Implementation(const ACharacter* Interactor) override;
 
 protected:
 	virtual void BeginPlay() override;
-
-public:	
-	virtual void Interact_Implementation(const ACharacter* Interactor) override;
-	virtual bool CanInteract_Implementation(const ACharacter* Interactor) override;
 
 private:
 	UFUNCTION()
@@ -91,9 +44,85 @@ private:
 	UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex);
 
-	bool CompareZoneColorToColorInSequence(UG2IColorZoneComponent& CurrentColorZone);
+	void CompareZoneColorToColorInSequence();
 	void MoveSlider(const FInputActionValue& Value);
-	void MoveSliderInertia(const FInputActionValue& Value);
+	void MoveSliderImpulse(const FInputActionValue& Value);
 	void SliderExit(const FInputActionValue& Value);
-	void FindAndSwitchLamp(bool bLampMode, UG2IColorZoneComponent& CurrentColorZone);
+	void CheckErrors();
+	void FindAndSwitchLamp();
+	void FindLamps();
+	void SetImpulse();
+	
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UStaticMeshComponent> SliderBaseSM;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UStaticMeshComponent> SliderSM;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UBoxComponent> SliderCol;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (MakeEditWidget = true))
+	FVector SliderStartLocation = {0.0f, 0.0f, 0.0f};
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (MakeEditWidget = true))
+	FVector SliderEndLocation = {0.0f, 0.0f, 0.0f};
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SliderMoveSpeed = 35.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float BlendTime = 0.5f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<EZoneColor> CorrectSequence;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UCameraComponent> ViewCamera;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UInputMappingContext> SliderIMC;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UInputMappingContext> DefaultIMC;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UInputAction> MoveSliderAction;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UInputAction> SliderExitAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UG2IColorZoneComponent> CurrentCommonColorZone = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UG2IColorZoneComponent> CurrentActivationColorZone = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float FlashTime = 0.5f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int LampFlashCount = 3;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float LampFlashFrequency = 0.3f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float LampErrorTime = 1.5f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ImpulsePower = 17.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ImpulseDeclinePower = 0.23f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ImpulseDeclineFrequency = 0.008f;
+	
+private:
+	bool bIsSliderActive = false;
+	bool bIsPuzzleComplete = false;
+	int IndexInCorrectSequence = 0;
+	float CurrenImpulse = 0.0f;
+	float MoveDir = 0.0f;
+	float CurrentImpulseLenght = 0.0f;
+	bool bIsLampWithoutZone = false;
+	bool bIsSequenceEmpty = false;
+	UPROPERTY()
+	TObjectPtr<AActor> OriginalViewTarget;
+	UPROPERTY()
+	TObjectPtr<APlayerController> PC;
+	UPROPERTY()
+	TObjectPtr<UWorld> World;
+	FTimerHandle ActivationZoneTimer;
+	FTimerHandle ImpulseTimer;
+	UPROPERTY()
+	TMap<EZoneColor, TObjectPtr<UG2ISliderLampComponent>> Lamps;
+	UPROPERTY()
+	TObjectPtr<UG2ISliderLampComponent> CurrentLamp;
 };

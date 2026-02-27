@@ -30,5 +30,6 @@ public:
 	EZoneColor Color = EZoneColor::None;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UBoxComponent> ZoneCol;
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsActivationZone = false;
 };

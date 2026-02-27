@@ -19,20 +19,43 @@ class G2I_API UG2ISliderLampComponent : public UPrimitiveComponent
 public:
 	UG2ISliderLampComponent();
 	virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
+	void SetTimerToIntensity(int IntensityChangeDir);
+	void SetTimerToFlashing(int FlashCount, float FlashTime);
 	
+protected:
+	virtual void BeginPlay() override;
+	
+private:
+	void ChangeIntensity(int IntensityChangeDir, float TargetLightIntensity);
+	void LampFlashing(int FlashCount);
+
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UStaticMeshComponent> LampMesh;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UPointLightComponent> LampLight;
-
+	TObjectPtr<UMaterialInstance> LightMaterial;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EZoneColor Color = EZoneColor::None;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UMaterial> LightOnMaterial;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UMaterial> LightOffMaterial;
+	FLinearColor LampColor;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxLightIntensityInCommonColorZone = 50.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxLightIntensityInActivationColorZone = 200.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float LightIntensityRate = 10.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float IntensityIncreaseFrequency = 0.05f;
+	
+	UPROPERTY()
+	TObjectPtr<UMaterialInstanceDynamic> DynamicMaterial;
+	bool bIsLampFlashing = false;
+	int LampMode = 0;
+
+private:
+	FTimerHandle IntensityColorTimer;
+	FTimerHandle FlashingTimer;
+	int FlashCounter = 0;
+	bool bLampFlashState = true;
 };
