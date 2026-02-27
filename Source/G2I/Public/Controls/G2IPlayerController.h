@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "EnhancedActionKeyMapping.h"
 #include "GameFramework/PlayerController.h"
 #include "G2IPlayerController.generated.h"
 
@@ -68,11 +69,18 @@ public:
 	
 	void QuitGame();
 
+	FName GetKeyName(UInputAction *InputAction);
+
+	TMap<TObjectPtr<UInputAction>, FName>& GetActionToTagMap();
+
 protected:
 
 	/** Setup Input */
 	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
 	TArray<TObjectPtr<UInputMappingContext>> InputMappingContexts;
+
+	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
+	TArray<FEnhancedActionKeyMapping> InputKeyMappings;
 	
 	virtual void SetupInputComponent() override;
 

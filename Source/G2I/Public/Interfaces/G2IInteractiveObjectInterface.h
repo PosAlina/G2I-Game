@@ -5,6 +5,8 @@
 #include "GameFramework/Character.h"
 #include "G2IInteractiveObjectInterface.generated.h"
 
+class UG2IWorldHintKeyWidgetComponent;
+
 UINTERFACE(MinimalAPI, Blueprintable)
 class UG2IInteractiveObjectInterface : public UInterface
 {
@@ -23,4 +25,6 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interactions")
 	void Interact(const ACharacter* Interactor);
 
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interactions")
+	UG2IWorldHintKeyWidgetComponent *GetInteractionKeyHintComponent();
 };
