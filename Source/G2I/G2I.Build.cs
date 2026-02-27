@@ -44,6 +44,8 @@ public class G2I : ModuleRules
 			"G2I/Public/Interfaces/Camera",
 			"G2I/Public/Interfaces/SteamGlove",
 			"G2I/Public/UI",
+			"G2I/Public/UI/Widgets",
+			"G2I/Public/UI/WidgetComponents",
 			"G2I/Public/Components",
 			"G2I/Public/Components/Camera",
 			"G2I/Public/Components/SteamGlove"
@@ -66,6 +68,8 @@ public class G2I : ModuleRules
 			"G2I/Private/Interfaces/Camera",
 			"G2I/Private/Interfaces/SteamGlove",
 			"G2I/Private/UI",
+			"G2I/Private/UI/Widgets",
+			"G2I/Private/UI/WidgetComponents",
 			"G2I/Private/Components",
 			"G2I/Private/Components/Camera",
 			"G2I/Private/Components/SteamGlove"

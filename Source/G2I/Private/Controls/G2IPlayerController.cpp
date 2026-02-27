@@ -34,6 +34,7 @@ void AG2IPlayerController::SetupInputComponent()
 				for (const UInputMappingContext* CurrentContext : InputMappingContexts)
 				{
 					Subsystem->AddMappingContext(CurrentContext, 0);
+					InputKeyMappings.Append(CurrentContext->GetMappings());
 				}
 			}
 			else
@@ -212,6 +213,23 @@ void AG2IPlayerController::QuitGame()
 	}
 	
 	UKismetSystemLibrary::QuitGame(World, this, EQuitPreference::Quit, true);
+}
+
+FName AG2IPlayerController::GetKeyName(UInputAction* InputAction)
+{
+	for (const FEnhancedActionKeyMapping& Mapping : InputKeyMappings)
+	{
+		if (Mapping.Action == InputAction)
+		{
+			return Mapping.Key.GetFName();
+		}
+	}
+	return NAME_None;
+}
+
+TMap<TObjectPtr<UInputAction>, FName>& AG2IPlayerController::GetActionToTagMap()
+{
+	return ActionToTagMap;
 }
 
 void AG2IPlayerController::SetupCharacterActorComponents()

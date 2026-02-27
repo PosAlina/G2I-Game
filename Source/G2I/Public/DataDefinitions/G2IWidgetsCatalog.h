@@ -50,8 +50,12 @@ public:
 
 	// =================== TRAINING SCREEN WIDGET ===================
 	UPROPERTY(EditAnywhere, Category = TrainingScreen, meta = (ToolTip = "List of descriptions of common mechanics", MultiLine = true))
-	FG2IMultiText CommonMechanicsDescription;;
+	FG2IMultiText CommonMechanicsDescription;
 	
 	UPROPERTY(EditAnywhere, Category = TrainingScreen, meta = (ToolTip = "List of descriptions of unique mechanics for characters", MultiLine = true))
-	TMap<TSubclassOf<APawn>, FG2IMultiText> CharactersMechanicsDescription;;
+	TMap<TSubclassOf<APawn>, FG2IMultiText> CharactersMechanicsDescription;
+
+	// =================== WORLD WIDGET ===================
+	UPROPERTY(EditAnywhere, Category = WorldWidget)
+	FVector2D KeyWidgetDefaultSize = FVector2D(100.f, 100.f);
 };
