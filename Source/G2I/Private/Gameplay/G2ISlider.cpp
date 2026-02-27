@@ -18,7 +18,7 @@ AG2ISlider::AG2ISlider()
 	SliderCol = CreateDefaultSubobject<UBoxComponent>(TEXT("SliderCol"));
 	ViewCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ViewCamera"));
 
-	SetRootComponent(SliderBaseSM);
+	SliderBaseSM->SetupAttachment(RootComponent);
 	SliderSM->SetupAttachment(SliderBaseSM);
 	SliderCol->SetupAttachment(SliderSM);
 	ViewCamera->SetupAttachment(SliderBaseSM);
@@ -50,15 +50,19 @@ void AG2ISlider::BeginPlay()
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PC->InputComponent))
 	{
 		EnhancedInputComponent->BindAction(MoveSliderAction, ETriggerEvent::Triggered, this, &ThisClass::MoveSlider);
-		EnhancedInputComponent->BindAction(MoveSliderAction, ETriggerEvent::Completed, this, &ThisClass::MoveSliderInertia);
+		EnhancedInputComponent->BindAction(MoveSliderAction, ETriggerEvent::Completed, this, &ThisClass::MoveSliderImpulse);
 		EnhancedInputComponent->BindAction(SliderExitAction, ETriggerEvent::Started, this, &ThisClass::SliderExit);
 	}
+
+	FindLamps();
+	CheckErrors();
+	CurrenImpulse = ImpulsePower;
 }
 
 void AG2ISlider::Interact_Implementation(const ACharacter* Interactor)
 {
 	IG2IInteractiveObjectInterface::Interact_Implementation(Interactor);
-
+	
 	if (!bIsSliderActive)
 	{
 		auto Subsystem  = PC->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
@@ -72,64 +76,104 @@ void AG2ISlider::Interact_Implementation(const ACharacter* Interactor)
 
 bool AG2ISlider::CanInteract_Implementation(const ACharacter* Interactor)
 {
+	if (bIsLampWithoutZone)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("There is lamp without color zone"));
+		return false;
+	}
+	if (bIsSequenceEmpty)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Correct Sequense is empty"));
+		return false;
+	}
 	return true;
 }
 
-void AG2ISlider::OnSliderBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+void AG2ISlider::CheckErrors()
+{
+	TArray<TObjectPtr<UG2IColorZoneComponent>> ColorZones;
+	GetComponents(ColorZones);
+
+	for (auto Comp : ColorZones)
+	{
+		if (!Lamps.Contains(Comp->Color))
+		{
+			bIsLampWithoutZone = true;
+		}
+	}
+
+	if (CorrectSequence.Num() == 0)
+	{
+		bIsSequenceEmpty = true;
+	}
+}
+
+void AG2ISlider::OnSliderBeginOverlap(UPrimitiveComponent* OverlappedComponent,AActor* OtherActor,
                                       UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	auto CurrentColorZoneCol = Cast<UBoxComponent>(OtherComp);
+	auto tempColorZone = Cast<UG2IColorZoneComponent>(OtherComp->GetAttachParent());
 
-	if (!CurrentColorZoneCol)
-    {
-		UE_LOG(LogTemp, Log, TEXT("Not CurrentColorZoneCol"));
-    	return;
-    }
-	
-	auto CurrentColorZone = Cast<UG2IColorZoneComponent>(CurrentColorZoneCol->GetAttachParent());
-
-	if (!CurrentColorZone)
+	if (!tempColorZone)
 	{
-		UE_LOG(LogTemp, Log, TEXT("CurrentColorZoneCol hasnt ColorZone"));
+		UE_LOG(LogTemp, Log, TEXT("OtherComp is not ColorZoneComponent"));
 		return;
 	}
-
-	bool bIsZoneColorEqualColorInSequence = CompareZoneColorToColorInSequence(*CurrentColorZone);
-
-	if (!bIsZoneColorEqualColorInSequence)
+	
+	if (tempColorZone->bIsActivationZone)
 	{
-		IndexInCorrectSequence = 0;
-		CompareZoneColorToColorInSequence(*CurrentColorZone);
+		CurrentActivationColorZone = tempColorZone;
+	}
+	else
+	{
+		CurrentCommonColorZone = tempColorZone;
 	}
 
-	FindAndSwitchLamp(true, *CurrentColorZone);
+	FindAndSwitchLamp();
+	
+	if (CurrentActivationColorZone)
+	{
+		CurrentLamp->LampMode = 2;
+		GetWorldTimerManager().SetTimer(ActivationZoneTimer, this, &ThisClass::CompareZoneColorToColorInSequence, 1.5f, false);
+		CurrentLamp->SetTimerToIntensity(1);
+	}
+	else
+	{
+		CurrentLamp->LampMode = 1;
+		CurrentLamp->SetTimerToIntensity(1);
+	}
 }
 
 void AG2ISlider::OnSliderEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	auto CurrentColorZoneCol = Cast<UBoxComponent>(OtherComp);
+	auto tempColorZone = Cast<UG2IColorZoneComponent>(OtherComp->GetAttachParent());
 
-	if (!CurrentColorZoneCol)
-	{
-		UE_LOG(LogTemp, Log, TEXT("Not CurrentColorZoneCol"));
-		return;
-	}
-	
-	auto CurrentColorZone = Cast<UG2IColorZoneComponent>(CurrentColorZoneCol->GetAttachParent());
-
-	if (!CurrentColorZone)
+	if (!tempColorZone)
 	{
 		UE_LOG(LogTemp, Log, TEXT("CurrentColorZoneCol hasnt ColorZone"));
 		return;
 	}
 
-	FindAndSwitchLamp(false, *CurrentColorZone);
+	if (CurrentActivationColorZone)
+	{
+		CurrentActivationColorZone = nullptr;
+		CurrentLamp->LampMode = 1;
+	}
+	else
+	{
+		CurrentCommonColorZone = nullptr;
+		CurrentLamp->LampMode = 0;
+	}
+
+	if (!CurrentLamp->bIsLampFlashing)
+	{
+		CurrentLamp->SetTimerToIntensity(-1);
+	}
 }
 
-bool AG2ISlider::CompareZoneColorToColorInSequence(UG2IColorZoneComponent& CurrentColorZone)
+void AG2ISlider::CompareZoneColorToColorInSequence()
 {
-	if (!bIsPuzzleComplete && CorrectSequence[IndexInCorrectSequence] == CurrentColorZone.Color)
+	if (!bIsPuzzleComplete && CurrentActivationColorZone && CorrectSequence[IndexInCorrectSequence] == CurrentActivationColorZone->Color)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, "Correct");
 		IndexInCorrectSequence++;
@@ -138,17 +182,24 @@ bool AG2ISlider::CompareZoneColorToColorInSequence(UG2IColorZoneComponent& Curre
 			GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, "Correct All");
 			bIsPuzzleComplete = true;
 		}
-		return true;
+		CurrentLamp->SetTimerToFlashing(LampFlashCount, LampFlashFrequency);
 	}
-	return false;
+	else if (!bIsPuzzleComplete && CurrentActivationColorZone && CorrectSequence[IndexInCorrectSequence] != CurrentActivationColorZone->Color)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, "NoCorrect");
+		CurrentLamp->SetTimerToFlashing(1, LampErrorTime);
+		IndexInCorrectSequence = 0;
+	}
+	GetWorldTimerManager().ClearTimer(ActivationZoneTimer);
 }
-
 
 void AG2ISlider::MoveSlider(const FInputActionValue& Value)
 {
 	if (bIsSliderActive)
 	{
-		float MoveDir = Value.Get<float>();
+		GetWorldTimerManager().ClearTimer(ImpulseTimer);
+		CurrenImpulse = ImpulsePower;
+		MoveDir = Value.Get<float>();
 		FVector SliderLocation = SliderSM->GetRelativeLocation();
 		FVector OffsetVector = {0.0f, SliderMoveSpeed*World->DeltaTimeSeconds, 0.0f};
 
@@ -169,9 +220,15 @@ void AG2ISlider::MoveSlider(const FInputActionValue& Value)
 	}
 }
 
-void AG2ISlider::MoveSliderInertia(const FInputActionValue& Value)
+void AG2ISlider::MoveSliderImpulse(const FInputActionValue& Value)
 {
-
+	if (bIsSliderActive)
+	{
+		GetWorldTimerManager().SetTimer(ImpulseTimer, [this]()
+		{
+			SetImpulse();
+		}, ImpulseDeclineFrequency, true);
+	}
 }
 
 void AG2ISlider::SliderExit(const FInputActionValue& Value)
@@ -186,28 +243,40 @@ void AG2ISlider::SliderExit(const FInputActionValue& Value)
 	}
 }
 
-void AG2ISlider::FindAndSwitchLamp(bool bLampMode, UG2IColorZoneComponent& CurrentColorZone)
+void AG2ISlider::FindAndSwitchLamp()
 {
-	auto ActorComponents = GetComponents();
-
-	if (ActorComponents.Num() > 0)
+	if (!CurrentCommonColorZone->bIsActivationZone)
 	{
-		for (auto Comp : ActorComponents)
-		{
-			auto LampComp = Cast<UG2ISliderLampComponent>(Comp);
-			if (LampComp && LampComp->Color == CurrentColorZone.Color)
-			{
-				LampComp->LampLight->SetVisibility(bLampMode);
-				if (bLampMode)
-				{
-					LampComp->LampMesh->SetMaterial(0, LampComp->LightOnMaterial);
-				}
-				else
-				{
-					LampComp->LampMesh->SetMaterial(0, LampComp->LightOffMaterial);
-				}
-				break;
-			}
-		}
+		CurrentLamp = Lamps.FindRef(CurrentCommonColorZone->Color);
+		CurrentLamp->DynamicMaterial->SetVectorParameterValue("EmissiveColor", CurrentLamp->LampColor);
+	}
+}
+
+void AG2ISlider::FindLamps()
+{
+	TArray<UG2ISliderLampComponent*> LampComponents;
+	GetComponents(LampComponents);
+
+	for (auto Comp : LampComponents)
+	{
+		Lamps.Add(Comp->Color, Comp);
+	}
+}
+
+void AG2ISlider::SetImpulse()
+{
+	float temp = SliderSM->GetRelativeLocation().Y + MoveDir*CurrenImpulse*World->DeltaTimeSeconds;
+	if (temp < SliderStartLocation.Y || temp > SliderEndLocation.Y)
+	{
+		GetWorldTimerManager().ClearTimer(ImpulseTimer);
+		return;
+	}
+	
+	SliderSM->AddLocalOffset({0.0f, MoveDir*CurrenImpulse*World->DeltaTimeSeconds, 0.0f});
+	CurrenImpulse -= ImpulseDeclinePower;
+	if (CurrenImpulse < 0.0f)
+	{
+		GetWorldTimerManager().ClearTimer(ImpulseTimer);
+		CurrenImpulse = ImpulsePower;
 	}
 }
