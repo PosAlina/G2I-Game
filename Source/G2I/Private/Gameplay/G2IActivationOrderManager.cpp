@@ -12,6 +12,8 @@ AG2IActivationOrderManager::AG2IActivationOrderManager()
 
 void AG2IActivationOrderManager::OrderCompleted()
 {
+	OnActivationWithOrderEndedDelegate.Broadcast(this, true);
+	UnbindToAllDelegates();
 	UE_LOG(LogG2I, Log, TEXT("Order completed successfully in %s"), *GetActorNameOrLabel());
 }
 
@@ -27,6 +29,7 @@ void AG2IActivationOrderManager::OrderFailed()
 		}
 	}
 	ActivatedActorsArray.Empty();
+	OnActivationWithOrderEndedDelegate.Broadcast(this, false);
 	UE_LOG(LogG2I, Log, TEXT("Order failed in %s"), *GetActorNameOrLabel());
 }
 
@@ -42,6 +45,7 @@ void AG2IActivationOrderManager::OrderCancelled()
 		}
 	}
 	ActivatedActorsArray.Empty();
+	OnActivationWithOrderEndedDelegate.Broadcast(this, false);
 	UE_LOG(LogG2I, Log, TEXT("Order calcelled in %s"), *GetActorNameOrLabel());
 }
 
@@ -70,6 +74,22 @@ void AG2IActivationOrderManager::BindToAllDelegates()
 	}
 }
 
+void AG2IActivationOrderManager::UnbindToAllDelegates()
+{
+	for (AActor* Actor : CorrectOrderOfActors)
+	{
+		if (Actor)
+		{
+			if (auto* ActivationComponent = Actor->GetComponentByClass<UG2IActivationWithOrderComponent>())
+			{
+				ActivationComponent->OnActivatedDelegate.Unbind();
+			}
+			else
+				UE_LOG(LogG2I, Error, TEXT("Failed to get ActivationWithOrder component from %s actor in %s"), *Actor->GetActorNameOrLabel(), *GetActorNameOrLabel());
+		}
+	}
+}
+
 void AG2IActivationOrderManager::OnActorActivated(AActor* ActivatedActor, bool bReactivation, UG2IActivationWithOrderComponent* ActivationComponent)
 {
 	ActivatedActorsArray.Add(ActivatedActor);
@@ -81,7 +101,7 @@ void AG2IActivationOrderManager::OnActorActivated(AActor* ActivatedActor, bool b
 
 void AG2IActivationOrderManager::CheckIfOrderCompleted()
 {
-	if (CurrentIndex + 1 < NumberOfActors)
+	if (CurrentIndex < NumberOfActors)
 		return;
 
 	for (int32 i = 0; i < NumberOfActors; i++)
