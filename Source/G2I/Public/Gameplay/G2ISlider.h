@@ -54,11 +54,11 @@ private:
 	void SetImpulse();
 	
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TObjectPtr<UStaticMeshComponent> SliderBaseSM;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TObjectPtr<UStaticMeshComponent> SliderSM;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TObjectPtr<UBoxComponent> SliderCol;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (MakeEditWidget = true))
@@ -72,24 +72,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<EZoneColor> CorrectSequence;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TObjectPtr<UCameraComponent> ViewCamera;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TObjectPtr<UInputMappingContext> SliderIMC;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TObjectPtr<UInputMappingContext> DefaultIMC;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TObjectPtr<UInputAction> MoveSliderAction;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TObjectPtr<UInputAction> SliderExitAction;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UG2IColorZoneComponent> CurrentCommonColorZone = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UG2IColorZoneComponent> CurrentActivationColorZone = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float FlashTime = 0.5f;
+	float LampActivationTime = 1.5f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int LampFlashCount = 3;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -125,4 +121,8 @@ private:
 	TMap<EZoneColor, TObjectPtr<UG2ISliderLampComponent>> Lamps;
 	UPROPERTY()
 	TObjectPtr<UG2ISliderLampComponent> CurrentLamp;
+	UPROPERTY()
+	TObjectPtr<UG2IColorZoneComponent> CurrentCommonColorZone = nullptr;
+	UPROPERTY()
+	TObjectPtr<UG2IColorZoneComponent> CurrentActivationColorZone = nullptr;
 };

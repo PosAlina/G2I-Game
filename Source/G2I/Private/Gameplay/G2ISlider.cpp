@@ -133,7 +133,7 @@ void AG2ISlider::OnSliderBeginOverlap(UPrimitiveComponent* OverlappedComponent,A
 	if (CurrentActivationColorZone)
 	{
 		CurrentLamp->LampMode = 2;
-		GetWorldTimerManager().SetTimer(ActivationZoneTimer, this, &ThisClass::CompareZoneColorToColorInSequence, 1.5f, false);
+		GetWorldTimerManager().SetTimer(ActivationZoneTimer, this, &ThisClass::CompareZoneColorToColorInSequence, LampActivationTime, false);
 		CurrentLamp->SetTimerToIntensity(1);
 	}
 	else

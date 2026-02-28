@@ -28,7 +28,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EZoneColor Color = EZoneColor::None;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TObjectPtr<UBoxComponent> ZoneCol;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsActivationZone = false;

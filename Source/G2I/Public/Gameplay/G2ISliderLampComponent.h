@@ -30,9 +30,9 @@ private:
 	void LampFlashing(int FlashCount);
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TObjectPtr<UStaticMeshComponent> LampMesh;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TObjectPtr<UMaterialInstance> LightMaterial;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EZoneColor Color = EZoneColor::None;
