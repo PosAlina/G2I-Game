@@ -8,9 +8,6 @@
 #include "G2ISliderLampComponent.generated.h"
 
 class UPointLightComponent;
-/**
- * 
- */
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class G2I_API UG2ISliderLampComponent : public UPrimitiveComponent
 {
@@ -30,7 +27,7 @@ private:
 	void LampFlashing(int FlashCount);
 
 public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UStaticMeshComponent> LampMesh;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TObjectPtr<UMaterialInstance> LightMaterial;
@@ -54,7 +51,9 @@ public:
 	int LampMode = 0;
 
 private:
+	UPROPERTY()
 	FTimerHandle IntensityColorTimer;
+	UPROPERTY()
 	FTimerHandle FlashingTimer;
 	int FlashCounter = 0;
 	bool bLampFlashState = true;
