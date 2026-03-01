@@ -1,10 +1,8 @@
-
-
-
 #include "Gameplay/G2ISlider.h"
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "G2I.h"
 #include "G2IColorZoneComponent.h"
 #include "G2ISliderLampComponent.h"
 #include "Camera/CameraComponent.h"
@@ -17,7 +15,31 @@ AG2ISlider::AG2ISlider()
 	SliderSM = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Slider"));
 	SliderCol = CreateDefaultSubobject<UBoxComponent>(TEXT("SliderCol"));
 	ViewCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ViewCamera"));
-
+	
+	if (!ensure(SliderBaseSM))
+	{
+		UE_LOG(LogG2I, Error, TEXT("SliderBaseSM was not created in %s"), *GetActorNameOrLabel());
+		return;
+	}
+	
+	if (!ensure(SliderSM))
+	{
+		UE_LOG(LogG2I, Error, TEXT("SliderSM was not created in %s"), *GetActorNameOrLabel());
+		return;
+	}
+	
+	if (!ensure(SliderCol))
+	{
+		UE_LOG(LogG2I, Error, TEXT("LampMesh was not created in %s"), *GetActorNameOrLabel());
+		return;
+	}
+	
+	if (!ensure(ViewCamera))
+	{
+		UE_LOG(LogG2I, Error, TEXT("ViewCamera was not created in %s"), *GetActorNameOrLabel());
+		return;
+	}
+	
 	SliderBaseSM->SetupAttachment(RootComponent);
 	SliderSM->SetupAttachment(SliderBaseSM);
 	SliderCol->SetupAttachment(SliderSM);
@@ -30,21 +52,25 @@ AG2ISlider::AG2ISlider()
 void AG2ISlider::BeginPlay()
 {
 	Super::BeginPlay();
-	SliderSM->SetRelativeLocation(SliderStartLocation);
 	
 	World =  GetWorld();
-	if (World == nullptr)
+	if (!ensure(World))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("World is nullptr"));
+		UE_LOG(LogG2I, Error, TEXT("World is null in %s"), *GetActorNameOrLabel());
 		return;
 	}
 
 	PC = World->GetFirstPlayerController();
 
-	if (PC == nullptr)
+	if (!ensure(PC))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("PC is nullptr"));
+		UE_LOG(LogG2I, Error, TEXT("PC is null in %s"), *GetActorNameOrLabel());
 		return;
+	}
+
+	if (SliderSM)
+	{
+		SliderSM->SetRelativeLocation(SliderStartLocation);
 	}
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PC->InputComponent))
@@ -63,9 +89,14 @@ void AG2ISlider::Interact_Implementation(const ACharacter* Interactor)
 {
 	IG2IInteractiveObjectInterface::Interact_Implementation(Interactor);
 	
-	if (!bIsSliderActive)
+	if (ensure(PC) && !bIsSliderActive)
 	{
-		auto Subsystem  = PC->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+		auto* Subsystem = PC->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+		if (!Subsystem)
+		{
+			UE_LOG(LogG2I, Error, TEXT("Sybsystem is null in %s"), *GetActorNameOrLabel());
+			return;
+		}
 		OriginalViewTarget = PC->GetViewTarget();
 		PC->SetViewTargetWithBlend(this, BlendTime);
 		bIsSliderActive = true;
@@ -78,12 +109,12 @@ bool AG2ISlider::CanInteract_Implementation(const ACharacter* Interactor)
 {
 	if (bIsLampWithoutZone)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("There is lamp without color zone"));
+		UE_LOG(LogG2I, Warning, TEXT("There is lamp without color zone in %s"), *GetActorNameOrLabel());
 		return false;
 	}
 	if (bIsSequenceEmpty)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Correct Sequense is empty"));
+		UE_LOG(LogG2I, Warning, TEXT("Correct Sequense is empty in %s"), *GetActorNameOrLabel());
 		return false;
 	}
 	return true;
@@ -96,9 +127,10 @@ void AG2ISlider::CheckErrors()
 
 	for (auto Comp : ColorZones)
 	{
-		if (!Lamps.Contains(Comp->Color))
+		if (Comp && !Lamps.Contains(Comp->Color))
 		{
 			bIsLampWithoutZone = true;
+			break;
 		}
 	}
 
@@ -111,11 +143,17 @@ void AG2ISlider::CheckErrors()
 void AG2ISlider::OnSliderBeginOverlap(UPrimitiveComponent* OverlappedComponent,AActor* OtherActor,
                                       UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	auto tempColorZone = Cast<UG2IColorZoneComponent>(OtherComp->GetAttachParent());
+	if (!OtherComp)
+	{
+		UE_LOG(LogG2I, Log, TEXT("%s has not components"), *OtherActor->GetName());
+		return;
+	}
+	
+	auto* tempColorZone = Cast<UG2IColorZoneComponent>(OtherComp->GetAttachParent());
 
 	if (!tempColorZone)
 	{
-		UE_LOG(LogTemp, Log, TEXT("OtherComp is not ColorZoneComponent"));
+		UE_LOG(LogG2I, Log, TEXT("OtherComp is not ColorZoneComponent in %s"), *GetActorNameOrLabel());
 		return;
 	}
 	
@@ -129,73 +167,99 @@ void AG2ISlider::OnSliderBeginOverlap(UPrimitiveComponent* OverlappedComponent,A
 	}
 
 	FindAndSwitchLamp();
-	
-	if (CurrentActivationColorZone)
+
+	if (CurrentLamp)
 	{
-		CurrentLamp->LampMode = 2;
-		GetWorldTimerManager().SetTimer(ActivationZoneTimer, this, &ThisClass::CompareZoneColorToColorInSequence, LampActivationTime, false);
-		CurrentLamp->SetTimerToIntensity(1);
-	}
-	else
-	{
-		CurrentLamp->LampMode = 1;
-		CurrentLamp->SetTimerToIntensity(1);
+		if (CurrentActivationColorZone)
+		{
+			CurrentLamp->LampMode = 2;
+			GetWorldTimerManager().SetTimer(ActivationZoneTimer, this, &ThisClass::CompareZoneColorToColorInSequence, LampActivationTime, false);
+			CurrentLamp->SetTimerToIntensity(1);
+		}
+		else
+		{
+			CurrentLamp->LampMode = 1;
+			CurrentLamp->SetTimerToIntensity(1);
+		}
 	}
 }
 
 void AG2ISlider::OnSliderEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	auto tempColorZone = Cast<UG2IColorZoneComponent>(OtherComp->GetAttachParent());
+	if (!OtherComp)
+	{
+		UE_LOG(LogG2I, Log, TEXT("%s has not components"), *OtherActor->GetName());
+		return;
+	}
+	
+	auto* tempColorZone = Cast<UG2IColorZoneComponent>(OtherComp->GetAttachParent());
 
 	if (!tempColorZone)
 	{
-		UE_LOG(LogTemp, Log, TEXT("CurrentColorZoneCol hasnt ColorZone"));
+		UE_LOG(LogG2I, Log, TEXT("OtherComp is not ColorZoneComponent in %s"), *GetActorNameOrLabel());
 		return;
 	}
 
-	if (CurrentActivationColorZone)
+	if (CurrentLamp)
 	{
-		CurrentActivationColorZone = nullptr;
-		CurrentLamp->LampMode = 1;
-	}
-	else
-	{
-		CurrentCommonColorZone = nullptr;
-		CurrentLamp->LampMode = 0;
-	}
+		if (CurrentActivationColorZone)
+		{
+			CurrentActivationColorZone = nullptr;
+			CurrentLamp->LampMode = 1;
+		}
+		else
+		{
+			CurrentCommonColorZone = nullptr;
+			CurrentLamp->LampMode = 0;
+		}
 
-	if (!CurrentLamp->bIsLampFlashing)
-	{
-		CurrentLamp->SetTimerToIntensity(-1);
+		if (!CurrentLamp->bIsLampFlashing)
+		{
+			CurrentLamp->SetTimerToIntensity(-1);
+		}
 	}
 }
 
 void AG2ISlider::CompareZoneColorToColorInSequence()
 {
-	if (!bIsPuzzleComplete && CurrentActivationColorZone && CorrectSequence[IndexInCorrectSequence] == CurrentActivationColorZone->Color)
+	if (!bIsPuzzleComplete && CurrentActivationColorZone && CurrentLamp)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, "Correct");
-		IndexInCorrectSequence++;
-		if (IndexInCorrectSequence == CorrectSequence.Num())
+		if (CorrectSequence[IndexInCorrectSequence] == CurrentActivationColorZone->Color)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, "Correct All");
-			bIsPuzzleComplete = true;
+			#if WITH_EDITOR
+				GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange,FString::Printf(TEXT("Correct lamp, %i out of %i"), IndexInCorrectSequence+1, CorrectSequence.Num()));
+			#endif
+			UE_LOG(LogG2I, Log, TEXT("Correct lamp, %i out of %i"), IndexInCorrectSequence+1, CorrectSequence.Num());
+			
+			IndexInCorrectSequence++;
+			if (IndexInCorrectSequence == CorrectSequence.Num())
+			{
+				#if WITH_EDITOR
+					GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, "Sequence is correct");
+				#endif
+				UE_LOG(LogG2I, Log, TEXT("Sequence is correct"));
+				bIsPuzzleComplete = true;
+				OnPuzzleComplete.Broadcast();
+			}
+			CurrentLamp->SetTimerToFlashing(LampFlashCount, LampFlashFrequency);
 		}
-		CurrentLamp->SetTimerToFlashing(LampFlashCount, LampFlashFrequency);
-	}
-	else if (!bIsPuzzleComplete && CurrentActivationColorZone && CorrectSequence[IndexInCorrectSequence] != CurrentActivationColorZone->Color)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, "NoCorrect");
-		CurrentLamp->SetTimerToFlashing(1, LampErrorTime);
-		IndexInCorrectSequence = 0;
+		else
+		{
+			#if WITH_EDITOR
+				GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, "Wrong lamp, start over");
+			#endif
+			UE_LOG(LogG2I, Log, TEXT("Wrong lamp, start over"));
+			CurrentLamp->SetTimerToFlashing(1, LampErrorTime);
+			IndexInCorrectSequence = 0;
+		}
 	}
 	GetWorldTimerManager().ClearTimer(ActivationZoneTimer);
 }
 
 void AG2ISlider::MoveSlider(const FInputActionValue& Value)
 {
-	if (bIsSliderActive)
+	if (bIsSliderActive && SliderSM)
 	{
 		GetWorldTimerManager().ClearTimer(ImpulseTimer);
 		CurrenImpulse = ImpulsePower;
@@ -233,9 +297,14 @@ void AG2ISlider::MoveSliderImpulse(const FInputActionValue& Value)
 
 void AG2ISlider::SliderExit(const FInputActionValue& Value)
 {
-	if (bIsSliderActive)
+	if (ensure(PC) && bIsSliderActive)
 	{
-		auto Subsystem  = PC->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+		auto* Subsystem = PC->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+		if (!Subsystem)
+		{
+			UE_LOG(LogG2I, Error, TEXT("Sybsystem is null in %s"), *GetActorNameOrLabel());
+			return;
+		}
 		PC->SetViewTargetWithBlend(OriginalViewTarget, BlendTime);
 		bIsSliderActive = false;
 		Subsystem->RemoveMappingContext(SliderIMC);
@@ -245,10 +314,13 @@ void AG2ISlider::SliderExit(const FInputActionValue& Value)
 
 void AG2ISlider::FindAndSwitchLamp()
 {
-	if (!CurrentCommonColorZone->bIsActivationZone)
+	if (CurrentCommonColorZone && !CurrentCommonColorZone->bIsActivationZone)
 	{
 		CurrentLamp = Lamps.FindRef(CurrentCommonColorZone->Color);
-		CurrentLamp->DynamicMaterial->SetVectorParameterValue("EmissiveColor", CurrentLamp->LampColor);
+		if (CurrentLamp && CurrentLamp->DynamicMaterial)
+		{
+			CurrentLamp->DynamicMaterial->SetVectorParameterValue("EmissiveColor", CurrentLamp->LampColor);
+		}
 	}
 }
 
@@ -257,26 +329,32 @@ void AG2ISlider::FindLamps()
 	TArray<UG2ISliderLampComponent*> LampComponents;
 	GetComponents(LampComponents);
 
-	for (auto Comp : LampComponents)
+	for (auto* Comp : LampComponents)
 	{
-		Lamps.Add(Comp->Color, Comp);
+		if (Comp)
+		{
+			Lamps.Add(Comp->Color, Comp);
+		}
 	}
 }
 
 void AG2ISlider::SetImpulse()
 {
-	float temp = SliderSM->GetRelativeLocation().Y + MoveDir*CurrenImpulse*World->DeltaTimeSeconds;
-	if (temp < SliderStartLocation.Y || temp > SliderEndLocation.Y)
+	if (SliderSM)
 	{
-		GetWorldTimerManager().ClearTimer(ImpulseTimer);
-		return;
-	}
+		float SliderOffset = SliderSM->GetRelativeLocation().Y + MoveDir*CurrenImpulse*World->DeltaTimeSeconds;
+		if (SliderOffset < SliderStartLocation.Y || SliderOffset > SliderEndLocation.Y)
+		{
+			GetWorldTimerManager().ClearTimer(ImpulseTimer);
+			return;
+		}
 	
-	SliderSM->AddLocalOffset({0.0f, MoveDir*CurrenImpulse*World->DeltaTimeSeconds, 0.0f});
-	CurrenImpulse -= ImpulseDeclinePower;
-	if (CurrenImpulse < 0.0f)
-	{
-		GetWorldTimerManager().ClearTimer(ImpulseTimer);
-		CurrenImpulse = ImpulsePower;
+		SliderSM->AddLocalOffset({0.0f, MoveDir*CurrenImpulse*World->DeltaTimeSeconds, 0.0f});
+		CurrenImpulse -= ImpulseDeclinePower;
+		if (CurrenImpulse < 0.0f)
+		{
+			GetWorldTimerManager().ClearTimer(ImpulseTimer);
+			CurrenImpulse = ImpulsePower;
+		}
 	}
 }

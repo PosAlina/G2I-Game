@@ -3,12 +3,19 @@
 
 #include "Gameplay/G2ISliderLampComponent.h"
 
+#include "G2I.h"
 #include "BaseGizmos/GizmoElementRenderState.h"
 #include "Components/PointLightComponent.h"
 
 UG2ISliderLampComponent::UG2ISliderLampComponent()
 {
 	LampMesh = CreateDefaultSubobject<UStaticMeshComponent>("LampMesh");
+	
+	if (!ensure(LampMesh))
+	{
+		UE_LOG(LogG2I, Error, TEXT("LampMesh was not created in %s"), *GetName());
+		return;
+	}
 	
 	LampMesh->SetupAttachment(this);
 }
@@ -17,16 +24,31 @@ void UG2ISliderLampComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	DynamicMaterial = UMaterialInstanceDynamic::Create(LightMaterial, this);
+	if (LightMaterial)
+	{
+		DynamicMaterial = UMaterialInstanceDynamic::Create(LightMaterial, this);
+	}
+
+	if (!DynamicMaterial)
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Dynamic material was not created in %s"), *GetName());
+		return;
+	}
+	
 	DynamicMaterial->SetVectorParameterValue("BaseColor", LampColor);
 	DynamicMaterial->SetVectorParameterValue("EmissiveColor", {0.0f, 0.0f, 0.0f, 1.0f});
 	DynamicMaterial->SetScalarParameterValue("EmissiveCoeff", 0.0f);
-	LampMesh->SetMaterial(0, DynamicMaterial);
+	
+	if (LampMesh)
+	{
+		LampMesh->SetMaterial(0, DynamicMaterial);
+	}
 }
 
 
 void UG2ISliderLampComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
 {
+	Super::OnComponentDestroyed(bDestroyingHierarchy);
 	if (LampMesh)
 	{
 		LampMesh->DestroyComponent();
@@ -36,28 +58,44 @@ void UG2ISliderLampComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
 
 void UG2ISliderLampComponent::ChangeIntensity(int IntensityChangeDir, float TargetLightIntensity)
 {
-	float EmissiveCoeff = DynamicMaterial->K2_GetScalarParameterValue("EmissiveCoeff");
-	if (IntensityChangeDir == 1)
+	if (DynamicMaterial)
 	{
-		DynamicMaterial->SetScalarParameterValue("EmissiveCoeff", FMath::Min(TargetLightIntensity, EmissiveCoeff + LightIntensityRate));
-	}
-	else
-	{
-		DynamicMaterial->SetScalarParameterValue("EmissiveCoeff", FMath::Max(TargetLightIntensity, EmissiveCoeff - LightIntensityRate));
-	}
-
-	if (EmissiveCoeff == TargetLightIntensity)
-	{
-		GetWorld()->GetTimerManager().ClearTimer(IntensityColorTimer);
-		if (FMath::IsNearlyEqual(EmissiveCoeff, 0.0f))
+		float EmissiveCoeff = DynamicMaterial->K2_GetScalarParameterValue("EmissiveCoeff");
+		if (IntensityChangeDir == 1)
 		{
-			DynamicMaterial->SetVectorParameterValue("EmissiveColor", {0.0f, 0.0f, 0.0f, 1.0f});
+			DynamicMaterial->SetScalarParameterValue("EmissiveCoeff", FMath::Min(TargetLightIntensity, EmissiveCoeff + LightIntensityRate));
 		}
-	}
+		else
+		{
+			DynamicMaterial->SetScalarParameterValue("EmissiveCoeff", FMath::Max(TargetLightIntensity, EmissiveCoeff - LightIntensityRate));
+		}
+
+		if (EmissiveCoeff == TargetLightIntensity)
+		{
+			if (!ensure(GetWorld()))
+			{
+				UE_LOG(LogG2I, Warning, TEXT("World is null in %s"), *GetName());
+				return;
+			}
+			
+			GetWorld()->GetTimerManager().ClearTimer(IntensityColorTimer);
+			if (FMath::IsNearlyEqual(EmissiveCoeff, 0.0f))
+			{
+				//DynamicMaterial->
+				DynamicMaterial->SetVectorParameterValue("EmissiveColor", {0.0f, 0.0f, 0.0f, 1.0f});
+			}
+		}
+	}	
 }
 
 void UG2ISliderLampComponent::SetTimerToIntensity(int IntensityChangeDir)
 {
+	if (!ensure(GetWorld()))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("World is null in %s"), *GetName());
+		return;
+	}
+	
 	GetWorld()->GetTimerManager().ClearTimer(IntensityColorTimer);
 	GetWorld()->GetTimerManager().SetTimer(IntensityColorTimer, [this, IntensityChangeDir]()
 	{
@@ -68,7 +106,8 @@ void UG2ISliderLampComponent::SetTimerToIntensity(int IntensityChangeDir)
 		else if (LampMode == 1)
 		{
 			this->ChangeIntensity(IntensityChangeDir, MaxLightIntensityInCommonColorZone);
-		}else
+		}
+		else
 		{
 			this->ChangeIntensity(IntensityChangeDir, 0);
 		}
@@ -78,10 +117,15 @@ void UG2ISliderLampComponent::SetTimerToIntensity(int IntensityChangeDir)
 void UG2ISliderLampComponent::SetTimerToFlashing(int FlashCount, float FlashTime)
 {
 	bIsLampFlashing = true;
-	//GetWorld()->GetTimerManager().ClearTimer(FlashingTimer);
+	if (!ensure(GetWorld()))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("World is null in %s"), *GetName());
+		return;
+	}
+	
 	GetWorld()->GetTimerManager().SetTimer(FlashingTimer, [this, FlashCount]()
 	{
-		this->LampFlashing(FlashCount);
+		LampFlashing(FlashCount);
 	}, FlashTime, true, 0.0f);
 }
 
@@ -89,22 +133,31 @@ void UG2ISliderLampComponent::LampFlashing(int FlashCount)
 {
 	if (FlashCounter < FlashCount)
 	{
-		if (bLampFlashState)
+		if (DynamicMaterial)
 		{
-			DynamicMaterial->SetScalarParameterValue("EmissiveCoeff", 0.0f);
-		}
-		else
-		{
-			DynamicMaterial->SetScalarParameterValue("EmissiveCoeff", 100.0f);
-		}
-		bLampFlashState = !bLampFlashState;
-		if (bLampFlashState)
-		{
-			FlashCounter++;
+			if (bLampFlashState)
+			{
+				DynamicMaterial->SetScalarParameterValue("EmissiveCoeff", 0.0f);
+			}
+			else
+			{
+				DynamicMaterial->SetScalarParameterValue("EmissiveCoeff", 100.0f);
+			}
+			bLampFlashState = !bLampFlashState;
+			if (bLampFlashState)
+			{
+				FlashCounter++;
+			}
 		}
 	}
 	else
 	{
+		if (!ensure(GetWorld()))
+		{
+			UE_LOG(LogG2I, Warning, TEXT("World is null in %s"), *GetName());
+			return;
+		}
+		
 		GetWorld()->GetTimerManager().ClearTimer(FlashingTimer);
 		bIsLampFlashing = false;
 		FlashCounter = 0;

@@ -15,7 +15,10 @@ class UG2IColorZoneComponent;
 class UG2ISliderLampComponent;
 enum class EZoneColor : uint8;
 class UBoxComponent;
+class FTimerManager;
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPuzzleCompleteDelegate);
 UCLASS()
 class G2I_API AG2ISlider : public AActor, public IG2IInteractiveObjectInterface
 {
@@ -54,11 +57,14 @@ private:
 	void SetImpulse();
 	
 public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UPROPERTY(BlueprintAssignable)
+	FPuzzleCompleteDelegate OnPuzzleComplete;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UStaticMeshComponent> SliderBaseSM;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UStaticMeshComponent> SliderSM;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UBoxComponent> SliderCol;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (MakeEditWidget = true))
@@ -72,7 +78,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<EZoneColor> CorrectSequence;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UCameraComponent> ViewCamera;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
@@ -115,7 +121,9 @@ private:
 	TObjectPtr<APlayerController> PC;
 	UPROPERTY()
 	TObjectPtr<UWorld> World;
+	UPROPERTY()
 	FTimerHandle ActivationZoneTimer;
+	UPROPERTY()
 	FTimerHandle ImpulseTimer;
 	UPROPERTY()
 	TMap<EZoneColor, TObjectPtr<UG2ISliderLampComponent>> Lamps;
@@ -125,4 +133,5 @@ private:
 	TObjectPtr<UG2IColorZoneComponent> CurrentCommonColorZone = nullptr;
 	UPROPERTY()
 	TObjectPtr<UG2IColorZoneComponent> CurrentActivationColorZone = nullptr;
+	FTimerManager* TimerManager;
 };
