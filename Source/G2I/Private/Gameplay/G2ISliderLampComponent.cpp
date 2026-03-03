@@ -1,8 +1,4 @@
-
-
-
 #include "Gameplay/G2ISliderLampComponent.h"
-
 #include "G2I.h"
 #include "BaseGizmos/GizmoElementRenderState.h"
 #include "Components/PointLightComponent.h"
@@ -23,6 +19,7 @@ UG2ISliderLampComponent::UG2ISliderLampComponent()
 void UG2ISliderLampComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	World = GetWorld();
 	
 	if (LightMaterial)
 	{
@@ -72,16 +69,15 @@ void UG2ISliderLampComponent::ChangeIntensity(int IntensityChangeDir, float Targ
 
 		if (EmissiveCoeff == TargetLightIntensity)
 		{
-			if (!ensure(GetWorld()))
+			if (!ensure(World))
 			{
 				UE_LOG(LogG2I, Warning, TEXT("World is null in %s"), *GetName());
 				return;
 			}
 			
-			GetWorld()->GetTimerManager().ClearTimer(IntensityColorTimer);
+			World->GetTimerManager().ClearTimer(IntensityColorTimer);
 			if (FMath::IsNearlyEqual(EmissiveCoeff, 0.0f))
 			{
-				//DynamicMaterial->
 				DynamicMaterial->SetVectorParameterValue("EmissiveColor", {0.0f, 0.0f, 0.0f, 1.0f});
 			}
 		}
@@ -90,14 +86,14 @@ void UG2ISliderLampComponent::ChangeIntensity(int IntensityChangeDir, float Targ
 
 void UG2ISliderLampComponent::SetTimerToIntensity(int IntensityChangeDir)
 {
-	if (!ensure(GetWorld()))
+	if (!ensure(World))
 	{
 		UE_LOG(LogG2I, Warning, TEXT("World is null in %s"), *GetName());
 		return;
 	}
 	
-	GetWorld()->GetTimerManager().ClearTimer(IntensityColorTimer);
-	GetWorld()->GetTimerManager().SetTimer(IntensityColorTimer, [this, IntensityChangeDir]()
+	World->GetTimerManager().ClearTimer(IntensityColorTimer);
+	World->GetTimerManager().SetTimer(IntensityColorTimer, [this, IntensityChangeDir]()
 	{
 		if (LampMode == 2)
 		{
@@ -117,13 +113,13 @@ void UG2ISliderLampComponent::SetTimerToIntensity(int IntensityChangeDir)
 void UG2ISliderLampComponent::SetTimerToFlashing(int FlashCount, float FlashTime)
 {
 	bIsLampFlashing = true;
-	if (!ensure(GetWorld()))
+	if (!ensure(World))
 	{
 		UE_LOG(LogG2I, Warning, TEXT("World is null in %s"), *GetName());
 		return;
 	}
 	
-	GetWorld()->GetTimerManager().SetTimer(FlashingTimer, [this, FlashCount]()
+	World->GetTimerManager().SetTimer(FlashingTimer, [this, FlashCount]()
 	{
 		LampFlashing(FlashCount);
 	}, FlashTime, true, 0.0f);
@@ -152,13 +148,13 @@ void UG2ISliderLampComponent::LampFlashing(int FlashCount)
 	}
 	else
 	{
-		if (!ensure(GetWorld()))
+		if (!ensure(World))
 		{
 			UE_LOG(LogG2I, Warning, TEXT("World is null in %s"), *GetName());
 			return;
 		}
 		
-		GetWorld()->GetTimerManager().ClearTimer(FlashingTimer);
+		World->GetTimerManager().ClearTimer(FlashingTimer);
 		bIsLampFlashing = false;
 		FlashCounter = 0;
 		if (LampMode == 0)

@@ -3,6 +3,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "G2I.h"
+#include "G2ICharacterEngineer.h"
 #include "G2IColorZoneComponent.h"
 #include "G2ISliderLampComponent.h"
 #include "Camera/CameraComponent.h"
@@ -53,7 +54,7 @@ void AG2ISlider::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	World =  GetWorld();
+	World = GetWorld();
 	if (!ensure(World))
 	{
 		UE_LOG(LogG2I, Error, TEXT("World is null in %s"), *GetActorNameOrLabel());
@@ -87,16 +88,22 @@ void AG2ISlider::BeginPlay()
 
 void AG2ISlider::Interact_Implementation(const ACharacter* Interactor)
 {
-	IG2IInteractiveObjectInterface::Interact_Implementation(Interactor);
-	
 	if (ensure(PC) && !bIsSliderActive)
 	{
-		auto* Subsystem = PC->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+		auto* LocalPlayer = PC->GetLocalPlayer();
+		if (!LocalPlayer)
+		{
+			UE_LOG(LogG2I, Error, TEXT("LocalPlayer is null in %s"), *GetActorNameOrLabel());
+			return;
+		}
+		
+		auto* Subsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
 		if (!Subsystem)
 		{
 			UE_LOG(LogG2I, Error, TEXT("Sybsystem is null in %s"), *GetActorNameOrLabel());
 			return;
 		}
+		
 		OriginalViewTarget = PC->GetViewTarget();
 		PC->SetViewTargetWithBlend(this, BlendTime);
 		bIsSliderActive = true;
@@ -117,7 +124,11 @@ bool AG2ISlider::CanInteract_Implementation(const ACharacter* Interactor)
 		UE_LOG(LogG2I, Warning, TEXT("Correct Sequense is empty in %s"), *GetActorNameOrLabel());
 		return false;
 	}
-	return true;
+	if (Interactor && PossibleInteractors.Contains(Interactor))
+	{
+		return true;
+	}
+	return false;
 }
 
 void AG2ISlider::CheckErrors()
@@ -291,7 +302,7 @@ void AG2ISlider::MoveSliderImpulse(const FInputActionValue& Value)
 		GetWorldTimerManager().SetTimer(ImpulseTimer, [this]()
 		{
 			SetImpulse();
-		}, ImpulseDeclineFrequency, true);
+		}, ImpulseDeclineFrequency, true, 0.0f);
 	}
 }
 
@@ -299,12 +310,20 @@ void AG2ISlider::SliderExit(const FInputActionValue& Value)
 {
 	if (ensure(PC) && bIsSliderActive)
 	{
-		auto* Subsystem = PC->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+		auto* LocalPlayer = PC->GetLocalPlayer();
+		if (!LocalPlayer)
+		{
+			UE_LOG(LogG2I, Error, TEXT("LocalPlayer is null in %s"), *GetActorNameOrLabel());
+			return;
+		}
+		
+		auto* Subsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
 		if (!Subsystem)
 		{
 			UE_LOG(LogG2I, Error, TEXT("Sybsystem is null in %s"), *GetActorNameOrLabel());
 			return;
 		}
+		
 		PC->SetViewTargetWithBlend(OriginalViewTarget, BlendTime);
 		bIsSliderActive = false;
 		Subsystem->RemoveMappingContext(SliderIMC);

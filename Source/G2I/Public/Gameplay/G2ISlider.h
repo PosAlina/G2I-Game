@@ -106,6 +106,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float ImpulseDeclineFrequency = 0.008f;
 	
+protected:
+	UPROPERTY(EditAnywhere)
+	TSet<TObjectPtr<ACharacter>> PossibleInteractors;
+	
 private:
 	bool bIsSliderActive = false;
 	bool bIsPuzzleComplete = false;
