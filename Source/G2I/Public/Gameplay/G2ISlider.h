@@ -134,8 +134,8 @@ private:
 	UPROPERTY()
 	TObjectPtr<UG2ISliderLampComponent> CurrentLamp;
 	UPROPERTY()
-	TObjectPtr<UG2IColorZoneComponent> CurrentCommonColorZone = nullptr;
+	TObjectPtr<UG2IColorZoneComponent> CurrentCommonColorZone;
 	UPROPERTY()
-	TObjectPtr<UG2IColorZoneComponent> CurrentActivationColorZone = nullptr;
+	TObjectPtr<UG2IColorZoneComponent> CurrentActivationColorZone;
 	FTimerManager* TimerManager;
 };

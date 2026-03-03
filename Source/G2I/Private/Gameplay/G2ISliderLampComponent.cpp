@@ -97,15 +97,15 @@ void UG2ISliderLampComponent::SetTimerToIntensity(int IntensityChangeDir)
 	{
 		if (LampMode == 2)
 		{
-			this->ChangeIntensity(IntensityChangeDir, MaxLightIntensityInActivationColorZone);
+			ChangeIntensity(IntensityChangeDir, MaxLightIntensityInActivationColorZone);
 		}
 		else if (LampMode == 1)
 		{
-			this->ChangeIntensity(IntensityChangeDir, MaxLightIntensityInCommonColorZone);
+			ChangeIntensity(IntensityChangeDir, MaxLightIntensityInCommonColorZone);
 		}
 		else
 		{
-			this->ChangeIntensity(IntensityChangeDir, 0);
+			ChangeIntensity(IntensityChangeDir, 0);
 		}
 	}, IntensityIncreaseFrequency, true);
 }
