@@ -52,6 +52,8 @@ public:
 
 private:
 	UPROPERTY()
+	TObjectPtr<UWorld> World;
+	UPROPERTY()
 	FTimerHandle IntensityColorTimer;
 	UPROPERTY()
 	FTimerHandle FlashingTimer;
