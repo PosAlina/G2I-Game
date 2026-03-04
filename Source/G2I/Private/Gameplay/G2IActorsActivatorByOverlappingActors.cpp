@@ -82,8 +82,8 @@ bool AG2IActorsActivatorByOverlappingActors::ActivateActorsByActor(const AActor 
 				{
 					IG2IActivationInterface::Execute_Activate(*ActivatedActorIt);
 
-#if WITH_EDITOR
 					const FString DebugActivatedMessage = (*ActivatedActorIt)->GetActorNameOrLabel() + " activated";
+#if WITH_EDITOR
 					if (GEngine)
 					{
 						GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, DebugActivatedMessage);

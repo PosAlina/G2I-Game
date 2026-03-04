@@ -1,7 +1,5 @@
 #include "Gameplay/G2ISliderLampComponent.h"
 #include "G2I.h"
-#include "BaseGizmos/GizmoElementRenderState.h"
-#include "Components/PointLightComponent.h"
 
 UG2ISliderLampComponent::UG2ISliderLampComponent()
 {
