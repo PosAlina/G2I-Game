@@ -10,6 +10,7 @@ UG2ISteamGloveComponent::UG2ISteamGloveComponent()
 	ReloadingComp = CreateDefaultSubobject<UG2IReloadingComponent>(FName("ReloadingComp"));
 	SteamGloveAimingComp = CreateDefaultSubobject<UG2IAimingComponent>(FName("SteamGloveAimingComp"));
 	SteamShotComp = CreateDefaultSubobject<UG2ISteamShotComponent>(FName("SteamShotComp"));
+	GlovePunchComp = CreateDefaultSubobject<UG2IGlovePunchComponent>(FName("GlovePunchComp"));
 }
 
 void UG2ISteamGloveComponent::OnRegister()

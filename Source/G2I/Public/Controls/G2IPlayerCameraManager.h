@@ -4,6 +4,8 @@
 #include "Camera/PlayerCameraManager.h"
 #include "G2IPlayerCameraManager.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FChangeCameraLocationDelegate, const FVector&, NewCameraLocation);
+
 /**
  * Basic Player Camera Manager
  * Doesn't switch on Player Controller when trying setting empty camera
@@ -15,7 +17,13 @@ class G2I_API AG2IPlayerCameraManager : public APlayerCameraManager
 
 public:
 
+	UPROPERTY(BlueprintAssignable)
+	FChangeCameraLocationDelegate OnChangeCameraLocationDelegate;
+	
+public:
+
 	virtual void SetViewTarget(AActor* NewViewTarget,
 		FViewTargetTransitionParams TransitionParams = FViewTargetTransitionParams()) override;
-	
+
+	virtual void UpdateCamera(float DeltaTime) override;
 };

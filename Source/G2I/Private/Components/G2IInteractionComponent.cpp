@@ -7,23 +7,45 @@
 #include <Components/CapsuleComponent.h>
 #include "DrawDebugHelpers.h"
 #include "G2I.h"
+#include "G2IGameInstance.h"
+#include "G2IPlayerController.h"
+#include "Public/UI/WidgetComponents/G2IWorldHintKeyWidgetComponent.h"
 
 void UG2IInteractionComponent::BindingToDelegates()
 {
-	if (ACharacter* Owner = Cast<ACharacter>(GetOwner()))
+	if (!ensure(Owner))
 	{
-		if (UG2ICharacterMovementComponent* CharacterMovementComp = Owner->FindComponentByClass<UG2ICharacterMovementComponent>()) {
-			CharacterMovementComp->OnJumpDelegate.AddDynamic(this, &UG2IInteractionComponent::HandleJumping);
-			Owner->LandedDelegate.AddDynamic(this, &UG2IInteractionComponent::HandleLanded);
-		}
+		UE_LOG(LogG2I, Error, TEXT("Owner is nullptr in %s"), *GetName());
+		return;
 	}
+	
+	if (UG2ICharacterMovementComponent* CharacterMovementComp = Owner->FindComponentByClass<UG2ICharacterMovementComponent>()) {
+		CharacterMovementComp->OnJumpDelegate.AddDynamic(this, &UG2IInteractionComponent::HandleJumping);
+		Owner->LandedDelegate.AddDynamic(this, &UG2IInteractionComponent::HandleLanded);
+	}
+
+	if (!ensure(InteractionBox))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s doesn't have interaction box component"), *GetName());
+		return;
+	}
+	InteractionBox->OnComponentBeginOverlap.AddDynamic(this, &UG2IInteractionComponent::OnInteractionBoxBeginOverlap);
+	InteractionBox->OnComponentEndOverlap.AddDynamic(this, &UG2IInteractionComponent::OnInteractionBoxEndOverlap);
 }
 
 void UG2IInteractionComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	SetupDefaults();
 	BindingToDelegates();
+
+	TArray<AActor*> OverlappingActors;
+	InteractionBox->GetOverlappingActors(OverlappingActors);
+	for (AActor* OverlappingActor : OverlappingActors)
+	{
+		OpenKeyHintByActor(OverlappingActor);
+	}
 }
 
 UG2IInteractionComponent::UG2IInteractionComponent()
@@ -38,31 +60,15 @@ void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 	if (!bCanInteract) {
 		return;
 	}
-	AActor* Ow = GetOwner();
-	if (Ow == nullptr)
-	{
-		UE_LOG(LogG2I, Log, TEXT("Component don't have owner"));
-		return;
-	}
-
-	APawn* Pawn = Cast<APawn>(Ow);
-	if (Pawn == nullptr)
-	{
-		UE_LOG(LogG2I, Log, TEXT("The component's owner is not a Pawn"));
-		return;
-	}
-
-	APlayerController* PlayerController = Cast<APlayerController>(Pawn->GetController());
-	if (PlayerController == nullptr)
-	{
-		UE_LOG(LogG2I, Log, TEXT("The component's owner is not controlled by the player"));
-		return;
-	}
 	
-	const ACharacter* Owner = Cast<ACharacter>(GetOwner());
-	if (!Owner)
+	if (!ensure(Owner))
 	{
-		UE_LOG(LogG2I, Log, TEXT("The component's owner is not a Character"));
+		UE_LOG(LogG2I, Error, TEXT("Owner isn't character in %s"), *GetName());
+		return;
+	}
+	if (!ensure(InteractionBox))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s doesn't have interaction box component"), *GetName());
 		return;
 	}
 
@@ -94,7 +100,26 @@ void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 
 			if (Overlap->Implements<UG2IInteractiveObjectInterface>())
 			{
-
+				if (UG2IWorldHintKeyWidgetComponent *KeyHintComponent =
+					IG2IInteractiveObjectInterface::Execute_GetInteractionKeyHintComponent(Overlap))
+				{
+					if (!ensure(UIManager))
+					{
+						UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+							*UG2IUIManager::StaticClass()->GetName(), *GetName());
+					}
+					else
+					{
+						if (!UIManager->CanSeeWorldWidget(KeyHintComponent))
+						{
+							UE_LOG(LogG2I, Log, TEXT("%s can't interact with %s, because it can't see key hint %s"),
+								*Owner->GetActorNameOrLabel(), *Overlap->GetActorNameOrLabel(),
+								*KeyHintComponent->GetName());
+							continue;
+						}
+					}
+				}
+				
 				if (IG2IInteractiveObjectInterface::Execute_CanInteract(Overlap, Owner))
 				{
 					if (Overlap->Implements<UG2IMovingObjectInterface>()) {
@@ -102,6 +127,14 @@ void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 						OnMovingInteractingDelegate.Broadcast(SpeedChange);
 					}
 					IG2IInteractiveObjectInterface::Execute_Interact(Overlap, Owner);
+					const FString InteractLogMessage = "Player interacted with " + Overlap->GetActorNameOrLabel();
+#if WITH_EDITOR
+					if (GEngine)
+					{
+						GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, InteractLogMessage);
+					}
+#endif
+					UE_LOG(LogG2I, Log, TEXT("%s"), *InteractLogMessage);
 				}
 				else
 				{
@@ -134,49 +167,158 @@ void UG2IInteractionComponent::OnRegister()
 {
 	Super::OnRegister();
 
-	if (AActor* Owner = GetOwner())
+	AActor *OwnerActor = GetOwner();
+	if (!ensure(OwnerActor))
 	{
-		if (USceneComponent* Root = Owner->GetRootComponent())
+		UE_LOG(LogG2I, Error, TEXT("Owner doesn't exist in %s"), *GetName());
+		return;
+	}
+	Owner = Cast<ACharacter>(OwnerActor);
+	if (!ensure(Owner))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Owner isn't character in %s of %s"), *GetName(),
+			*OwnerActor->GetActorNameOrLabel());
+		return;
+	}
+	if (!ensure(InteractionBox))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s doesn't have interaction box component"), *GetName());
+		return;
+	}
+	
+	if (USceneComponent* Root = OwnerActor->GetRootComponent())
+	{
+		InteractionBox->AttachToComponent(
+			Root,
+			FAttachmentTransformRules::SnapToTargetNotIncludingScale
+		);
+		UCapsuleComponent* Capsule = Owner->GetCapsuleComponent();
+		if (Capsule)
 		{
-			InteractionBox->AttachToComponent(
-				Root,
-				FAttachmentTransformRules::SnapToTargetNotIncludingScale
+			float Radius = Capsule->GetUnscaledCapsuleRadius();
+			float HalfHeight = Capsule->GetUnscaledCapsuleHalfHeight();;
+
+			float Length = InteractionBoxLength;
+
+			FVector HalfSize;
+			HalfSize.X = Length * 0.5f;
+			HalfSize.Y = Radius; 
+			HalfSize.Z = HalfHeight;
+
+			InteractionBox->SetBoxExtent(HalfSize);
+
+			InteractionBox->SetRelativeLocation(
+				FVector(Length * 0.5f + Radius, 0.f, 0.f)
 			);
-			if (ACharacter* Character = Cast<ACharacter>(Owner))
-			{
-				UCapsuleComponent* Capsule = Character->GetCapsuleComponent();
-				if (Capsule)
-				{
-					float Radius = Capsule->GetUnscaledCapsuleRadius();
-					float HalfHeight = Capsule->GetUnscaledCapsuleHalfHeight();;
-
-					float Length = InteractionBoxLength;
-
-					FVector HalfSize;
-					HalfSize.X = Length * 0.5f;
-					HalfSize.Y = Radius; 
-					HalfSize.Z = HalfHeight;
-
-					InteractionBox->SetBoxExtent(HalfSize);
-
-					InteractionBox->SetRelativeLocation(
-						FVector(Length * 0.5f + Radius, 0.f, 0.f)
-					);
-				}
-				else {
-					UE_LOG(LogG2I, Log, TEXT("Character don't have capsule"));
-				}
-			}
-			else {
-				UE_LOG(LogG2I, Log, TEXT("Owner isn't a Character"));
-				return;
-			}
 		}
 		else {
-			UE_LOG(LogG2I, Log, TEXT("Owner don't have RootComponent"));
+			UE_LOG(LogG2I, Log, TEXT("Character doesn't have a capsule component"));
 		}
 	}
 	else {
-		UE_LOG(LogG2I, Log, TEXT("Component don't have owner"));
+		UE_LOG(LogG2I, Log, TEXT("Owner doesn't have a RootComponent"));
+	}
+}
+
+void UG2IInteractionComponent::SetupDefaults()
+{
+	const UWorld *World = GetWorld();
+	if (!ensure(World))
+	{
+		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
+		return;
+	}
+
+	APlayerController *LocalPlayerController = World->GetFirstPlayerController();
+	if (!ensure(LocalPlayerController))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Local player controller doesn't exist in %s"), *GetName());
+		return;
+	}
+
+	PlayerController = Cast<AG2IPlayerController>(LocalPlayerController);
+	if (!ensure(PlayerController))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Player Controller %s isn't %s in %s"),
+			*LocalPlayerController->GetActorNameOrLabel(), *AG2IPlayerController::StaticClass()->GetName(), *GetName());
+		return;
+	}
+
+	SetTagOfInteractionActions();
+	
+	const UG2IGameInstance *GameInstance = Cast<UG2IGameInstance>(World->GetGameInstance());
+	if (!ensure(GameInstance))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Game Instance doesn't exist in %s"), *GetName());
+		return;
+	}
+	UIManager = GameInstance->GetSubsystem<UG2IUIManager>();
+	if (!ensure(UIManager))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+			*UG2IUIManager::StaticClass()->GetName(), *GetName());
+		return;
+	}
+}
+
+void UG2IInteractionComponent::SetTagOfInteractionActions()
+{
+	if (!ensure(PlayerController))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Player Controller doesn't exist in %s"), *GetName());
+		return;
+	}
+	TagOfInteractionActions = PlayerController->GetActionToTagMap();
+}
+
+void UG2IInteractionComponent::OnInteractionBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent,
+	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+	const FHitResult& SweepResult)
+{
+	OpenKeyHintByActor(OtherActor);
+}
+
+void UG2IInteractionComponent::OnInteractionBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	CloseKeyHintByActor(OtherActor);
+}
+
+void UG2IInteractionComponent::OpenKeyHintByActor(AActor* OtherActor)
+{
+	if (OtherActor && OtherActor->Implements<UG2IInteractiveObjectInterface>())
+	{
+		if (UG2IWorldHintKeyWidgetComponent *KeyHintComponent =
+		IG2IInteractiveObjectInterface::Execute_GetInteractionKeyHintComponent(OtherActor))
+		{
+			if (IG2IInteractiveObjectInterface::Execute_CanInteract(OtherActor, Owner))
+			{
+				TArray<UInputAction *> InteractionActions;
+				for (auto& [Action, Tag] : TagOfInteractionActions)
+				{
+					if (OtherActor->ActorHasTag(Tag))
+					{
+						InteractionActions.Add(Action);
+					}
+				}
+				if (!InteractionActions.IsEmpty())
+				{
+					// TODO: add support for multiple widgets with different keys
+					KeyHintComponent->OpenKeyHint(InteractionActions[0]);
+				}
+			}
+		}
+	}
+}
+
+void UG2IInteractionComponent::CloseKeyHintByActor(AActor* OtherActor)
+{
+	if (OtherActor && OtherActor->Implements<UG2IInteractiveObjectInterface>())
+	{
+		if (UG2IWorldHintKeyWidgetComponent *KeyHintComponent =
+		IG2IInteractiveObjectInterface::Execute_GetInteractionKeyHintComponent(OtherActor))
+		{
+			KeyHintComponent->CloseKeyHint();
+		}
 	}
 }

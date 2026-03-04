@@ -74,7 +74,12 @@ void AG2IAirTab::ChangeActivated(bool bNewActivated)
 void AG2IAirTab::ActivateActors()
 {
 	for (auto& Actor : ActorsToActivate)
-		IG2IActivationInterface::Execute_Activate(Actor);
+	{
+		if (Actor && Actor->Implements<UG2IActivationInterface>())
+		{
+			IG2IActivationInterface::Execute_Activate(Actor);
+		}
+	}
 
 	UE_LOG(LogG2I, Log, TEXT("Activated %d actors from %s"), ActorsToActivate.Num(), *GetActorNameOrLabel());
 }
@@ -82,7 +87,12 @@ void AG2IAirTab::ActivateActors()
 void AG2IAirTab::DeactivateActors()
 {
 	for (auto& Actor : ActorsToActivate)
-		IG2IActivationInterface::Execute_Deactivate(Actor);
+	{
+		if (Actor && Actor->Implements<UG2IActivationInterface>())
+		{
+			IG2IActivationInterface::Execute_Deactivate(Actor);
+		}
+	}
 
 	UE_LOG(LogG2I, Log, TEXT("Deactivated %d actors from %s"), ActorsToActivate.Num(), *GetActorNameOrLabel());
 }

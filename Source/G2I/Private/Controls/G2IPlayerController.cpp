@@ -5,6 +5,7 @@
 #include "G2IAimingInterface.h"
 #include "G2IPlayerCameraManager.h"
 #include "G2IThirdPersonCameraInputInterface.h"
+#include "G2IGlovePunchInterface.h"
 #include "G2IPlayerState.h"
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
@@ -33,6 +34,7 @@ void AG2IPlayerController::SetupInputComponent()
 				for (const UInputMappingContext* CurrentContext : InputMappingContexts)
 				{
 					Subsystem->AddMappingContext(CurrentContext, 0);
+					InputKeyMappings.Append(CurrentContext->GetMappings());
 				}
 			}
 			else
@@ -74,6 +76,7 @@ void AG2IPlayerController::SetupInputComponent()
 
 				EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Started,this, &ThisClass::CallPause);
 
+				EnhancedInputComponent->BindAction(GlovePunchAction, ETriggerEvent::Started, this, &ThisClass::GlovePunchActivation);
 			}
 			else
 			{
@@ -212,6 +215,23 @@ void AG2IPlayerController::QuitGame()
 	UKismetSystemLibrary::QuitGame(World, this, EQuitPreference::Quit, true);
 }
 
+FName AG2IPlayerController::GetKeyName(UInputAction* InputAction)
+{
+	for (const FEnhancedActionKeyMapping& Mapping : InputKeyMappings)
+	{
+		if (Mapping.Action == InputAction)
+		{
+			return Mapping.Key.GetFName();
+		}
+	}
+	return NAME_None;
+}
+
+TMap<TObjectPtr<UInputAction>, FName>& AG2IPlayerController::GetActionToTagMap()
+{
+	return ActionToTagMap;
+}
+
 void AG2IPlayerController::SetupCharacterActorComponents()
 {
 	ThirdPersonCameraComponents.Empty();
@@ -221,6 +241,7 @@ void AG2IPlayerController::SetupCharacterActorComponents()
 	AimingComponent = nullptr;
 	SteamShotComponent = nullptr;
 	FlightComponent = nullptr;
+	GlovePunchComponent = nullptr;
 	
 	if (const APawn *CurrentCharacter = GetPawn())
 	{
@@ -265,6 +286,11 @@ void AG2IPlayerController::SetupCharacterActorComponents()
 			if(Component->Implements<UG2IFlightInterface>())
 			{
 				FlightComponent = Component;
+			}
+			
+			if (Component->Implements<UG2IGlovePunchInterface>())
+			{
+				GlovePunchComponent = Component;
 			}
 		}
 	}
@@ -536,4 +562,9 @@ void AG2IPlayerController::ToggleFollowAIBehindPlayer(const FInputActionValue& V
 {
 	bIsFollowingAIBehindPlayer = !bIsFollowingAIBehindPlayer;
 	OnToggleFollowAIBehindPlayerDelegate.Broadcast(bIsFollowingAIBehindPlayer);
+}
+
+void AG2IPlayerController::GlovePunchActivation(const FInputActionInstance& Instance)
+{
+	IG2IGlovePunchInterface::Execute_GlovePunchActivation(GlovePunchComponent);
 }
