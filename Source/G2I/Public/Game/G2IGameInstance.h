@@ -48,35 +48,31 @@ private:
 
 public:
 
-	// === Implementation of the IG2ISaveGameplayInterface' functions ===
+	// === Implementations of the IG2ISaveGameplayInterface' functions ===
 
 	void CreateNewGameplaySaveGameObject_Implementation();
 
 	void SaveGameplay_Implementation(bool bAsync);
 
+	void LoadGameplay_Implementation(bool bAsync);
+
 	void SetGameplaySaveSlotName_Implementation(const FString& NewSlotName);
 
 	const FString GetGameplaySaveSlotName_Implementation();
 
-	void LoadGameplay_Implementation(bool bAsync);
+	void SaveAllData_Implementation();
 
-	void SyncGameplaySaveGameData_Implementation();
+	void LoadAllData_Implementation();
 
-	void SuncAndSaveGameplay_Implementation(bool bAsync);
+	void SaveAllDataAndGameplay_Implementation(bool bAsync);
+
+	void SaveRequestedData_Implementation(UObject* Requester);
+
+	void LoadRequestedData_Implementation(UObject* Requester);
 
 	const UG2ISaveGameplayDelegates* GetGameplaySaveDelegates_Implementation();
 
 	// === Other Functions ===
-
-	// This function not only checks, it creates new SaveGame if it doesn't exist yet.
-	// If SaveGame exists, but not valid, adds missing data, keeping everything else untouched.
-	UFUNCTION(BlueprintCallable, Category = "Gameplay Save Game")
-	void CheckIfGameplaySaveGameExistsAndValid();
-
-	// This function not only checks, it creates new SaveGame if it doesn't exist yet.
-	// If SaveGame exists, but not valid, adds missing data, keeping everything else untouched.
-	UFUNCTION(BlueprintCallable, Category = "Settings Save Game")
-	void CheckIfSettingsSaveGameExistsAndValid();
 
 protected:
 	virtual void Init() override;
