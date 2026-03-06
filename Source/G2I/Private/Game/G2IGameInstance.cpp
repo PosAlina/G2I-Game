@@ -18,20 +18,6 @@ void UG2IGameInstance::Init()
     Super::Init();
 
     CreateSaveGameplayDelegates();
-
-    OnGameplayAsyncSavedDelegate.BindUObject(this, &UG2IGameInstance::OnGameplayAsuncSaved);
-    OnGameplayAsyncLoadedDelegate.BindUObject(this, &UG2IGameInstance::OnGameplayAsuncLoaded);
-
-    /*if (UGameplayStatics::DoesSaveGameExist(GameplaySaveSlotName, 0))
-    {
-        // Load?
-        // Check if it's valid?
-        // idk?
-    }
-    else
-    {
-        CreateGameplaySaveGame();
-    }*/
 }
 
 void UG2IGameInstance::CreateGameplaySaveGame()
@@ -45,7 +31,13 @@ void UG2IGameInstance::CreateSaveGameplayDelegates()
 {
     SaveGameplayDelegates = NewObject<UG2ISaveGameplayDelegates>(this);
     if (!ensure(SaveGameplayDelegates))
+    {
         UE_LOG(LogG2I, Error, TEXT("Couldn't create SaveGameplayDelegates object."));
+        return;
+    }
+
+    OnGameplayAsyncSavedDelegate.BindUObject(this, &UG2IGameInstance::OnGameplayAsuncSaved);
+    OnGameplayAsyncLoadedDelegate.BindUObject(this, &UG2IGameInstance::OnGameplayAsuncLoaded);
 }
 
 void UG2IGameInstance::OnGameplayAsuncSaved(const FString& SlotName, const int32 UserIndex, bool bSuccess)
@@ -59,29 +51,29 @@ void UG2IGameInstance::OnGameplayAsuncLoaded(const FString& SlotName, const int3
     {
         if (GameplaySaveGame = Cast<UG2IGameplaySaveGame>(LoadedGameData))
         {
-            // Successfully loaded
+            UE_LOG(LogG2I, Log, TEXT("Gameplay loaded successfully from the slot %s."), *GameplaySaveSlotName);
+            SaveGameplayDelegates->OnGameplayLoadedDelegate.Broadcast(true);
         }
         else
         {
             // SaveGame file exists, but not valid
-            // TODO
+            UE_LOG(LogG2I, Error, TEXT("Gameplay loaded from the slot %s but is invalid. Operation failed."), *GameplaySaveSlotName);
+            SaveGameplayDelegates->OnGameplayLoadedDelegate.Broadcast(false);
         }
-
-        SaveGameplayDelegates->OnGameplayLoadedDelegate.Broadcast(true);
-        SyncGameplayLoadGameData();
     }
     else
     {
         // Load failed
+        UE_LOG(LogG2I, Error, TEXT("Gameplay load from the slot %s failed."), *GameplaySaveSlotName);
         SaveGameplayDelegates->OnGameplayLoadedDelegate.Broadcast(false);
     }
 }
 
 void UG2IGameInstance::SaveGameplay_Implementation(bool bAsync)
 {
-    if (!ensure(GameplaySaveGame))
+    if (!GameplaySaveGame)
         CreateGameplaySaveGame();
-    if (!ensure(SaveGameplayDelegates))
+    if (!SaveGameplayDelegates)
         CreateSaveGameplayDelegates();
 
     if (bAsync)
@@ -94,7 +86,7 @@ void UG2IGameInstance::SaveGameplay_Implementation(bool bAsync)
     {
         // Synchronous
         SaveGameplayDelegates->OnGameplaySaveStartedDelegate.Broadcast();
-        if (ensure(UGameplayStatics::SaveGameToSlot(GameplaySaveGame, GameplaySaveSlotName, 0)))
+        if (UGameplayStatics::SaveGameToSlot(GameplaySaveGame, GameplaySaveSlotName, 0))
         {
             // Successfully saved
             SaveGameplayDelegates->OnGameplaySavedDelegate.Broadcast(true);
@@ -126,7 +118,7 @@ const UG2ISaveGameplayDelegates* UG2IGameInstance::GetGameplaySaveDelegates_Impl
 
 void UG2IGameInstance::LoadGameplay_Implementation(bool bAsync)
 {
-    if (!ensure(SaveGameplayDelegates))
+    if (!SaveGameplayDelegates)
         CreateSaveGameplayDelegates();
 
     if (bAsync)
@@ -138,36 +130,30 @@ void UG2IGameInstance::LoadGameplay_Implementation(bool bAsync)
     else
     {
         // Synchronous
-        SaveGameplayDelegates->OnGameplayLoadStartedDelegate.Broadcast();
         if (USaveGame* LoadedGame = UGameplayStatics::LoadGameFromSlot(GameplaySaveSlotName, 0))
         {
             if (GameplaySaveGame = Cast<UG2IGameplaySaveGame>(LoadedGame))
             {
                 // Successfully loaded
-                SaveGameplayDelegates->OnGameplayLoadedDelegate.Broadcast(true);
-                SyncGameplayLoadGameData();
-                UE_LOG(LogG2I, Log, TEXT("Gameplay saved successfully in the slot %s."), *GameplaySaveSlotName);
+                UE_LOG(LogG2I, Log, TEXT("Gameplay loaded successfully from the slot %s."), *GameplaySaveSlotName);
             }
             else
             {
                 // Loaded SaveGame object, but it's invalid
-                // TODO
+                UE_LOG(LogG2I, Error, TEXT("Gameplay loaded from the slot %s but is invalid. Operation failed."), *GameplaySaveSlotName);
             }
         }
         else
         {
             // Failed to load
-            SaveGameplayDelegates->OnGameplayLoadedDelegate.Broadcast(false);
-            UE_LOG(LogG2I, Error, TEXT("Gameplay saving in the slot %s failed."), *GameplaySaveSlotName);
-            
-            // TODO maybe create new SaveGame object?
+            UE_LOG(LogG2I, Error, TEXT("Gameplay load from the slot %s failed."), *GameplaySaveSlotName);
         }
     }
 }
 
-void UG2IGameInstance::SyncGameplaySaveGameData_Implementation()
+void UG2IGameInstance::SaveAllData_Implementation()
 {
-    // Getting all actors with tag 'Savable'
+    // Getting all actors with gameplay tag 'Savable'
     TArray<AActor*> FoundSavableActors;
     GetAllActorsWithGameplayTag(FoundSavableActors, FName(TEXT("Savable")));
 
@@ -179,10 +165,30 @@ void UG2IGameInstance::SyncGameplaySaveGameData_Implementation()
             IG2ISavableInterface::Execute_SaveData(Actor, GameplaySaveGame);
         }
         else
-            UE_LOG(LogG2I, Error, TEXT("Actor %s doesn't implement Savable interface. It's data will be lost."), *Actor->GetActorNameOrLabel());
+            UE_LOG(LogG2I, Warning, TEXT("Actor %s doesn't implement Savable interface. It's data will be lost."), *Actor->GetActorNameOrLabel());
     }
 
-    UE_LOG(LogG2I, Log, TEXT("Gameplay data synced & stored in GameplaySaveGame object."));
+    UE_LOG(LogG2I, Log, TEXT("Gameplay data saved & stored in GameplaySaveGame object."));
+}
+
+void UG2IGameInstance::LoadAllData_Implementation()
+{
+    // Getting all actors with gameplay tag 'Savable'
+    TArray<AActor*> FoundSavableActors;
+    GetAllActorsWithGameplayTag(FoundSavableActors, FName(TEXT("Savable")));
+
+    // Iterating on them & loading their data
+    for (auto* Actor : FoundSavableActors)
+    {
+        if (Actor->Implements<IG2ISavableInterface>())
+        {
+            IG2ISavableInterface::Execute_LoadData(Actor, GameplaySaveGame);
+        }
+        else
+            UE_LOG(LogG2I, Warning, TEXT("Actor %s doesn't implement Savable interface. It's data won't be loaded."), *Actor->GetActorNameOrLabel());
+    }
+
+    UE_LOG(LogG2I, Log, TEXT("Gameplay data loaded from the GameplaySaveGame object."));
 }
 
 void UG2IGameInstance::SyncGameplayLoadGameData()
@@ -199,7 +205,7 @@ void UG2IGameInstance::SyncGameplayLoadGameData()
             IG2ISavableInterface::Execute_LoadData(Actor, GameplaySaveGame);
         }
         else
-            UE_LOG(LogG2I, Error, TEXT("Actor %s doesn't implement Savable interface. It's data will be lost."), *Actor->GetActorNameOrLabel());
+            UE_LOG(LogG2I, Warning, TEXT("Actor %s doesn't implement Savable interface. It's data will be lost."), *Actor->GetActorNameOrLabel());
     }
 
     UE_LOG(LogG2I, Log, TEXT("Gameplay data synced & loaded in Savable objects."));
@@ -207,14 +213,13 @@ void UG2IGameInstance::SyncGameplayLoadGameData()
 
 void UG2IGameInstance::GetAllActorsWithGameplayTag(TArray<AActor*>& FoundActors, FName TagName)
 {
-    if (!ensure(GameplaySaveGame))
-        CreateGameplaySaveGame();
-
     UWorld* World = GetWorld();
     if (!World)
+    {
+        UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s."), *GetName());
         return;
+    }
 
-    TArray<AActor*> FoundSavableActors;
     FGameplayTagQuery TagQuery = FGameplayTagQuery::MakeQuery_MatchTag(FGameplayTag::RequestGameplayTag(TagName));
 
     UBlueprintGameplayTagLibrary::GetAllActorsOfClassMatchingTagQuery(
@@ -225,18 +230,34 @@ void UG2IGameInstance::GetAllActorsWithGameplayTag(TArray<AActor*>& FoundActors,
     );
 }
 
-void UG2IGameInstance::SuncAndSaveGameplay_Implementation(bool bAsync)
+void UG2IGameInstance::SaveAllDataAndGameplay_Implementation(bool bAsync)
 {
-    IG2ISaveGameplayInterface::Execute_SyncGameplaySaveData(this);
+    IG2ISaveGameplayInterface::Execute_SaveAllData(this);
     IG2ISaveGameplayInterface::Execute_SaveGameplay(this, bAsync);
 }
 
-void UG2IGameInstance::CheckIfGameplaySaveGameExistsAndValid()
+void UG2IGameInstance::SaveRequestedData_Implementation(UObject* Requester)
 {
-
+    if (Requester)
+    {
+        if (Requester->Implements<IG2ISavableInterface>())
+        {
+            IG2ISavableInterface::Execute_SaveData(Requester, GameplaySaveGame);
+        }
+        else
+            UE_LOG(LogG2I, Warning, TEXT("%s doesn't implement Savable interface. It's data will be lost."), *Requester->GetName());
+    }
 }
 
-void UG2IGameInstance::CheckIfSettingsSaveGameExistsAndValid()
+void UG2IGameInstance::LoadRequestedData_Implementation(UObject* Requester)
 {
-
+    if (Requester)
+    {
+        if (Requester->Implements<IG2ISavableInterface>())
+        {
+            IG2ISavableInterface::Execute_LoadData(Requester, GameplaySaveGame);
+        }
+        else
+            UE_LOG(LogG2I, Warning, TEXT("%s doesn't implement Savable interface. It's data won't be loaded."), *Requester->GetName());
+    }
 }

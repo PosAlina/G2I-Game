@@ -10,7 +10,10 @@ struct FPlayersSaveData
 	GENERATED_BODY()
 
 	UPROPERTY(SaveGame, BlueprintReadWrite)
-	TMap<FString, FVector> PlayersLocation;
+	TMap<FString, FVector> CharactersLocation;
+
+	UPROPERTY(SaveGame, BlueprintReadWrite)
+	FString CurrentCharacter;
 };
 
 /**

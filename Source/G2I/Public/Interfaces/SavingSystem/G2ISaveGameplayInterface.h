@@ -2,10 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-//#include "Kismet/GameplayStatics.h"
 #include "Delegates/Delegate.h"
 #include "G2ISaveGameplayInterface.generated.h"
-
 
 // === Delegates ===
 
@@ -67,21 +65,35 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Save Gameplay")
 	const FString GetGameplaySaveSlotName();
 
-	// Saves game
+	// Saves SaveGame to slot
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Save Gameplay")
 	void SaveGameplay(bool bAsync);
 
-	// Loads game & syncs loaded data with every object that has Savable interface
+	// Loads SaveGame from slot
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Save Gameplay")
 	void LoadGameplay(bool bAsync);
 
-	// Updates & syncs data of every object with the Savable interface
+	// Saves data of all ACTORS on the level with Savable tag/interface in the SaveGame (not in the slot though!)
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Save Gameplay")
-	void SyncGameplaySaveData();
+	void SaveAllData();
 
-	// Syncs all data & saves game
+	// Loads data of all ACTORS on the level with Savable tag/interface from the SaveGame
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Save Gameplay")
-	void SuncAndSaveGameplay(bool bAsync);
+	void LoadAllData();
+
+	// Saves data of all ACTORS on the level with Savable tag/interface in the SaveGame & saves SaveGame to slot
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Save Gameplay")
+	void SaveAllDataAndGameplay(bool bAsync);
+
+	// Saves Requester's data in the SaveGame object (not in the slot though!)
+	// This will be called when Requester needs it (in it's OnDestroyed, etc.)
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Save Gameplay")
+	void SaveRequestedData(UObject* Requester);
+
+	// Loads Requester's data from the SaveGame object (not from the slot though!)
+	// This will be called when Requester needs it (in it's BeginPlay, etc.)
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Save Gameplay")
+	void LoadRequestedData(UObject* Requester);
 
 	// Returns class with all delegates
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Save Gameplay")
