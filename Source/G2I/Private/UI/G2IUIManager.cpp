@@ -1,12 +1,18 @@
 #include "G2IUIManager.h"
 #include "G2I.h"
+#include "G2IAimTypeEnum.h"
 #include "G2IGameInstance.h"
 #include "G2IPlayerController.h"
 #include "G2IUIDisplayManager.h"
-#include "G2IUIInputHandler.h"
-#include "G2IWidgetsEnums.h"
+#include "G2IWidgetComponentParameters.h"
+#include "G2IWidgetNames.h"
 #include "G2IWidgetsCatalog.h"
 #include "G2IWorldHintKeyWidgetComponent.h"
+#include "Components/RichTextBlock.h"
+#include "Components/TextBlock.h"
+#include "Components/WidgetSwitcher.h"
+#include "Gameplay/G2IKeyHintWidget.h"
+#include "HUD/G2IAimingWidget.h"
 
 void UG2IUIManager::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -22,21 +28,15 @@ void UG2IUIManager::InitializeComponents(APlayerController* InPlayerController)
 		UE_LOG(LogG2I, Error, TEXT("PlayerController doesn't exist in %s"), *GetName());
 		return;
 	}
-	PlayerController->OnPossessPawnDelegate.AddDynamic(this, &ThisClass::SetMechanicsDescriptionByCharacter);
 	
-	GameInstance = Cast<UG2IGameInstance>(GetGameInstance());
+	UG2IGameInstance *GameInstance = Cast<UG2IGameInstance>(GetGameInstance());
 	if (!ensure(GameInstance))
 	{
 		UE_LOG(LogG2I, Error, TEXT("Game Instance isn't %s in %s"),
 			*UG2IGameInstance::StaticClass()->GetName(), *GetName());
 		return;
 	}
-	WidgetsCatalog = GameInstance->WidgetsCatalog;
-	if (!ensure(WidgetsCatalog))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"), *UG2IWidgetsCatalog::StaticClass()->GetName(), *GetName());
-		return;
-	}
+	WidgetComponentParameters = GameInstance->GetWidgetComponentParameters();
 
 	DisplayManager = NewObject<UG2IUIDisplayManager>(this);
 	if (!ensure(DisplayManager))
@@ -45,30 +45,32 @@ void UG2IUIManager::InitializeComponents(APlayerController* InPlayerController)
 			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
 		return;
 	}
-	DisplayManager->Initialize(WidgetsCatalog);
+	DisplayManager->Initialize();
 
-	UIHandler = NewObject<UG2IUIInputHandler>(this);
-	if (!ensure(UIHandler))
+	const UWorld *World = GetWorld();
+	if (!ensure(World))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
-			*UG2IUIInputHandler::StaticClass()->GetName(), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
 		return;
 	}
-	UIHandler->Initialize(this, DisplayManager);
-
-	InitializeDefaultsWidgets();
-	OpenHUD();
+	OnUIManagerInitialized.Broadcast();
 }
 
-void UG2IUIManager::InitializeDefaultsWidgets()
+FString UG2IUIManager::GetWidgetNameString(EG2IWidgetNames WidgetName) const
 {
-	InitializeAimingWidget();
-	InitializeTrainingScreenWidget();
+	const UEnum* WidgetNamesEnumPtr = StaticEnum<EG2IWidgetNames>();
+	if (!ensure(WidgetNamesEnumPtr))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Couldn't find enum WidgetNames in %s"),*GetName());
+		return "";
+	}
+
+	return WidgetNamesEnumPtr->GetNameStringByValue(static_cast<int64>(WidgetName));
 }
 
 void UG2IUIManager::OpenHUD() const
 {
-	OpenTrainingWidget();
+	OpenWidget(EG2IWidgetNames::TrainingScreen);
 }
 
 void UG2IUIManager::OpenWorldWidget(UG2IWorldHintWidgetComponent* WidgetComponent) const
@@ -135,11 +137,12 @@ UG2IUserWidget* UG2IUIManager::CreateWidgetByName(const EG2IWidgetNames WidgetNa
 	return DisplayManager->CreateNewWidget(WidgetName);
 }
 
-void UG2IUIManager::InitializeAimingWidget() const
+void UG2IUIManager::AddWidgetToPanel(UPanelWidget* Panel, const EG2IWidgetNames WidgetName) const
 {
-	if (!ensure(WidgetsCatalog))
+	if (!ensure(Panel))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"), *UG2IWidgetsCatalog::StaticClass()->GetName(), *GetName());
+		UE_LOG(LogG2I, Warning, TEXT("An attempt to change nullptr %s in %s"),
+			*UPanelWidget::StaticClass()->GetName(), *GetName());
 		return;
 	}
 	if (!ensure(DisplayManager))
@@ -149,29 +152,44 @@ void UG2IUIManager::InitializeAimingWidget() const
 		return;
 	}
 	
-	UTexture2D *NewAimTexture = WidgetsCatalog->AimingViewTypes[EG2IAimType::DefaultAim];
-	DisplayManager->SetImage(EG2IWidgetNames::Aim, "AimImage", NewAimTexture);
+	UG2IUserWidget *Widget = DisplayManager->GetWidget(WidgetName);
+	if (!ensure(Widget))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Widget %s doesn't exist in %s"), *GetWidgetNameString(WidgetName),
+			*GetName());
+		return;
+	}
+
+	Panel->AddChild(Widget);
 }
 
-void UG2IUIManager::OpenAimingWidget() const
+void UG2IUIManager::SwitchWidget(UWidgetSwitcher* Switcher, const EG2IWidgetNames WidgetName) const
 {
+	if (!ensure(Switcher))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("An attempt to change nullptr %s in %s"),
+			*UWidgetSwitcher::StaticClass()->GetName(), *GetName());
+		return;
+	}
 	if (!ensure(DisplayManager))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
 			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
 		return;
 	}
-	
-	DisplayManager->ShowWidget(EG2IWidgetNames::Aim);
+	UG2IUserWidget *Widget = DisplayManager->GetWidget(WidgetName);
+	if (!ensure(Widget))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Widget %s doesn't exist in %s"),
+			*GetWidgetNameString(WidgetName), *GetName());
+		return;
+	}
+
+	Switcher->SetActiveWidget(Widget);
 }
 
-void UG2IUIManager::CloseAimingWidget() const
+void UG2IUIManager::OpenWidget(const EG2IWidgetNames WidgetName) const
 {
-	if (!ensure(WidgetsCatalog))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"), *UG2IWidgetsCatalog::StaticClass()->GetName(), *GetName());
-		return;
-	}
 	if (!ensure(DisplayManager))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
@@ -179,7 +197,69 @@ void UG2IUIManager::CloseAimingWidget() const
 		return;
 	}
 	
-	DisplayManager->HideWidget(EG2IWidgetNames::Aim);
+	DisplayManager->OpenWidget(WidgetName);
+}
+
+void UG2IUIManager::CloseWidget(const EG2IWidgetNames WidgetName) const
+{
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
+			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		return;
+	}
+	
+	DisplayManager->CloseWidget(WidgetName);
+}
+
+void UG2IUIManager::ShowWidget(const EG2IWidgetNames WidgetName) const
+{
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
+			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		return;
+	}
+	UG2IUserWidget *Widget = DisplayManager->GetWidget(WidgetName);
+	if (!ensure(Widget))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Widget %s doesn't exist in %s"), *GetWidgetNameString(WidgetName),
+			*GetName());
+		return;
+	}
+
+	Widget->SetVisibility(ESlateVisibility::Visible);
+}
+
+void UG2IUIManager::HideWidget(const EG2IWidgetNames WidgetName) const
+{
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
+			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		return;
+	}
+	UG2IUserWidget *Widget = DisplayManager->GetWidget(WidgetName);
+	if (!ensure(Widget))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Widget %s doesn't exist in %s"), *GetWidgetNameString(WidgetName),
+			*GetName());
+		return;
+	}
+	
+	Widget->SetVisibility(ESlateVisibility::Hidden);
+}
+
+void UG2IUIManager::CloseAllWidgets() const
+{
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
+			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		return;
+	}
+
+	DisplayManager->CloseAllActiveWidgets();
 }
 
 void UG2IUIManager::ChangeAimingType(const EG2IAimType NewAimType) const
@@ -191,108 +271,14 @@ void UG2IUIManager::ChangeAimingType(const EG2IAimType NewAimType) const
 		return;
 	}
 
-	UTexture2D *NewAimTexture = WidgetsCatalog->AimingViewTypes[NewAimType];
-	DisplayManager->SetImage(EG2IWidgetNames::Aim, "AimImage", NewAimTexture);
-}
-
-void UG2IUIManager::OpenPauseWidget() const
-{
-	if (!ensure(DisplayManager))
+	UG2IAimingWidget *Widget = Cast<UG2IAimingWidget>(DisplayManager->GetWidget(EG2IWidgetNames::Aim));
+	if (!ensure(Widget))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
-			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		UE_LOG(LogG2I, Warning, TEXT("Aiming widget doesn't exist in %s"), *GetName());
 		return;
 	}
 	
-	DisplayManager->ShowWidget(EG2IWidgetNames::Pause);
-}
-
-void UG2IUIManager::ClosePauseWidget() const
-{
-	if (!ensure(DisplayManager))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
-			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
-		return;
-	}
-	
-	DisplayManager->HideWidget(EG2IWidgetNames::Pause);
-}
-
-void UG2IUIManager::InitializeTrainingScreenWidget()
-{
-	SetCommonMechanicsDescription();
-
-	if (!ensure(PlayerController))
-	{
-		UE_LOG(LogG2I, Error, TEXT("PlayerController doesn't exist in %s"), *GetName());
-		return;
-	}
-	APawn *Pawn = PlayerController->GetPawn();
-	SetMechanicsDescriptionByCharacter(Pawn);
-}
-
-void UG2IUIManager::OpenTrainingWidget() const
-{
-	if (!ensure(DisplayManager))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
-			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
-		return;
-	}
-	
-	DisplayManager->ShowWidget(EG2IWidgetNames::TrainingScreen);
-}
-
-void UG2IUIManager::SetCommonMechanicsDescription() const
-{
-	if (!ensure(DisplayManager))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
-			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
-		return;
-	}
-	if (!ensure(WidgetsCatalog))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"), *UG2IWidgetsCatalog::StaticClass()->GetName(), *GetName());
-		return;
-	}
-
-	FString Description;
-	for (auto Text : WidgetsCatalog->CommonMechanicsDescription.NextStrings)
-	{
-		Description += Text + "\n";
-	}
-	DisplayManager->SetText(EG2IWidgetNames::TrainingScreen, "CommonDescriptionTextBlock", Description);
-}
-
-void UG2IUIManager::SetMechanicsDescriptionByCharacter(APawn *Pawn)
-{
-	if (!Pawn)
-	{
-		return;
-	}
-	if (!ensure(DisplayManager))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
-			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
-		return;
-	}
-	if (!ensure(WidgetsCatalog))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"), *UG2IWidgetsCatalog::StaticClass()->GetName(), *GetName());
-		return;
-	}
-
-	FString Description;
-	if (FG2IMultiText *Descriptions = WidgetsCatalog->CharactersMechanicsDescription.Find(Pawn->GetClass()))
-	{
-		for (FString Text : Descriptions->NextStrings)
-		{
-			Description += Text + "\n";
-		}
-	}
-	DisplayManager->SetText(EG2IWidgetNames::TrainingScreen, "CharacterDescriptionTextBlock", Description);
+	Widget->SetAimingViewType(NewAimType);
 }
 
 void UG2IUIManager::SetKeyByInputAction(UG2IWorldHintWidgetComponent* WidgetComponent, UInputAction* InputAction) const
@@ -309,21 +295,24 @@ void UG2IUIManager::SetKeyByInputAction(UG2IWorldHintWidgetComponent* WidgetComp
 			*InputAction->GetName(), *GetName());
 		return;
 	}
-	if (!ensure(DisplayManager))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
-			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
-		return;
-	}
 	if (!ensure(PlayerController))
 	{
 		UE_LOG(LogG2I, Error, TEXT("PlayerController doesn't exist in %s"), *GetName());
 		return;
 	}
 
-	UG2IUserWidget *Widget = WidgetComponent->FindOrAddWidgetByName(EG2IWidgetNames::KeyHint);
-	const FName Key = PlayerController->GetKeyName(InputAction);
-	DisplayManager->SetText(Widget, "KeyTextBlock", Key.ToString());
+	if (const UG2IKeyHintWidget *Widget =
+		Cast<UG2IKeyHintWidget>(WidgetComponent->FindOrAddWidgetByName(EG2IWidgetNames::KeyHint)))
+	{
+		if (!ensure(Widget->KeyTextBlock))
+		{
+			UE_LOG(LogG2I, Warning, TEXT("An attempt to change nullptr key text block of %s in %s"),
+				*Widget->GetName(), *GetName());
+			return;
+		}
+		const FName Key = PlayerController->GetKeyName(InputAction);
+		Widget->KeyTextBlock->SetText(FText::FromName(Key));
+	}
 }
 
 void UG2IUIManager::SetKeyWidgetSize(UG2IWorldHintKeyWidgetComponent* WidgetComponent) const
@@ -333,11 +322,12 @@ void UG2IUIManager::SetKeyWidgetSize(UG2IWorldHintKeyWidgetComponent* WidgetComp
 		UE_LOG(LogG2I, Warning, TEXT("Attempting to set key in nullptr widget component in %s"), *GetName());
 		return;
 	}
-	if (!ensure(WidgetsCatalog))
+	if (!ensure(WidgetComponentParameters))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"), *UG2IWidgetsCatalog::StaticClass()->GetName(), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
+			*UG2IWidgetComponentParameters::StaticClass()->GetName(), *GetName());
 		return;
 	}
 
-	WidgetComponent->SetWidgetSize(WidgetsCatalog->KeyWidgetDefaultSize);
+	WidgetComponent->SetWidgetSize(WidgetComponentParameters->KeyWidgetDefaultSize);
 }
