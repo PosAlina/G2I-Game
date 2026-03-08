@@ -77,6 +77,10 @@ void AG2IPlayerController::SetupInputComponent()
 				EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Started,this, &ThisClass::CallPause);
 
 				EnhancedInputComponent->BindAction(GlovePunchAction, ETriggerEvent::Started, this, &ThisClass::GlovePunchActivation);
+#if WITH_EDITOR
+				EnhancedInputComponent->BindAction(SaveAction, ETriggerEvent::Triggered, this, &ThisClass::SaveGameplay);
+				EnhancedInputComponent->BindAction(LoadAction, ETriggerEvent::Triggered, this, &ThisClass::LoadGameplay);
+#endif
 			}
 			else
 			{
@@ -113,6 +117,13 @@ void AG2IPlayerController::SetupInputComponent()
 AG2IPlayerController::AG2IPlayerController()
 {
 	PlayerCameraManagerClass = AG2IPlayerCameraManager::StaticClass();
+
+	FGameplayTag SavableTag = UGameplayTagsManager::Get().RequestGameplayTag(FName("Savable"));
+
+	if (SavableTag.IsValid())
+	{
+		GameplayTags.AddTag(SavableTag);
+	}
 }
 
 void AG2IPlayerController::OnPossess(APawn* NewPawn)
@@ -230,6 +241,25 @@ FName AG2IPlayerController::GetKeyName(UInputAction* InputAction)
 TMap<TObjectPtr<UInputAction>, FName>& AG2IPlayerController::GetActionToTagMap()
 {
 	return ActionToTagMap;
+}
+
+void AG2IPlayerController::SaveData_Implementation(UG2IGameplaySaveGame* SaveGameRef)
+{
+	if (SaveGameRef && GetPawn())
+	{
+		SaveGameRef->PlayersSaveData.CurrentCharacter = GetPawn()->GetName();
+		UE_LOG(LogG2I, Log, TEXT("PlayerController: %s saved."), *SaveGameRef->PlayersSaveData.CurrentCharacter);
+	}
+}
+
+void AG2IPlayerController::LoadData_Implementation(const UG2IGameplaySaveGame* SaveGameRef)
+{
+	if (SaveGameRef)
+		if (const APawn* CurrentCharacter = GetPawn())
+		{
+			if (!CurrentCharacter->GetName().Equals(SaveGameRef->PlayersSaveData.CurrentCharacter))
+				SelectNextCharacter(FInputActionValue());
+		}
 }
 
 void AG2IPlayerController::SetupCharacterActorComponents()
@@ -567,4 +597,26 @@ void AG2IPlayerController::ToggleFollowAIBehindPlayer(const FInputActionValue& V
 void AG2IPlayerController::GlovePunchActivation(const FInputActionInstance& Instance)
 {
 	IG2IGlovePunchInterface::Execute_GlovePunchActivation(GlovePunchComponent);
+}
+
+void AG2IPlayerController::SaveGameplay(const FInputActionValue& Value)
+{
+	if (auto* GameInstance = GetGameInstance())
+	{
+		if (GameInstance->Implements<UG2ISaveGameplayInterface>())
+			IG2ISaveGameplayInterface::Execute_SaveAllDataAndGameplay(GameInstance, true);
+		else
+			UE_LOG(LogG2I, Warning, TEXT("%s doesn't implement interface UG2ISaveGameplayInterface."), *GameInstance->GetName());
+	}
+}
+
+void AG2IPlayerController::LoadGameplay(const FInputActionValue& Value)
+{
+	if (auto* GameInstance = GetGameInstance())
+	{
+		if (GameInstance->Implements<UG2ISaveGameplayInterface>())
+			IG2ISaveGameplayInterface::Execute_LoadRequestedData(GameInstance, this);
+		else
+			UE_LOG(LogG2I, Warning, TEXT("%s doesn't implement interface UG2ISaveGameplayInterface."), *GameInstance->GetName());
+	}
 }

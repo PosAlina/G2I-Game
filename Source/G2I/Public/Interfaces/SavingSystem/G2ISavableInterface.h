@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "GameFramework/SaveGame.h"
+#include "Game/G2IGameplaySaveGame.h"
 #include "G2ISavableInterface.generated.h"
 
 // This class does not need to be modified.
@@ -22,9 +22,9 @@ class G2I_API IG2ISavableInterface
 public:
 	// Adds/updates needed data to the save game object
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Savable")
-	void SaveData(const USaveGame* SaveGameRef);
+	void SaveData(UG2IGameplaySaveGame* SaveGameRef);
 
 	// Loads needed data from the save game object
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Savable")
-	void LoadData(const USaveGame* SaveGameRef);
+	void LoadData(const UG2IGameplaySaveGame* SaveGameRef);
 };

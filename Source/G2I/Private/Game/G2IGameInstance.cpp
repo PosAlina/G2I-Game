@@ -2,6 +2,7 @@
 #include "G2I.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameplayTagContainer.h"
+#include "GameplayTagsManager.h"
 #include "BlueprintGameplayTagLibrary.h"
 #include "Interfaces/SavingSystem/G2ISavableInterface.h"
 
@@ -160,7 +161,7 @@ void UG2IGameInstance::SaveAllData_Implementation()
     // Iterating on them & saving their data
     for (auto* Actor : FoundSavableActors)
     {
-        if (Actor->Implements<IG2ISavableInterface>())
+        if (Actor->Implements<UG2ISavableInterface>())
         {
             IG2ISavableInterface::Execute_SaveData(Actor, GameplaySaveGame);
         }
@@ -180,7 +181,7 @@ void UG2IGameInstance::LoadAllData_Implementation()
     // Iterating on them & loading their data
     for (auto* Actor : FoundSavableActors)
     {
-        if (Actor->Implements<IG2ISavableInterface>())
+        if (Actor->Implements<UG2ISavableInterface>())
         {
             IG2ISavableInterface::Execute_LoadData(Actor, GameplaySaveGame);
         }
@@ -200,7 +201,7 @@ void UG2IGameInstance::SyncGameplayLoadGameData()
     // Iterating on them & loading their data
     for (auto* Actor : FoundSavableActors)
     {
-        if (Actor->Implements<IG2ISavableInterface>())
+        if (Actor->Implements<UG2ISavableInterface>())
         {
             IG2ISavableInterface::Execute_LoadData(Actor, GameplaySaveGame);
         }
@@ -240,7 +241,7 @@ void UG2IGameInstance::SaveRequestedData_Implementation(UObject* Requester)
 {
     if (Requester)
     {
-        if (Requester->Implements<IG2ISavableInterface>())
+        if (Requester->Implements<UG2ISavableInterface>())
         {
             IG2ISavableInterface::Execute_SaveData(Requester, GameplaySaveGame);
         }
@@ -253,7 +254,7 @@ void UG2IGameInstance::LoadRequestedData_Implementation(UObject* Requester)
 {
     if (Requester)
     {
-        if (Requester->Implements<IG2ISavableInterface>())
+        if (Requester->Implements<UG2ISavableInterface>())
         {
             IG2ISavableInterface::Execute_LoadData(Requester, GameplaySaveGame);
         }

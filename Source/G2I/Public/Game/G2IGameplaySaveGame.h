@@ -13,7 +13,7 @@ struct FPlayersSaveData
 	TMap<FString, FVector> CharactersLocation;
 
 	UPROPERTY(SaveGame, BlueprintReadWrite)
-	FString CurrentCharacter;
+	FString CurrentCharacter = TEXT("");
 };
 
 /**
