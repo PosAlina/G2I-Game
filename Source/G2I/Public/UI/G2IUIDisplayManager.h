@@ -2,10 +2,12 @@
 
 #include "CoreMinimal.h"
 #include "G2I.h"
-#include "G2IWidgetsEnums.h"
-#include "Widgets/G2IUserWidget.h"
+#include "G2IWidgetNames.h"
+#include "G2IUserWidget.h"
+#include "G2IWidgetTypes.h"
 #include "G2IUIDisplayManager.generated.h"
 
+enum class EG2IStringTablesTypes : uint8;
 class UG2IWorldHintWidgetComponent;
 class AG2IPlayerController;
 struct FG2IWidgetClassesInfo;
@@ -19,7 +21,14 @@ struct FG2IWidgetInfo
 	UPROPERTY()
 	TObjectPtr<UG2IUserWidget> Widget;
 	
-	EG2IUIType Type = EG2IUIType::HUD;
+	EG2IWidgetTypes Type = EG2IWidgetTypes::UI;
+};
+
+
+template<typename T>
+concept HasSetText = requires(T* UIElement, const FText& Text)
+{
+	UIElement->SetText(Text);
 };
 
 /**
@@ -40,6 +49,8 @@ protected:
 	
 	TSet<uint32> ActiveWidgetComponentsID;
 
+	TMap<EG2IWidgetTypes, TSet<EG2IWidgetNames>> AllActiveWidgetsNames;
+
 private:
 
 	UPROPERTY()
@@ -48,51 +59,48 @@ private:
 	UPROPERTY()
 	TObjectPtr<AG2IPlayerController> PlayerController;
 
-	UPROPERTY()
-	TObjectPtr<ACharacter> PlayerCharacter;
-
 	FCollisionQueryParams QueryParamsForWorldWidgetsActivate;
+
+	FText MissingStringInStringTable = FText::FromString("<MISSING STRING TABLE ENTRY>");
+	FText OverrideMissingStringInStringTable = FText::GetEmpty();
+
+	TMap<EG2IStringTablesTypes, FName> StringTablesNames;
 	
-public:
-
 	// ==================== UI ELEMENTS ====================
-	void SetImage(const EG2IWidgetNames WidgetName, const FName ElementName, UTexture2D *Texture);
-
-	void SetText(const EG2IWidgetNames WidgetName, const FName ElementName, const FString& Str);
-
-	void SetText(UG2IUserWidget *Widget, const FName ElementName, const FString& Str);
-
-	template<typename T>
-	void FullHideElement(const EG2IWidgetNames WidgetName, const FName ElementName);
-
-	template<typename T>
-	void ShowHiddenElement(const EG2IWidgetNames WidgetName, const FName ElementName);
-
 public:
+
+	template<typename T>
+	requires HasSetText<T>
+	void SetText(T *UIElement, EG2IStringTablesTypes StringTableType, const FString& KeyNewText,
+		const FString& KeyDefaultText);
+
+	FText GetText(EG2IStringTablesTypes StringTableType, const FString& KeyNewText);
+	
+private:
+
+	bool IsMissingOrEmptyString(const FText& Text) const;
 	
 	// ==================== BASE WIDGET FUNCTIONS ====================
-	void Initialize(UG2IWidgetsCatalog* WidgetsCatalog);
+public:
+	void Initialize();
+	void InitializeGameInstanceDefaults();
 
 	UG2IUserWidget *GetWidget(const EG2IWidgetNames WidgetName);
 
 	UG2IUserWidget *CreateNewWidget(const EG2IWidgetNames WidgetName);
 
-	void ShowWidget(const EG2IWidgetNames WidgetName);
+	void OpenWidget(const EG2IWidgetNames WidgetName);
+	void CloseWidget(const EG2IWidgetNames WidgetName);
 
-	void HideWidget(const EG2IWidgetNames WidgetName);
-
-	template<typename T>
-	T *GetUIElement(const EG2IWidgetNames WidgetName, const FName ElementName);
-	
-	template<typename T>
-	T *GetUIElement(UG2IUserWidget *Widget, const FName ElementName);
+	void CloseAllActiveWidgets();
+	void CloseActiveWidgetsByType(const EG2IWidgetTypes WidgetsType);
 
 private:
 
-	void RegisterWidget(const EG2IWidgetNames WidgetName, FG2IWidgetClassesInfo WidgetClassInfo);
+	void RegisterWidget(const EG2IWidgetNames WidgetName, const FG2IWidgetClassesInfo& WidgetClassInfo);
 	
-	UFUNCTION()
 	void SetupDefaults();
+	void BindDelegates();
 
 	UFUNCTION()
 	void UpdateBindingDelegatesForChangedPawn(APawn *Pawn);
@@ -100,15 +108,15 @@ private:
 	// ==================== BASE WIDGET COMPONENTS FUNCTIONS ====================
 public:
 
-	void RegisterWorldWidgetComponent(UG2IWorldHintWidgetComponent& WidgetComponent);
-
 	void ShowWorldWidget(UG2IWorldHintWidgetComponent& WidgetComponent);
 
 	void HideWorldWidget(UG2IWorldHintWidgetComponent& WidgetComponent);
 
 	bool IsVisibleWorldWidget(UG2IWorldHintWidgetComponent& WidgetComponent) const;
 	
-protected:
+private:
+	
+	void RegisterWorldWidgetComponent(UG2IWorldHintWidgetComponent& WidgetComponent);
 	
 	UFUNCTION()
 	void ReactActiveWidgetComponentsToNewCameraLocation(const FVector& NewCameraLocation);
@@ -117,48 +125,27 @@ protected:
 	
 };
 
-template <typename T>
-T *UG2IUIDisplayManager::GetUIElement(const EG2IWidgetNames WidgetName, const FName ElementName)
+template <typename T> requires HasSetText<T>
+void UG2IUIDisplayManager::SetText(T* UIElement, const EG2IStringTablesTypes StringTableType,
+	const FString& KeyNewText, const FString& KeyDefaultText)
 {
-	if (UG2IUserWidget *Widget = GetWidget(WidgetName))
+	if (!ensure(UIElement))
 	{
-		T *UIElement = Widget->GetElement<T>(ElementName);
-		return UIElement;
-	}
-	return nullptr;
-}
-
-template <typename T>
-T *UG2IUIDisplayManager::GetUIElement(UG2IUserWidget *Widget, const FName ElementName)
-{
-	T *UIElement = Widget->GetElement<T>(ElementName);
-	return UIElement;
-}
-
-template <typename T>
-void UG2IUIDisplayManager::FullHideElement(const EG2IWidgetNames WidgetName, const FName ElementName)
-{
-	if (T *Element = GetUIElement<T>(WidgetName, ElementName))
-	{
-		Element->SetVisibility(ESlateVisibility::Collapsed);
-	}
-	else
-	{
-		UE_LOG(LogG2I, Warning, TEXT("Element doesn't exist in %s"), *GetName());
+		UE_LOG(LogG2I, Warning, TEXT("UI element with text is undefined in %s"), *GetName());
 		return;
 	}
-}
 
-template <typename T>
-void UG2IUIDisplayManager::ShowHiddenElement(const EG2IWidgetNames WidgetName, const FName ElementName)
-{
-	if (T *Element = GetUIElement<T>(WidgetName, ElementName))
+	const FName *StringTableName = StringTablesNames.Find(StringTableType);
+	if (!ensure(StringTableName))
 	{
-		Element->SetVisibility(ESlateVisibility::Visible);
-	}
-	else
-	{
-		UE_LOG(LogG2I, Warning, TEXT("Element doesn't exist in %s"), *GetName());
+		UE_LOG(LogG2I, Warning, TEXT("Couldn't find string table with type %s in %s"),
+			*StringTableName->ToString(), *GetName());
 		return;
 	}
+	FText NewText = FText::FromStringTable((*StringTableName), KeyNewText);
+	if (IsMissingOrEmptyString(NewText))
+	{
+		NewText = FText::FromStringTable((*StringTableName), KeyDefaultText);
+	}
+	UIElement->SetText(NewText);
 }

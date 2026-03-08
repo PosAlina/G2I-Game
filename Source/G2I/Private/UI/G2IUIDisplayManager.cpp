@@ -1,20 +1,19 @@
 #include "G2IUIDisplayManager.h"
 #include "G2I.h"
+#include "G2IGameInstance.h"
 #include "G2IPlayerCameraManager.h"
 #include "G2IPlayerController.h"
+#include "G2IStringTablesCatalog.h"
 #include "G2IWidgetsCatalog.h"
 #include "G2IWorldHintWidgetComponent.h"
 #include "Blueprint/UserWidget.h"
-#include "Components/Image.h"
-#include "Components/TextBlock.h"
+#include "Internationalization/StringTable.h"
 
-void UG2IUIDisplayManager::Initialize(UG2IWidgetsCatalog* WidgetsCatalog)
+void UG2IUIDisplayManager::Initialize()
 {
 	SetupDefaults();
-	for (const TTuple<EG2IWidgetNames, FG2IWidgetClassesInfo> WidgetInfo : WidgetsCatalog->WidgetClasses)
-	{
-		RegisterWidget(WidgetInfo.Key, WidgetInfo.Value);
-	}
+	InitializeGameInstanceDefaults();
+	BindDelegates();
 }
 
 void UG2IUIDisplayManager::RegisterWorldWidgetComponent(UG2IWorldHintWidgetComponent& WidgetComponent)
@@ -28,7 +27,8 @@ uint32 UG2IUIDisplayManager::GetWorldWidgetComponentID(UG2IWorldHintWidgetCompon
 	return GetTypeHash(&WidgetComponent);
 }
 
-void UG2IUIDisplayManager::RegisterWidget(const EG2IWidgetNames WidgetName, FG2IWidgetClassesInfo WidgetClassInfo)
+void UG2IUIDisplayManager::RegisterWidget(const EG2IWidgetNames WidgetName,
+	const FG2IWidgetClassesInfo& WidgetClassInfo)
 {
 	if (!ensure(World))
 	{
@@ -65,13 +65,69 @@ void UG2IUIDisplayManager::SetupDefaults()
 		UE_LOG(LogG2I, Error, TEXT("PlayerController doesn't exist in %s"), *GetName());
 		return;
 	}
-	PlayerController->OnPossessPawnDelegate.AddDynamic(this, &ThisClass::UpdateBindingDelegatesForChangedPawn);
-	const TObjectPtr<AG2IPlayerCameraManager> CameraManager = Cast<AG2IPlayerCameraManager>(PlayerController->PlayerCameraManager);
-	if (!CameraManager)
+}
+
+void UG2IUIDisplayManager::InitializeGameInstanceDefaults()
+{
+	if (!ensure(World))
 	{
+		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
 		return;
 	}
-	CameraManager->OnChangeCameraLocationDelegate.AddDynamic(this, &ThisClass::ReactActiveWidgetComponentsToNewCameraLocation);
+	UG2IGameInstance *GameInstance = Cast<UG2IGameInstance>(World->GetGameInstance());
+	if (!ensure(GameInstance))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Game Instance isn't %s in %s"),
+			*UG2IGameInstance::StaticClass()->GetName(), *GetName());
+		return;
+	}
+	UG2IWidgetsCatalog *WidgetsCatalog = GameInstance->GetWidgetsCatalog();
+	if (!ensure(WidgetsCatalog))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Couldn't get %s from GameInstance in %s"),
+			*UG2IWidgetsCatalog::StaticClass()->GetName(), *GetName());
+	}
+	else
+	{
+		for (const auto WidgetInfo : WidgetsCatalog->WidgetClasses)
+		{
+			RegisterWidget(WidgetInfo.Key, WidgetInfo.Value);
+		}
+	}
+
+	const UG2IStringTablesCatalog *StringTablesCatalog = GameInstance->GetStringTablesCatalog();
+	if (!ensure(StringTablesCatalog))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Couldn't get %s from GameInstance in %s"),
+			*UG2IStringTablesCatalog::StaticClass()->GetName(), *GetName());
+	}
+	else
+	{
+		for (auto [TableType, Table] : StringTablesCatalog->StringTables)
+		{
+			if (!ensure(Table))
+			{
+				UE_LOG(LogG2I, Warning, TEXT("Table doesn't exist in string tables %s"), *GetName());
+				continue;
+			}
+			StringTablesNames.Add(TableType, Table->GetStringTableId());
+		}
+	}
+}
+
+void UG2IUIDisplayManager::BindDelegates()
+{
+	PlayerController->OnPossessPawnDelegate.AddDynamic(this, &ThisClass::UpdateBindingDelegatesForChangedPawn);
+	const TObjectPtr<AG2IPlayerCameraManager> CameraManager =
+		Cast<AG2IPlayerCameraManager>(PlayerController->PlayerCameraManager);
+	if (!CameraManager)
+	{
+		UE_LOG(LogG2I, Error, TEXT("Camera Manager %s doesn't exist in %s"),
+			*AG2IPlayerCameraManager::StaticClass()->GetName(), *GetName());
+		return;
+	}
+	CameraManager->OnChangeCameraLocationDelegate.AddDynamic(this,
+		&ThisClass::ReactActiveWidgetComponentsToNewCameraLocation);
 }
 
 void UG2IUIDisplayManager::UpdateBindingDelegatesForChangedPawn(APawn* Pawn)
@@ -126,15 +182,18 @@ UG2IUserWidget *UG2IUIDisplayManager::CreateNewWidget(const EG2IWidgetNames Widg
 	return nullptr;
 }
 
-void UG2IUIDisplayManager::ShowWidget(const EG2IWidgetNames WidgetName)
+void UG2IUIDisplayManager::OpenWidget(const EG2IWidgetNames WidgetName)
 {
 	if (const auto WidgetInfo = AllWidgets.Find(WidgetName))
 	{
 		if (UG2IUserWidget *Widget = WidgetInfo->Widget)
 		{
 			Widget->AddToViewport();
+			
+			TSet<EG2IWidgetNames> ActiveWidgetsNamesByType = AllActiveWidgetsNames.FindOrAdd(WidgetInfo->Type);
+			ActiveWidgetsNamesByType.Add(WidgetName);
 
-			if (WidgetInfo->Type == EG2IUIType::UI)
+			if (WidgetInfo->Type == EG2IWidgetTypes::UI)
 			{
 				if (!ensure(PlayerController))
 				{
@@ -151,13 +210,37 @@ void UG2IUIDisplayManager::ShowWidget(const EG2IWidgetNames WidgetName)
 	}
 }
 
-void UG2IUIDisplayManager::HideWidget(const EG2IWidgetNames WidgetName)
+void UG2IUIDisplayManager::CloseWidget(const EG2IWidgetNames WidgetName)
 {
 	if (const auto WidgetInfo = AllWidgets.Find(WidgetName))
 	{
 		if (UG2IUserWidget *Widget = WidgetInfo->Widget)
 		{
 			Widget->RemoveFromParent();
+
+			if (TSet<EG2IWidgetNames> *ActiveWidgetsNamesByType = AllActiveWidgetsNames.Find(WidgetInfo->Type))
+			{
+				ActiveWidgetsNamesByType->Remove(WidgetName);
+			}
+		}
+	}
+}
+
+void UG2IUIDisplayManager::CloseAllActiveWidgets()
+{
+	for (auto [ActiveWidgetsType, _] : AllActiveWidgetsNames)
+	{
+		CloseActiveWidgetsByType(ActiveWidgetsType);
+	}
+}
+
+void UG2IUIDisplayManager::CloseActiveWidgetsByType(const EG2IWidgetTypes WidgetsType)
+{
+	if (TSet<EG2IWidgetNames> *ActiveWidgetsNamesByType = AllActiveWidgetsNames.Find(WidgetsType))
+	{
+		for (const EG2IWidgetNames WidgetName : *ActiveWidgetsNamesByType)
+		{
+			CloseWidget(WidgetName);
 		}
 	}
 }
@@ -196,53 +279,26 @@ bool UG2IUIDisplayManager::IsVisibleWorldWidget(UG2IWorldHintWidgetComponent& Wi
 	return false;
 }
 
-void UG2IUIDisplayManager::SetImage(const EG2IWidgetNames WidgetName, const FName ElementName, UTexture2D* Texture)
+FText UG2IUIDisplayManager::GetText(EG2IStringTablesTypes StringTableType, const FString& KeyNewText)
 {
-	if (!ensure(Texture))
+	const FName *StringTableName = StringTablesNames.Find(StringTableType);
+	if (!ensure(StringTableName))
 	{
-		UE_LOG(LogG2I, Log, TEXT("There was an attempt to change the image to a nullptr Texture in %s"),
-			*GetName());
-		return;
+		UE_LOG(LogG2I, Warning, TEXT("Target string table doesn't exist in array %s of tables %s"),
+			*UG2IStringTablesCatalog::StaticClass()->GetName(), *GetName());
+		return OverrideMissingStringInStringTable;
 	}
-	
-	if (UImage *Image = GetUIElement<UImage>(WidgetName, ElementName))
+	FText NewText = FText::FromStringTable((*StringTableName), KeyNewText);
+	if (IsMissingOrEmptyString(NewText))
 	{
-		Image->SetBrushFromTexture(Texture);
+		return OverrideMissingStringInStringTable;
 	}
-	else
-	{
-		UE_LOG(LogG2I, Warning, TEXT("%s doesn't exist in %s"), *ElementName.ToString(), *GetName());
-		return;
-	}
+	return NewText;
 }
 
-void UG2IUIDisplayManager::SetText(const EG2IWidgetNames WidgetName, const FName ElementName, const FString& Str)
+bool UG2IUIDisplayManager::IsMissingOrEmptyString(const FText& Text) const
 {
-	const FText Text = FText::FromString(Str);
-	if (UTextBlock *TextBlock = GetUIElement<UTextBlock>(WidgetName, ElementName))
-	{
-		TextBlock->SetText(Text);
-	}
-	else
-	{
-		UE_LOG(LogG2I, Warning, TEXT("%s doesn't exist in %s"), *ElementName.ToString(), *GetName());
-		return;
-	}
+	FString Str = Text.ToString();
+	Str.RemoveSpacesInline();
+	return Str.IsEmpty() || Text.EqualTo(MissingStringInStringTable);
 }
-
-void UG2IUIDisplayManager::SetText(UG2IUserWidget* Widget, const FName ElementName, const FString& Str)
-{
-	const FText Text = FText::FromString(Str);
-	if (UTextBlock *TextBlock = GetUIElement<UTextBlock>(Widget, ElementName))
-	{
-		TextBlock->SetText(Text);
-	}
-	else
-	{
-		UE_LOG(LogG2I, Warning, TEXT("%s doesn't exist in %s"), *ElementName.ToString(), *GetName());
-		return;
-	}
-}
-
-
-

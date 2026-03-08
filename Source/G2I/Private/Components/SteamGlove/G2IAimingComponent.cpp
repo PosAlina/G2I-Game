@@ -8,6 +8,7 @@
 #include "G2ICharacterInterface.h"
 #include "G2IGameInstance.h"
 #include "G2IUIManager.h"
+#include "G2IWidgetNames.h"
 
 UG2IAimingComponent::UG2IAimingComponent()
 {
@@ -138,7 +139,7 @@ void UG2IAimingComponent::StartAimingAction_Implementation()
 			UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
 				*UG2IUIManager::StaticClass()->GetName(), *GetName());
 		}
-		UIManager->OpenAimingWidget();
+		UIManager->OpenWidget(EG2IWidgetNames::Aim);
 	}
 }
 
@@ -155,7 +156,7 @@ void UG2IAimingComponent::StopAimingAction_Implementation()
 			UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
 				*UG2IUIManager::StaticClass()->GetName(), *GetName());
 		}
-		UIManager->CloseAimingWidget();
+		UIManager->CloseWidget(EG2IWidgetNames::Aim);
 	}
 }
 

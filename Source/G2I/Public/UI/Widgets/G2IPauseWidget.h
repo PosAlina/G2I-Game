@@ -4,6 +4,8 @@
 #include "G2IUserWidget.h"
 #include "G2IPauseWidget.generated.h"
 
+class UButton;
+
 UCLASS()
 class G2I_API UG2IPauseWidget : public UG2IUserWidget
 {
