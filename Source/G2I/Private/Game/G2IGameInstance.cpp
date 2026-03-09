@@ -44,6 +44,12 @@ void UG2IGameInstance::CreateSaveGameplayDelegates()
 void UG2IGameInstance::OnGameplayAsuncSaved(const FString& SlotName, const int32 UserIndex, bool bSuccess)
 {
     SaveGameplayDelegates->OnGameplaySavedDelegate.Broadcast(bSuccess);
+    if (bSuccess)
+    {
+        UE_LOG(LogG2I, Log, TEXT("Gameplay saved successfully in the slot %s."), *GameplaySaveSlotName);
+    }
+    else
+        UE_LOG(LogG2I, Error, TEXT("Gameplay saving in the slot %s failed."), *GameplaySaveSlotName);
 }
 
 void UG2IGameInstance::OnGameplayAsuncLoaded(const FString& SlotName, const int32 UserIndex, USaveGame* LoadedGameData)
@@ -112,7 +118,7 @@ const FString UG2IGameInstance::GetGameplaySaveSlotName_Implementation()
 	return GameplaySaveSlotName;
 }
 
-const UG2ISaveGameplayDelegates* UG2IGameInstance::GetGameplaySaveDelegates_Implementation()
+UG2ISaveGameplayDelegates* UG2IGameInstance::GetGameplaySaveDelegates_Implementation()
 {
     return SaveGameplayDelegates;
 }

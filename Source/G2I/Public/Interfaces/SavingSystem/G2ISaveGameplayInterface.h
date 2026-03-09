@@ -97,5 +97,5 @@ public:
 
 	// Returns class with all delegates
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Save Gameplay")
-	const UG2ISaveGameplayDelegates* GetGameplaySaveDelegates();
+	UG2ISaveGameplayDelegates* GetGameplaySaveDelegates();
 };

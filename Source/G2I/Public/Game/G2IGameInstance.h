@@ -77,7 +77,7 @@ public:
 
 	void LoadRequestedData_Implementation(UObject* Requester);
 
-	const UG2ISaveGameplayDelegates* GetGameplaySaveDelegates_Implementation();
+	UG2ISaveGameplayDelegates* GetGameplaySaveDelegates_Implementation();
 
 	// === Other Functions ===
 

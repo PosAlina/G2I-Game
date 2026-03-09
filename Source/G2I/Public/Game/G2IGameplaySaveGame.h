@@ -27,4 +27,7 @@ class G2I_API UG2IGameplaySaveGame : public USaveGame
 public:
 	UPROPERTY(SaveGame, BlueprintReadWrite, Category = "Save Gameplay Data|Player")
 	FPlayersSaveData PlayersSaveData;
+
+	UPROPERTY(SaveGame, BlueprintReadWrite, Category = "Save Gameplay Data|Saving Trigger Boxes")
+	TMap<FString, bool> SaveTriggerBoxesSaveData;
 };
