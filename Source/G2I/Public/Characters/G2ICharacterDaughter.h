@@ -3,6 +3,8 @@
 #include "CoreMinimal.h"
 #include "G2ICharacterInterface.h"
 #include "GameFramework/Character.h"
+#include "Interfaces/SavingSystem/G2ISaveGameplayInterface.h"
+#include "Interfaces/SavingSystem/G2ISavableInterface.h"
 #include "G2ICharacterDaughter.generated.h"
 
 class UG2IFlightComponent;
@@ -21,7 +23,7 @@ class UG2IInventoryComponent;
  *  Implements a controllable orbiting camera
  */
 UCLASS(Blueprintable)
-class AG2ICharacterDaughter : public ACharacter, public IG2ICharacterInterface
+class AG2ICharacterDaughter : public ACharacter, public IG2ICharacterInterface, public IG2ISavableInterface
 {
 	GENERATED_BODY()
 
@@ -60,6 +62,10 @@ private:
 public:
 
 	explicit AG2ICharacterDaughter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+	void SaveData_Implementation(UG2IGameplaySaveGame* SaveGameRef);
+
+	void LoadData_Implementation(const UG2IGameplaySaveGame* SaveGameRef);
 
 	virtual void PossessedBy(AController* NewController) override;
 	

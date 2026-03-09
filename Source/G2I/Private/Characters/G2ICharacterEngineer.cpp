@@ -7,6 +7,7 @@
 #include "Components/SteamGlove/G2ISteamGloveComponent.h"
 #include "Components/Camera/G2ICameraControllerComponent.h"
 #include "Components/Camera/G2IFixedCamerasComponent.h"
+#include "Game/G2IPlayerState.h"
 #include "GameFramework/Controller.h"
 #include "Engine/World.h"
 #include "G2I.h"
@@ -59,4 +60,28 @@ FPossessedDelegate& AG2ICharacterEngineer::GetPossessedDelegate()
 FUnPossessedDelegate& AG2ICharacterEngineer::GetUnPossessedDelegate()
 {
 	return OnUnPossessedDelegate;
+}
+
+void AG2ICharacterEngineer::SaveData_Implementation(UG2IGameplaySaveGame* SaveGameRef)
+{
+	if (IsPlayerControlled())
+	{
+		SaveGameRef->PlayersSaveData.CurrentCharacter = GetClass();
+	}
+
+	SaveGameRef->PlayersSaveData.CharactersTransform.Add(GetClass(), GetTransform());
+}
+
+void AG2ICharacterEngineer::LoadData_Implementation(const UG2IGameplaySaveGame* SaveGameRef)
+{
+	if (IsPlayerControlled() && !this->IsA(SaveGameRef->PlayersSaveData.CurrentCharacter))
+	{
+		if (auto* G2IPlayerState = Cast<AG2IPlayerState>(GetPlayerState()))
+		{
+			G2IPlayerState->SelectNextCharacter();
+		}
+	}
+
+	if (auto* KeyTransform = SaveGameRef->PlayersSaveData.CharactersTransform.Find(GetClass()))
+		SetActorTransform(*KeyTransform);
 }
