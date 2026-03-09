@@ -35,13 +35,14 @@ void UG2IGameInstance::Init()
     Super::Init();
 
     CreateSaveGameplayDelegates();
+    CreateGameplaySaveGame();
 }
 
 void UG2IGameInstance::CreateGameplaySaveGame()
 {
     GameplaySaveGame = Cast<UG2IGameplaySaveGame>(UGameplayStatics::CreateSaveGameObject(UG2IGameplaySaveGame::StaticClass()));
     if (!ensure(GameplaySaveGame))
-        UE_LOG(LogG2I, Error, TEXT("Couldn't create GameplaySaveGame object."));
+        UE_LOG(LogG2I, Error, TEXT("Couldn't create GameplaySaveGame object in %s."), *GetName());
 }
 
 void UG2IGameInstance::CreateSaveGameplayDelegates()
@@ -49,7 +50,7 @@ void UG2IGameInstance::CreateSaveGameplayDelegates()
     SaveGameplayDelegates = NewObject<UG2ISaveGameplayDelegates>(this);
     if (!ensure(SaveGameplayDelegates))
     {
-        UE_LOG(LogG2I, Error, TEXT("Couldn't create SaveGameplayDelegates object."));
+        UE_LOG(LogG2I, Error, TEXT("Couldn't create SaveGameplayDelegates object in %s."), *GetName());
         return;
     }
 
@@ -60,6 +61,12 @@ void UG2IGameInstance::CreateSaveGameplayDelegates()
 void UG2IGameInstance::OnGameplayAsuncSaved(const FString& SlotName, const int32 UserIndex, bool bSuccess)
 {
     SaveGameplayDelegates->OnGameplaySavedDelegate.Broadcast(bSuccess);
+    if (bSuccess)
+    {
+        UE_LOG(LogG2I, Log, TEXT("Gameplay saved successfully in the slot %s."), *GameplaySaveSlotName);
+    }
+    else
+        UE_LOG(LogG2I, Error, TEXT("Gameplay saving in the slot %s failed."), *GameplaySaveSlotName);
 }
 
 void UG2IGameInstance::OnGameplayAsuncLoaded(const FString& SlotName, const int32 UserIndex, USaveGame* LoadedGameData)
@@ -128,7 +135,7 @@ const FString UG2IGameInstance::GetGameplaySaveSlotName_Implementation()
 	return GameplaySaveSlotName;
 }
 
-const UG2ISaveGameplayDelegates* UG2IGameInstance::GetGameplaySaveDelegates_Implementation()
+UG2ISaveGameplayDelegates* UG2IGameInstance::GetGameplaySaveDelegates_Implementation()
 {
     return SaveGameplayDelegates;
 }
@@ -170,19 +177,20 @@ void UG2IGameInstance::LoadGameplay_Implementation(bool bAsync)
 
 void UG2IGameInstance::SaveAllData_Implementation()
 {
-    // Getting all actors with gameplay tag 'Savable'
+    if (!GameplaySaveGame)
+    {
+        UE_LOG(LogG2I, Error, TEXT("GameplaySaveGame in null. You'll have to load it first or create new."));
+        return;
+    }
+
+    // Getting all actors with interface 'Savable'
     TArray<AActor*> FoundSavableActors;
-    GetAllActorsWithGameplayTag(FoundSavableActors, FName(TEXT("Savable")));
+    GetAllActorsWithSavableIntetrface(FoundSavableActors);
 
     // Iterating on them & saving their data
     for (auto* Actor : FoundSavableActors)
     {
-        if (Actor->Implements<UG2ISavableInterface>())
-        {
-            IG2ISavableInterface::Execute_SaveData(Actor, GameplaySaveGame);
-        }
-        else
-            UE_LOG(LogG2I, Warning, TEXT("Actor %s doesn't implement Savable interface. It's data will be lost."), *Actor->GetActorNameOrLabel());
+        IG2ISavableInterface::Execute_SaveData(Actor, GameplaySaveGame);
     }
 
     UE_LOG(LogG2I, Log, TEXT("Gameplay data saved & stored in GameplaySaveGame object."));
@@ -190,45 +198,26 @@ void UG2IGameInstance::SaveAllData_Implementation()
 
 void UG2IGameInstance::LoadAllData_Implementation()
 {
-    // Getting all actors with gameplay tag 'Savable'
+    if (!GameplaySaveGame)
+    {
+        UE_LOG(LogG2I, Error, TEXT("GameplaySaveGame in null. You'll have to load it first or create new."));
+        return;
+    }
+
+    // Getting all actors with interface 'Savable'
     TArray<AActor*> FoundSavableActors;
-    GetAllActorsWithGameplayTag(FoundSavableActors, FName(TEXT("Savable")));
+    GetAllActorsWithSavableIntetrface(FoundSavableActors);
 
     // Iterating on them & loading their data
     for (auto* Actor : FoundSavableActors)
     {
-        if (Actor->Implements<UG2ISavableInterface>())
-        {
-            IG2ISavableInterface::Execute_LoadData(Actor, GameplaySaveGame);
-        }
-        else
-            UE_LOG(LogG2I, Warning, TEXT("Actor %s doesn't implement Savable interface. It's data won't be loaded."), *Actor->GetActorNameOrLabel());
+        IG2ISavableInterface::Execute_LoadData(Actor, GameplaySaveGame);
     }
 
     UE_LOG(LogG2I, Log, TEXT("Gameplay data loaded from the GameplaySaveGame object."));
 }
 
-void UG2IGameInstance::SyncGameplayLoadGameData()
-{
-    // Getting all actors with tag 'Savable'
-    TArray<AActor*> FoundSavableActors;
-    GetAllActorsWithGameplayTag(FoundSavableActors, FName(TEXT("Savable")));
-
-    // Iterating on them & loading their data
-    for (auto* Actor : FoundSavableActors)
-    {
-        if (Actor->Implements<UG2ISavableInterface>())
-        {
-            IG2ISavableInterface::Execute_LoadData(Actor, GameplaySaveGame);
-        }
-        else
-            UE_LOG(LogG2I, Warning, TEXT("Actor %s doesn't implement Savable interface. It's data will be lost."), *Actor->GetActorNameOrLabel());
-    }
-
-    UE_LOG(LogG2I, Log, TEXT("Gameplay data synced & loaded in Savable objects."));
-}
-
-void UG2IGameInstance::GetAllActorsWithGameplayTag(TArray<AActor*>& FoundActors, FName TagName)
+void UG2IGameInstance::GetAllActorsWithSavableIntetrface(TArray<AActor*>& FoundActors)
 {
     UWorld* World = GetWorld();
     if (!World)
@@ -237,14 +226,10 @@ void UG2IGameInstance::GetAllActorsWithGameplayTag(TArray<AActor*>& FoundActors,
         return;
     }
 
-    FGameplayTagQuery TagQuery = FGameplayTagQuery::MakeQuery_MatchTag(FGameplayTag::RequestGameplayTag(TagName));
-
-    UBlueprintGameplayTagLibrary::GetAllActorsOfClassMatchingTagQuery(
-        World,
-        AActor::StaticClass(),
-        TagQuery,
-        FoundActors
-    );
+    UGameplayStatics::UGameplayStatics::GetAllActorsWithInterface(
+        this,
+        UG2ISavableInterface::StaticClass(),
+        FoundActors);
 }
 
 void UG2IGameInstance::SaveAllDataAndGameplay_Implementation(bool bAsync)
@@ -255,6 +240,12 @@ void UG2IGameInstance::SaveAllDataAndGameplay_Implementation(bool bAsync)
 
 void UG2IGameInstance::SaveRequestedData_Implementation(UObject* Requester)
 {
+    if (!GameplaySaveGame)
+    {
+        UE_LOG(LogG2I, Error, TEXT("GameplaySaveGame in null. You'll have to load it first or create new."));
+        return;
+    }
+
     if (Requester)
     {
         if (Requester->Implements<UG2ISavableInterface>())
@@ -268,6 +259,12 @@ void UG2IGameInstance::SaveRequestedData_Implementation(UObject* Requester)
 
 void UG2IGameInstance::LoadRequestedData_Implementation(UObject* Requester)
 {
+    if (!GameplaySaveGame)
+    {
+        UE_LOG(LogG2I, Error, TEXT("GameplaySaveGame in null. You'll have to load it first or create new."));
+        return;
+    }
+
     if (Requester)
     {
         if (Requester->Implements<UG2ISavableInterface>())

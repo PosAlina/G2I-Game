@@ -2,6 +2,7 @@
 #include "G2I.h"
 #include "G2IFlightComponent.h"
 #include "Engine/LocalPlayer.h"
+#include "Game/G2IPlayerState.h"
 #include "Components/Camera/G2IThirdPersonCameraComponent.h"
 #include "Components/G2ICharacterMovementComponent.h"
 #include "Components/G2IInteractionComponent.h"
@@ -9,6 +10,7 @@
 #include "Components/Camera/G2ICameraControllerComponent.h"
 #include "Components/Camera/G2IFixedCamerasComponent.h"
 #include "Components/G2IInventoryComponent.h"
+#include <InputActionValue.h>
 
 AG2ICharacterDaughter::AG2ICharacterDaughter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UG2ICharacterMovementComponent>(
@@ -68,4 +70,28 @@ FPossessedDelegate& AG2ICharacterDaughter::GetPossessedDelegate()
 FUnPossessedDelegate& AG2ICharacterDaughter::GetUnPossessedDelegate()
 {
 	return OnUnPossessedDelegate;
+}
+
+void AG2ICharacterDaughter::SaveData_Implementation(UG2IGameplaySaveGame* SaveGameRef)
+{
+	if (IsPlayerControlled())
+	{
+		SaveGameRef->PlayersSaveData.CurrentCharacter = GetClass();
+	}
+
+	SaveGameRef->PlayersSaveData.CharactersTransform.Add(GetClass(), GetTransform());
+}
+
+void AG2ICharacterDaughter::LoadData_Implementation(const UG2IGameplaySaveGame* SaveGameRef)
+{
+	if (IsPlayerControlled() && !this->IsA(SaveGameRef->PlayersSaveData.CurrentCharacter))
+	{
+		if (auto* G2IPlayerState = Cast<AG2IPlayerState>(GetPlayerState()))
+		{
+			G2IPlayerState->SelectNextCharacter();
+		}
+	}
+
+	if (auto* KeyTransform = SaveGameRef->PlayersSaveData.CharactersTransform.Find(GetClass()))
+		SetActorTransform(*KeyTransform);
 }

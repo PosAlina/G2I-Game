@@ -93,7 +93,7 @@ public:
 
 	void LoadRequestedData_Implementation(UObject* Requester);
 
-	const UG2ISaveGameplayDelegates* GetGameplaySaveDelegates_Implementation();
+	UG2ISaveGameplayDelegates* GetGameplaySaveDelegates_Implementation();
 
 	// === Other Functions ===
 
@@ -106,12 +106,9 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Gameplay Save Game")
 	void CreateSaveGameplayDelegates();
 
-	UFUNCTION(BlueprintCallable, Category = "Gameplay Save Game")
-	void SyncGameplayLoadGameData();
-
-	// Finding all actors that have gameplay tag 'TagName'
+	// Finding all actors that have 'gameplay tag 'TagName''Savable' interface
 	UFUNCTION(BlueprintCallable)
-	void GetAllActorsWithGameplayTag(TArray<AActor*>& FoundActors, FName TagName);
+	void GetAllActorsWithSavableIntetrface(TArray<AActor*>& FoundActors);
 
 	void OnGameplayAsuncSaved(const FString& SlotName, const int32 UserIndex, bool bSuccess);
 
