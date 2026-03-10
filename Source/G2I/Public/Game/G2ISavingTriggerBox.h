@@ -2,8 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "Engine/TriggerBox.h"
-#include "GameplayTagContainer.h"
-#include "GameplayTagsManager.h"
 #include "Interfaces/SavingSystem/G2ISavableInterface.h"
 #include "Interfaces/SavingSystem/G2ISaveGameplayInterface.h"
 #include "G2ISavingTriggerBox.generated.h"
@@ -15,10 +13,6 @@ UCLASS()
 class G2I_API AG2ISavingTriggerBox : public ATriggerBox, public IG2ISavableInterface
 {
 	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FGameplayTagContainer GameplayTags;
 
 protected:
 	UPROPERTY(BlueprintReadOnly)

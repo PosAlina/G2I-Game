@@ -117,13 +117,6 @@ void AG2IPlayerController::SetupInputComponent()
 AG2IPlayerController::AG2IPlayerController()
 {
 	PlayerCameraManagerClass = AG2IPlayerCameraManager::StaticClass();
-
-	FGameplayTag SavableTag = UGameplayTagsManager::Get().RequestGameplayTag(FName("Savable"));
-
-	if (SavableTag.IsValid())
-	{
-		GameplayTags.AddTag(SavableTag);
-	}
 }
 
 void AG2IPlayerController::OnPossess(APawn* NewPawn)
@@ -241,25 +234,6 @@ FName AG2IPlayerController::GetKeyName(UInputAction* InputAction)
 TMap<TObjectPtr<UInputAction>, FName>& AG2IPlayerController::GetActionToTagMap()
 {
 	return ActionToTagMap;
-}
-
-void AG2IPlayerController::SaveData_Implementation(UG2IGameplaySaveGame* SaveGameRef)
-{
-	if (SaveGameRef && GetPawn())
-	{
-		SaveGameRef->PlayersSaveData.CurrentCharacter = GetPawn()->GetName();
-		UE_LOG(LogG2I, Log, TEXT("PlayerController: %s saved."), *SaveGameRef->PlayersSaveData.CurrentCharacter);
-	}
-}
-
-void AG2IPlayerController::LoadData_Implementation(const UG2IGameplaySaveGame* SaveGameRef)
-{
-	if (SaveGameRef)
-		if (const APawn* CurrentCharacter = GetPawn())
-		{
-			if (!CurrentCharacter->GetName().Equals(SaveGameRef->PlayersSaveData.CurrentCharacter))
-				SelectNextCharacter(FInputActionValue());
-		}
 }
 
 void AG2IPlayerController::SetupCharacterActorComponents()
@@ -419,27 +393,18 @@ void AG2IPlayerController::Fly(int Direction)
 	{
 		IG2IFlightInterface::Execute_Fly(FlightComponent, MovementComponent, Direction);
 	}
-	else
-	{
-		UE_LOG(LogG2I, Log, TEXT("Pawn doesn't have component with fly interface in %s"), *GetName());
-		UE_LOG(LogG2I, Log, TEXT("Pawn doesn't have component with movement interface in %s"), *GetName());
-	}
 }
 
 void AG2IPlayerController::Jump(const FInputActionValue& Value)
 {
-	if (!FlightComponent)
-	{
-		UE_LOG(LogG2I, Log, TEXT("Pawn doesn't have component with fly interface in %s"), *GetName());
-	}
-	else
+	if (FlightComponent)
 	{
 		return;
 	}
 	
 	if (!ensure(MovementComponent))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("Pawn doesn't have component with movement interface in %s"), *GetName());
+		UE_LOG(LogG2I, Warning, TEXT("Pawn doesn't have movement component in %s"), *GetName());
 		return;
 	}
 	
@@ -599,6 +564,7 @@ void AG2IPlayerController::GlovePunchActivation(const FInputActionInstance& Inst
 	IG2IGlovePunchInterface::Execute_GlovePunchActivation(GlovePunchComponent);
 }
 
+#if WITH_EDITOR
 void AG2IPlayerController::SaveGameplay(const FInputActionValue& Value)
 {
 	if (auto* GameInstance = GetGameInstance())
@@ -615,8 +581,12 @@ void AG2IPlayerController::LoadGameplay(const FInputActionValue& Value)
 	if (auto* GameInstance = GetGameInstance())
 	{
 		if (GameInstance->Implements<UG2ISaveGameplayInterface>())
-			IG2ISaveGameplayInterface::Execute_LoadRequestedData(GameInstance, this);
+		{
+			IG2ISaveGameplayInterface::Execute_LoadGameplay(GameInstance, false);
+			IG2ISaveGameplayInterface::Execute_LoadAllData(GameInstance);
+		}
 		else
 			UE_LOG(LogG2I, Warning, TEXT("%s doesn't implement interface UG2ISaveGameplayInterface."), *GameInstance->GetName());
 	}
 }
+#endif

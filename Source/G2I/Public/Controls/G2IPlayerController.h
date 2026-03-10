@@ -3,10 +3,7 @@
 #include "CoreMinimal.h"
 #include "EnhancedActionKeyMapping.h"
 #include "GameFramework/PlayerController.h"
-#include "GameplayTagContainer.h"
-#include "GameplayTagsManager.h"
 #include "Interfaces/SavingSystem/G2ISaveGameplayInterface.h"
-#include "Interfaces/SavingSystem/G2ISavableInterface.h"
 #include "G2IPlayerController.generated.h"
 
 class UG2IUIManager;
@@ -26,7 +23,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FToggleFollowAIBehindPlayerDelegate,
  *  Manages input mappings
  */
 UCLASS(abstract)
-class G2I_API AG2IPlayerController : public APlayerController, public IG2ISavableInterface
+class G2I_API AG2IPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
@@ -77,15 +74,6 @@ public:
 
 	TMap<TObjectPtr<UInputAction>, FName>& GetActionToTagMap();
 
-public:
-	/* Saving system */
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FGameplayTagContainer GameplayTags;
-
-	void SaveData_Implementation(UG2IGameplaySaveGame* SaveGameRef);
-
-	void LoadData_Implementation(const UG2IGameplaySaveGame* SaveGameRef);
 protected:
 
 	/** Setup Input */

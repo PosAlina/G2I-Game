@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
+#include "GameFramework/Character.h"
 #include "G2IGameplaySaveGame.generated.h"
 
 USTRUCT(BlueprintType)
@@ -10,10 +11,10 @@ struct FPlayersSaveData
 	GENERATED_BODY()
 
 	UPROPERTY(SaveGame, BlueprintReadWrite)
-	TMap<FString, FVector> CharactersLocation;
+	TMap<TSubclassOf<ACharacter>, FTransform> CharactersTransform;
 
 	UPROPERTY(SaveGame, BlueprintReadWrite)
-	FString CurrentCharacter = TEXT("");
+	TSubclassOf<ACharacter> CurrentCharacter;
 };
 
 /**
@@ -29,5 +30,5 @@ public:
 	FPlayersSaveData PlayersSaveData;
 
 	UPROPERTY(SaveGame, BlueprintReadWrite, Category = "Save Gameplay Data|Saving Trigger Boxes")
-	TMap<FString, bool> SaveTriggerBoxesSaveData;
+	TMap<FVector, bool> SaveTriggerBoxesSaveData;
 };

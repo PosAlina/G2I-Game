@@ -6,12 +6,6 @@ AG2ISavingTriggerBox::AG2ISavingTriggerBox()
 {
 	OnActorBeginOverlap.AddDynamic(this, &ThisClass::OnOverlapBegin);
 
-	FGameplayTag SavableTag = UGameplayTagsManager::Get().RequestGameplayTag(FName("Savable"));
-	if (SavableTag.IsValid())
-	{
-		GameplayTags.AddTag(SavableTag);
-	}
-
 #if WITH_EDITOR
 	SetActorHiddenInGame(false);
 #endif
@@ -41,7 +35,7 @@ void AG2ISavingTriggerBox::OnOverlapBegin(AActor* OverlappedActor, AActor* Other
 		IG2ISaveGameplayInterface::Execute_SaveAllDataAndGameplay(GameInstance, true);
 	}
 	else
-		UE_LOG(LogG2I, Warning, TEXT("%s doesn't implement interface UG2ISaveGameplayInterface or is NULL in %s."), *GameInstance->GetName(), *GetName());
+		UE_LOG(LogG2I, Warning, TEXT("GameInstance doesn't implement interface UG2ISaveGameplayInterface or is NULL in %s."), *GetName());
 }
 
 void AG2ISavingTriggerBox::OnGameplaySaved(bool bSuccess)
@@ -52,18 +46,12 @@ void AG2ISavingTriggerBox::OnGameplaySaved(bool bSuccess)
 
 void AG2ISavingTriggerBox::SaveData_Implementation(UG2IGameplaySaveGame* SaveGameRef)
 {
-	if (SaveGameRef)
-	{
-		SaveGameRef->SaveTriggerBoxesSaveData.Add(GetName(), bActivated);
-	}
+	SaveGameRef->SaveTriggerBoxesSaveData.Add(GetActorLocation(), bActivated);
 }
 
 void AG2ISavingTriggerBox::LoadData_Implementation(const UG2IGameplaySaveGame* SaveGameRef)
 {
-	if (SaveGameRef)
-	{
-		if (auto* Key = SaveGameRef->SaveTriggerBoxesSaveData.Find(GetName()))
-			if (&Key)
-				Destroy();
-	}
+	if (auto* Key = SaveGameRef->SaveTriggerBoxesSaveData.Find(GetActorLocation()))
+		if (*Key)
+			Destroy();
 }
