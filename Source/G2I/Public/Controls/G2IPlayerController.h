@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "EnhancedActionKeyMapping.h"
 #include "GameFramework/PlayerController.h"
+#include "Interfaces/SavingSystem/G2ISaveGameplayInterface.h"
 #include "G2IPlayerController.generated.h"
 
 class UG2IUIManager;
@@ -195,4 +196,20 @@ protected:
 	TObjectPtr<UActorComponent> GlovePunchComponent;
 	
 	void GlovePunchActivation(const FInputActionInstance& Instance);
+
+	/** Debug keys for testing saving system */
+
+#if WITH_EDITORONLY_DATA
+	UPROPERTY(EditAnywhere, Category = "Input|Debug")
+	TObjectPtr<UInputAction> SaveAction;
+
+	UPROPERTY(EditAnywhere, Category = "Input|Debug")
+	TObjectPtr<UInputAction> LoadAction;
+#endif
+
+#if WITH_EDITOR
+	void SaveGameplay(const FInputActionValue& Value);
+
+	void LoadGameplay(const FInputActionValue& Value);
+#endif
 };
