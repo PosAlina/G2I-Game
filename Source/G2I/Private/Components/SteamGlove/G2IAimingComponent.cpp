@@ -7,6 +7,7 @@
 #include "G2ICameraStateEnums.h"
 #include "G2ICharacterInterface.h"
 #include "G2IGameInstance.h"
+#include "G2IOutlineComponent.h"
 #include "G2IUIManager.h"
 #include "G2IWidgetNames.h"
 
@@ -141,6 +142,7 @@ void UG2IAimingComponent::StartAimingAction_Implementation()
 		}
 		UIManager->OpenWidget(EG2IWidgetNames::Aim);
 	}
+	OutlineController(AimTargetActor, true);
 }
 
 void UG2IAimingComponent::StopAimingAction_Implementation()
@@ -158,6 +160,7 @@ void UG2IAimingComponent::StopAimingAction_Implementation()
 		}
 		UIManager->CloseWidget(EG2IWidgetNames::Aim);
 	}
+	OutlineController(AimTargetActor, false);
 }
 
 bool UG2IAimingComponent::IsAiming_Implementation()
@@ -286,13 +289,30 @@ void UG2IAimingComponent::DetectAimLineHitInfo()
 	{
 		AimLineHitInfo.HitResult.Location = AimTargetLocation;
 	}
+
+	auto PreviousAimTargetActor = AimTargetActor;
 	
 	if (AimTargetActor != AimLineHitInfo.HitResult.GetActor())
 	{
 		AimTargetActor = AimLineHitInfo.HitResult.GetActor();
 		SetAimType(AimTargetActor);
+		OutlineController(PreviousAimTargetActor, false);
+		OutlineController(AimTargetActor, true);
 	}
 }
 
+void UG2IAimingComponent::OutlineController(AActor* ActorToChanceOutline, bool bOutlineMode)
+{
+	UG2IOutlineComponent* OutlineComp = nullptr;
+	
+	if (ActorToChanceOutline)
+	{
+		OutlineComp = ActorToChanceOutline->FindComponentByClass<UG2IOutlineComponent>();
+	}
 
+	if (OutlineComp)
+	{
+		OutlineComp->OutlineController(bOutlineMode);
+	}
+}
 
