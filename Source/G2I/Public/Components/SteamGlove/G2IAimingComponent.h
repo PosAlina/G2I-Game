@@ -118,5 +118,7 @@ private:
 	void ActivateCurrentComponentUsingAim();
 
 	void SetAimType(const AActor* TargetActor);
+	
+	void OutlineController(AActor* PreviousAimTargetActor, bool bOutlineMode);
 
 };
