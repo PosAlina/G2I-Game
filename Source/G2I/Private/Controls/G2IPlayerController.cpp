@@ -566,5 +566,8 @@ void AG2IPlayerController::ToggleFollowAIBehindPlayer(const FInputActionValue& V
 
 void AG2IPlayerController::GlovePunchActivation(const FInputActionInstance& Instance)
 {
-	IG2IGlovePunchInterface::Execute_GlovePunchActivation(GlovePunchComponent);
+	if (GlovePunchComponent)
+	{
+		IG2IGlovePunchInterface::Execute_GlovePunchActivation(GlovePunchComponent);
+	}
 }
