@@ -4,6 +4,8 @@
 #include "G2IUserWidget.h"
 #include "G2ITrainingScreen.generated.h"
 
+class UTextBlock;
+
 UCLASS()
 class G2I_API UG2ITrainingScreen : public UG2IUserWidget
 {

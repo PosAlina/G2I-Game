@@ -4,6 +4,8 @@
 #include "Engine/GameInstance.h"
 #include "G2IGameInstance.generated.h"
 
+class UG2IWidgetComponentParameters;
+class UG2IStringTablesCatalog;
 class UG2IWidgetsCatalog;
 
 /**
@@ -14,9 +16,23 @@ class G2I_API UG2IGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 
-public:
+protected:
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UG2IWidgetsCatalog> WidgetsCatalog;
 
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UG2IStringTablesCatalog> StringTablesCatalog;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UG2IWidgetComponentParameters> WidgetComponentsParameters;
+
+public:
+	
+	UG2IWidgetsCatalog *GetWidgetsCatalog();
+
+	UG2IStringTablesCatalog *GetStringTablesCatalog();
+
+	UG2IWidgetComponentParameters *GetWidgetComponentParameters();
+	
 };
