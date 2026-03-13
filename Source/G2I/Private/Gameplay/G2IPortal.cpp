@@ -14,7 +14,7 @@ AG2IPortal::AG2IPortal()
 }
 
 
-void AG2IPortal::Teleport(ACharacter* Interactor)
+void AG2IPortal::Teleport(AActor* Interactor)
 {
     if (Interactor)
     {
@@ -23,13 +23,13 @@ void AG2IPortal::Teleport(ACharacter* Interactor)
             const FVector TargetLocation = Portal->Arrow->GetComponentLocation();
             const FRotator TargetRotation = Portal->Arrow->GetComponentRotation();
 
-            Interactor->SetActorLocationAndRotation(Portal->Arrow->GetComponentLocation(), Portal->Arrow->GetComponentRotation());
+            Interactor->SetActorLocationAndRotation(TargetLocation, TargetRotation);
         }
 
-        if (Interactor->ActorHasTag(TEXT("Ghost")))
+        /*if (Interactor->ActorHasTag(TEXT("Ghost")))
         {
             bIsActive = true;
-        }
+        }*/
     }
     else
     {

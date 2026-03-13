@@ -28,8 +28,8 @@ public:
     TObjectPtr<AG2IPortal> Portal;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Portal")
-    bool bIsActive = false;
+    bool bIsActive = true;
 
     UFUNCTION(BlueprintCallable)
-    void Teleport(ACharacter* Interactor);
+    void Teleport(AActor* Interactor);
 };
