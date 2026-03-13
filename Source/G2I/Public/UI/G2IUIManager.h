@@ -8,6 +8,8 @@ class UG2IWidgetComponentParameters;
 enum class EG2IStringTablesTypes : uint8;
 class UWidgetSwitcher;
 class UPanelWidget;
+class UG2IPropertyRow;
+class UG2ITextMultiValuePropertyRow;
 class UInputAction;
 enum class EG2IWidgetNames : uint8;
 class UG2IUserWidget;
@@ -87,4 +89,11 @@ private:
 	
 	FString GetWidgetNameString(EG2IWidgetNames WidgetName) const;
 	
+	// ==================== OPTIONS PROPERTIES ====================
+	void SetPropertyRow(UG2ITextMultiValuePropertyRow* PropertySelector, const FString& PropertyNameStringID,
+					TArray<FString>& ValuesNamesStringID, int32 DefaultValueIndex = 0) const;
+	void ApplyPropertiesValues(TArray<UG2IPropertyRow*> Properties) const;
+	void SavePropertiesValues(TArray<UG2IPropertyRow*> Properties) const;
+	void ApplyPropertyValue(const UG2IPropertyRow* PropertyRow) const;
+	void SavePropertyValue(const UG2IPropertyRow* PropertyRow) const;
 };

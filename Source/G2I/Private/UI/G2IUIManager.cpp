@@ -3,16 +3,17 @@
 #include "G2IAimTypeEnum.h"
 #include "G2IGameInstance.h"
 #include "G2IPlayerController.h"
+#include "G2IStringTablesTypes.h"
 #include "G2IUIDisplayManager.h"
 #include "G2IWidgetComponentParameters.h"
 #include "G2IWidgetNames.h"
-#include "G2IWidgetsCatalog.h"
 #include "G2IWorldHintKeyWidgetComponent.h"
 #include "Components/RichTextBlock.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "Gameplay/G2IKeyHintWidget.h"
 #include "HUD/G2IAimingWidget.h"
+#include "Menu/Elements/TextRow/G2ITextMultiValuePropertyRow.h"
 
 void UG2IUIManager::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -330,4 +331,79 @@ void UG2IUIManager::SetKeyWidgetSize(UG2IWorldHintKeyWidgetComponent* WidgetComp
 	}
 
 	WidgetComponent->SetWidgetSize(WidgetComponentParameters->KeyWidgetDefaultSize);
+}
+
+void UG2IUIManager::SetPropertyRow(UG2ITextMultiValuePropertyRow* PropertySelector, const FString& PropertyNameStringID,
+                                   TArray<FString>& ValuesNamesStringID, const int32 DefaultValueIndex) const
+{
+	if (!ensure(PropertySelector))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("An attempt to change nullptr %s in %s"),
+			*UG2ITextMultiValuePropertyRow::StaticClass()->GetName(), *GetName());
+		return;
+	}
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
+			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		return;
+	}
+	
+	DisplayManager->SetText<URichTextBlock>(PropertySelector->PropertyName, EG2IStringTablesTypes::Options,
+		PropertyNameStringID, "PropertyName");
+	for (FString& ValueStringID : ValuesNamesStringID)
+	{
+		URichTextBlock *ValueTextBlock = NewObject<URichTextBlock>();
+		DisplayManager->SetText<URichTextBlock>(ValueTextBlock, EG2IStringTablesTypes::Options,
+			ValueStringID, "PropertyValue");
+		FText InValue = DisplayManager->GetText(EG2IStringTablesTypes::Options, ValueStringID);
+		PropertySelector->AddPropertyValue(InValue);
+	}
+	PropertySelector->SelectValueByIndex(DefaultValueIndex);
+}
+
+void UG2IUIManager::ApplyPropertiesValues(TArray<UG2IPropertyRow*> Properties) const
+{
+	for (const UG2IPropertyRow *PropertyRow : Properties)
+	{
+		ApplyPropertyValue(PropertyRow);
+	}
+}
+
+void UG2IUIManager::SavePropertiesValues(TArray<UG2IPropertyRow*> Properties) const
+{
+	for (const UG2IPropertyRow *PropertyRow : Properties)
+	{
+		SavePropertyValue(PropertyRow);
+	}
+}
+
+void UG2IUIManager::ApplyPropertyValue(const UG2IPropertyRow* PropertyRow) const
+{
+	if (!ensure(PropertyRow))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Attempting to change nullptr %s in %s"),
+			*UG2IPropertyRow::StaticClass()->GetName(), *GetName());
+		return;
+	}
+
+	if (PropertyRow->OnApplyPropertyValue)
+	{
+		PropertyRow->OnApplyPropertyValue();
+	}
+}
+
+void UG2IUIManager::SavePropertyValue(const UG2IPropertyRow* PropertyRow) const
+{
+	if (!ensure(PropertyRow))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Attempting to change nullptr %s in %s"),
+			*UG2IPropertyRow::StaticClass()->GetName(), *GetName());
+		return;
+	}
+
+	if (PropertyRow->OnSavePropertyValue)
+	{
+		PropertyRow->OnSavePropertyValue();
+	}
 }
