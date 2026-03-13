@@ -8,6 +8,7 @@
 #include "G2ICharacterInterface.h"
 #include "G2IGameInstance.h"
 #include "G2IOutlineComponent.h"
+#include "G2ITraceableObectInterface.h"
 #include "G2IUIManager.h"
 
 UG2IAimingComponent::UG2IAimingComponent()
@@ -300,13 +301,38 @@ void UG2IAimingComponent::DetectAimLineHitInfo()
 	}
 }
 
-void UG2IAimingComponent::OutlineController(AActor* ActorToChanceOutline, bool bOutlineMode)
+void UG2IAimingComponent::OutlineController(const AActor* ActorToChangeOutline, bool bOutlineMode)
 {
+	TArray<UStaticMeshComponent*> OutlineMeshes;
+	if (ActorToChangeOutline && ActorToChangeOutline->Implements<UG2ITraceableObectInterface>())
+	{
+		ActorToChangeOutline->GetComponents<UStaticMeshComponent>(OutlineMeshes);
+	}
+
+	for (auto OutlineMesh : OutlineMeshes)
+	{
+		if (!ensure(OutlineMesh))
+		{
+			UE_LOG(LogG2I, Error, TEXT("OutlineMesh in %s is null"), *ActorToChangeOutline->GetName());
+			return;
+		}
+		
+		OutlineMesh->bDisallowNanite = bOutlineMode;
+		if (bOutlineMode)
+		{
+			OutlineMesh->SetOverlayMaterial(ShootableObjOutlineMaterialInstance);
+		}
+		else
+		{
+			OutlineMesh->SetOverlayMaterial(nullptr);
+		}
+	}
+	
 	UG2IOutlineComponent* OutlineComp = nullptr;
 	
-	if (ActorToChanceOutline)
+	if (ActorToChangeOutline)
 	{
-		OutlineComp = ActorToChanceOutline->FindComponentByClass<UG2IOutlineComponent>();
+		OutlineComp = ActorToChangeOutline->FindComponentByClass<UG2IOutlineComponent>();
 	}
 
 	if (OutlineComp)
