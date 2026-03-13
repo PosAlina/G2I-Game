@@ -1,1 +1,0 @@
-#include "G2IWidgetsCatalog.h"

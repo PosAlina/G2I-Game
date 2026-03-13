@@ -1,49 +1,69 @@
-#include "Widgets/G2IUserWidget.h"
-#include "Components/Button.h"
-#include "Components/Image.h"
-#include "Components/RichTextBlock.h"
-#include "Components/TextBlock.h"
+#include "G2IUserWidget.h"
+#include "G2I.h"
+#include "G2IGameInstance.h"
+#include "G2IPlayerController.h"
+#include "G2IUIManager.h"
 
-bool UG2IUserWidget::Initialize()
+void UG2IUserWidget::NativeOnInitialized()
 {
-	const bool bInitializeSuccess = Super::Initialize();
-	ClearUIElements();
+	Super::NativeOnInitialized();
 
-	for (TFieldIterator<FProperty> PropertyIterator(GetClass()); PropertyIterator; ++PropertyIterator)
-	{
-		if (const FObjectProperty *UIElement = CastField<FObjectProperty>(*PropertyIterator))
-		{
-			const FName UIElementName = (*PropertyIterator)->GetFName();
-			void *UIElementPtr = UIElement->ContainerPtrToValuePtr<void>(this);
-
-			if (!UIElement->PropertyClass)
-			{
-				continue;
-			}
-			
-			if (CheckClassAndRegisterElement<UImage>(UIElementName, UIElementPtr, *UIElement->PropertyClass))
-			{
-				continue;
-			}
-
-			if (CheckClassAndRegisterElement<UButton>(UIElementName, UIElementPtr, *UIElement->PropertyClass))
-			{
-				continue;
-			}
-
-			if (CheckClassAndRegisterElement<UTextBlock>(UIElementName, UIElementPtr, *UIElement->PropertyClass))
-			{
-				continue;
-			}
-		}
-	}
-	
-	return bInitializeSuccess;
+	World = GetWorld();
+	InitializeGameInstance();
+	InitializePlayerController();
+	InitializeUIManager();
 }
 
-void UG2IUserWidget::ClearUIElements()
+void UG2IUserWidget::InitializeUIManager()
 {
-	ClearUIElementsMap<UImage>();
-	ClearUIElementsMap<UButton>();
-	ClearUIElementsMap<UTextBlock>();
+	if (!ensure(GameInstance))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Game Instance doesn't exist in %s"), *GetName());
+		return;
+	}
+	UIManager = GameInstance->GetSubsystem<UG2IUIManager>();
+	if (!ensure(UIManager))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Couldn't get %s subsystem from GameInstance in %s"), *UG2IUIManager::StaticClass()->GetName(),
+			*GetName());
+	}
+	UIManager->OnUIManagerInitialized.AddDynamic(this, &ThisClass::InitializeAfterManagerLoading);
+}
+
+void UG2IUserWidget::InitializePlayerController()
+{
+	if (!ensure(World))
+	{
+		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
+		return;
+	}
+	
+	APlayerController *LocalPlayerController = World->GetFirstPlayerController();
+	if (!ensure(LocalPlayerController))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Player controller doesn't exist in %s"), *GetName());
+		return;
+	}
+
+	PlayerController = Cast<AG2IPlayerController>(LocalPlayerController);
+	if (!ensure(PlayerController))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Player Controller isn't %s in %s"),
+			*AG2IPlayerController::StaticClass()->GetName(), *GetName());
+	}
+}
+
+void UG2IUserWidget::InitializeGameInstance()
+{
+	if (!ensure(World))
+	{
+		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
+		return;
+	}
+	GameInstance = Cast<UG2IGameInstance>(World->GetGameInstance());
+	if (!ensure(GameInstance))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Game Instance isn't %s in %s"),
+			*UG2IGameInstance::StaticClass()->GetName(), *GetName());
+	}
 }

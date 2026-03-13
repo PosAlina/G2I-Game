@@ -18,6 +18,7 @@
 #include "G2ISteamMovementInputInterface.h"
 #include "G2ISteamShotInputInterface.h"
 #include "G2IUIManager.h"
+#include "G2IWidgetNames.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 void AG2IPlayerController::SetupInputComponent()
@@ -74,7 +75,8 @@ void AG2IPlayerController::SetupInputComponent()
 				EnhancedInputComponent->BindAction(ToggleFollowAIBehindPlayerAction, ETriggerEvent::Started,
 					this, &ThisClass::ToggleFollowAIBehindPlayer);
 
-				EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Started,this, &ThisClass::CallPause);
+				// TODO: Add Pause Action after adding all UI systems
+				//EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Started,this, &ThisClass::CallPause);
 
 				EnhancedInputComponent->BindAction(GlovePunchAction, ETriggerEvent::Started, this, &ThisClass::GlovePunchActivation);
 			}
@@ -180,11 +182,11 @@ bool AG2IPlayerController::SetPause(bool bPause, FCanUnpause CanUnpauseDelegate)
 	}
 	if (bPause)
 	{
-		UIManager->OpenPauseWidget();
+		UIManager->OpenWidget(EG2IWidgetNames::Pause);
 	}
 	else
 	{
-		UIManager->ClosePauseWidget();
+		UIManager->CloseWidget(EG2IWidgetNames::Pause);
 	}
 	
 	return true;

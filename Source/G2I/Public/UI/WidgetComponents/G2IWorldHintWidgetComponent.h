@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "G2IWidgetsEnums.h"
+#include "G2IWidgetNames.h"
 #include "Components/WidgetComponent.h"
 #include "G2IWorldHintWidgetComponent.generated.h"
 
