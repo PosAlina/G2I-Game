@@ -1,1 +1,0 @@
-﻿#include "G2IWidgetTypes.h"
