@@ -31,7 +31,7 @@ void UG2ISliderLampComponent::BeginPlay()
 	}
 	
 	DynamicMaterial->SetVectorParameterValue("BaseColor", LampColor);
-	DynamicMaterial->SetVectorParameterValue("EmissiveColor", FLinearColor{0.0f, 0.0f, 0.0f, 1.0f});
+	DynamicMaterial->SetVectorParameterValue("EmissiveColor", FLinearColor(0.0f, 0.0f, 0.0f, 1.0f));
 	DynamicMaterial->SetScalarParameterValue("EmissiveCoeff", 0.0f);
 	
 	if (LampMesh)
@@ -76,7 +76,7 @@ void UG2ISliderLampComponent::ChangeIntensity(int IntensityChangeDir, float Targ
 			World->GetTimerManager().ClearTimer(IntensityColorTimer);
 			if (FMath::IsNearlyEqual(EmissiveCoeff, 0.0f))
 			{
-				DynamicMaterial->SetVectorParameterValue("EmissiveColor", FLinearColor{0.0f, 0.0f, 0.0f, 1.0f});
+				DynamicMaterial->SetVectorParameterValue("EmissiveColor", FLinearColor(0.0f, 0.0f, 0.0f, 1.0f));
 			}
 		}
 	}	
