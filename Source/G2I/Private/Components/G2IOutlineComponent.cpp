@@ -1,5 +1,4 @@
 #include "Components/G2IOutlineComponent.h"
-
 #include "G2I.h"
 
 void UG2IOutlineComponent::OutlineController(bool bOutlineMode)
@@ -17,13 +16,13 @@ void UG2IOutlineComponent::OutlineController(bool bOutlineMode)
 
 	for (auto OutlineMesh : OutlineMeshes)
 	{
-		if (!ensure(OutlineMesh))
+		if (!OutlineMesh)
 		{
 			UE_LOG(LogG2I, Error, TEXT("OutlineMesh in %s is null"), *Parent->GetName());
 			return;
 		}
 		
-		OutlineMesh->bDisallowNanite = bOutlineMode;
+		OutlineMesh->bDisallowNanite = true;
 		if (bOutlineMode)
 		{
 			OutlineMesh->SetOverlayMaterial(OutlineMaterialInstance);

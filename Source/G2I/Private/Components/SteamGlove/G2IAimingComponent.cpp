@@ -290,11 +290,10 @@ void UG2IAimingComponent::DetectAimLineHitInfo()
 	{
 		AimLineHitInfo.HitResult.Location = AimTargetLocation;
 	}
-
-	auto PreviousAimTargetActor = AimTargetActor;
 	
 	if (AimTargetActor != AimLineHitInfo.HitResult.GetActor())
 	{
+		auto PreviousAimTargetActor = AimTargetActor;
 		AimTargetActor = AimLineHitInfo.HitResult.GetActor();
 		SetAimType(AimTargetActor);
 		OutlineController(PreviousAimTargetActor, false);
@@ -312,13 +311,13 @@ void UG2IAimingComponent::OutlineController(const AActor* ActorToChangeOutline, 
 
 	for (auto OutlineMesh : OutlineMeshes)
 	{
-		if (!ensure(OutlineMesh))
+		if (!OutlineMesh)
 		{
 			UE_LOG(LogG2I, Error, TEXT("OutlineMesh in %s is null"), *ActorToChangeOutline->GetName());
 			return;
 		}
 		
-		OutlineMesh->bDisallowNanite = bOutlineMode;
+		OutlineMesh->bDisallowNanite = true;
 		if (bOutlineMode)
 		{
 			OutlineMesh->SetOverlayMaterial(ShootableObjOutlineMaterialInstance);
