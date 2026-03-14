@@ -54,8 +54,8 @@ void AG2IPlayerController::SetupInputComponent()
 				
 				//EnhancedInputComponent->BindAction(ToggleCrouchAction, ETriggerEvent::Started, this, &ThisClass::ToggleCrouch);
 
-				EnhancedInputComponent->BindAction(SwitchCameraBehaviorAction, ETriggerEvent::Started, this,
-					&ThisClass::SwitchCameraBehavior);
+				/*EnhancedInputComponent->BindAction(SwitchCameraBehaviorAction, ETriggerEvent::Started, this,
+					&ThisClass::SwitchCameraBehavior);*/
 				
 				EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ThisClass::Look);
 
