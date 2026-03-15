@@ -7,7 +7,9 @@
 #include "GameFramework/PlayerController.h"
 #include "G2IAimingComponent.h"
 #include "G2ICameraControllerComponent.h"
+#include "G2ICameraDefaultsParameters.h"
 #include "G2ICameraStateEnums.h"
+#include "G2IPlayerController.h"
 #include "Components/CapsuleComponent.h"
 
 UG2ICharacterMovementComponent::UG2ICharacterMovementComponent()
@@ -30,9 +32,33 @@ void UG2ICharacterMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	SetupDefaults();
 	BindingToDelegates();
 }
 
+void UG2ICharacterMovementComponent::SetupDefaults()
+{
+	if (!ensure(World))
+	{
+		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
+		return;
+	}
+	AG2IPlayerController *PlayerController = Cast<AG2IPlayerController>(World->GetFirstPlayerController());
+	if (!ensure(PlayerController))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s in %s"),
+			*AG2IPlayerController::StaticClass()->GetName(), *GetName(), *Owner->GetActorNameOrLabel());
+		return;
+	}
+
+	CameraDefaultsParameters = PlayerController->GetCameraDefaultsParameters();
+	if (!ensure(CameraDefaultsParameters))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s can not return camera defaults parameters in %s in %s"),
+			*PlayerController->GetName(), *GetName(), *Owner->GetActorNameOrLabel());
+		return;
+	}
+}
 
 void UG2ICharacterMovementComponent::OnRegister()
 {
@@ -78,7 +104,7 @@ void UG2ICharacterMovementComponent::MoveAction_Implementation(const float Right
 	}
 	
 	// find out which way is forward
-	const FRotator YawRotation(0, Rotation.Yaw, 0);
+	const FRotator YawRotation(0, Rotation.Yaw + CameraPendingYawRotation, 0);
 
 	// get forward vector
 	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
@@ -279,6 +305,8 @@ void UG2ICharacterMovementComponent::BindingOwnerComponentsDelegates()
 	if (UG2ICameraControllerComponent *CameraControllerComponent = Owner->FindComponentByClass<UG2ICameraControllerComponent>())
 	{
 		CameraControllerComponent->OnSetCameraTypeDelegate.AddDynamic(this, &ThisClass::SetAbilityRotationTowardsCamera);
+		CameraControllerComponent->OnThirdPersonCameraYawRotationDelegate.AddDynamic(this,
+			&ThisClass::UG2ICharacterMovementComponent::SetCameraPendingYawRotation);
 	}
 }
 
@@ -492,6 +520,33 @@ void UG2ICharacterMovementComponent::SetAbilityRotationTowardsCamera(
 	{
 		bCanRotationTowardsCamera = false;
 		DisableRotationTowardsCamera();
-		return;
+		
+		if (!ensure(World))
+		{
+			UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
+			ResetCameraPendingYawRotation();
+			return;
+		}
+		if (!ensure(CameraDefaultsParameters))
+		{
+			UE_LOG(LogG2I, Error, TEXT("%s isn't initialized in %s in %s"),
+				*UG2ICameraDefaultsParameters::StaticClass()->GetName(), *GetName(), *Owner->GetActorNameOrLabel());
+			ResetCameraPendingYawRotation();
+			return;
+		}
+		World->GetTimerManager().ClearTimer(TimerBeforeDisableRotationTowardsCamera);
+		World->GetTimerManager().SetTimer(TimerBeforeDisableRotationTowardsCamera,
+			this, &ThisClass::ResetCameraPendingYawRotation,
+			CameraDefaultsParameters->PendingTimeAfterSwitchingToControlCharacter, false);
 	}
+}
+
+void UG2ICharacterMovementComponent::ResetCameraPendingYawRotation()
+{
+	CameraPendingYawRotation = 0.;
+}
+
+void UG2ICharacterMovementComponent::SetCameraPendingYawRotation(const double YawValue)
+{
+	CameraPendingYawRotation = YawValue;
 }
