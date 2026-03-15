@@ -76,7 +76,7 @@ void UG2ICameraControllerComponent::AddCamera(UCameraComponent* AddedCamera)
 		return;
 	}
 	
-	CurrentCameraIndex = CurrentCameraComponents.Add(AddedCamera);
+	SetCurrentCameraIndex(CurrentCameraComponents.Add(AddedCamera));
 	SetupCurrentCamera_Implementation();
 }
 
@@ -96,7 +96,7 @@ void UG2ICameraControllerComponent::RemoveCamera(UCameraComponent* RemovedCamera
 	
 	const int32 RemovedCameraIndex = CurrentCameraComponents.Find(RemovedCamera);
 	CurrentCameraComponents.RemoveAt(RemovedCameraIndex);
-	CurrentCameraIndex = CurrentCameraComponents.Num() - 1;
+	SetCurrentCameraIndex(CurrentCameraComponents.Num() - 1);
 	SetupCurrentCamera_Implementation();
 }
 
@@ -189,7 +189,7 @@ bool UG2ICameraControllerComponent::SetCurrentCamera(int32 NewCameraIndex)
 	
 	if (SetCamera(*NewCameraComponent))
 	{
-		CurrentCameraIndex = NewCameraIndex;
+		SetCurrentCameraIndex(NewCameraIndex);
 		return true;
 	}
 	
@@ -292,7 +292,7 @@ void UG2ICameraControllerComponent::SetupCamerasDefaults()
 	
 	if (!CurrentCameraComponents.IsEmpty())
 	{
-		CurrentCameraIndex = CurrentCameraComponents.Num() - 1;
+		SetCurrentCameraIndex(CurrentCameraComponents.Num() - 1);
 	}
 
 	SetupCurrentCamera_Implementation();
@@ -332,4 +332,26 @@ void UG2ICameraControllerComponent::SetupFixedCameras() const
 			IG2ICameraInterface::Execute_SetupCameras(ActorCameraComponent);
 		}
 	}
+}
+
+void UG2ICameraControllerComponent::SetThirdPersonCameraYawRotation()
+{
+	if (CurrentCameraComponents.IsValidIndex(CurrentCameraIndex) && CurrentCameraComponents[CurrentCameraIndex])
+	{
+		if (CurrentCameraType == EG2ICameraTypeEnum::ThirdPersonCamera)
+		{
+			OldCameraYawRotation = CurrentCameraComponents[CurrentCameraIndex]->GetComponentRotation().Yaw;
+			OnThirdPersonCameraYawRotationDelegate.Broadcast(OldCameraYawRotation);
+		}
+	}
+}
+
+void UG2ICameraControllerComponent::SetCurrentCameraIndex(const int32 NewCameraIndex)
+{
+	if (CurrentCameraIndex == NewCameraIndex)
+	{
+		return;
+	}
+	SetThirdPersonCameraYawRotation();
+	CurrentCameraIndex = NewCameraIndex;
 }
