@@ -76,23 +76,8 @@ void UG2ICameraControllerComponent::AddCamera(UCameraComponent* AddedCamera)
 		return;
 	}
 	
-	CurrentCameraComponents.Add(AddedCamera);
-	if (CurrentCameraComponents.Num() > 1)
-	{
-		return;
-	}
-
-	// Set current camera
-	CurrentCameraIndex = 0;
-	if (!IsOwnerControllable())
-	{
-		return;
-	}
-	if (!SetCamera(*AddedCamera))
-	{
-		UE_LOG(LogG2I, Warning, TEXT("%s can not become current camera in %s"), *AddedCamera->GetName(),
-			*GetName());
-	}
+	SetCurrentCameraIndex(CurrentCameraComponents.Add(AddedCamera));
+	SetupCurrentCamera_Implementation();
 }
 
 void UG2ICameraControllerComponent::RemoveCamera(UCameraComponent* RemovedCamera)
@@ -109,37 +94,10 @@ void UG2ICameraControllerComponent::RemoveCamera(UCameraComponent* RemovedCamera
 		return;
 	}
 	
-	if (RemovedCamera == CurrentCameraComponents[CurrentCameraIndex % CurrentCameraComponents.Num()])
-	{
-		const uint32 NewCameraComponentIndex = (CurrentCameraIndex + 1) % CurrentCameraComponents.Num();
-		const UCameraComponent *NewCamera = CurrentCameraComponents[NewCameraComponentIndex];
-		if (!ensure(NewCamera))
-		{
-			UE_LOG(LogG2I, Error, TEXT("Current camera's array has nullptr camera in %i place in %s"),
-				NewCameraComponentIndex, *GetName());
-			return;
-		}
-		
-		bool bCameraChanged = true;
-		if (IsOwnerControllable())
-		{
-			bCameraChanged = SetCamera(*NewCamera);
-		}
-		if (bCameraChanged)
-		{
-			CurrentCameraComponents.RemoveAt(CurrentCameraIndex % CurrentCameraComponents.Num());
-			CurrentCameraIndex %= CurrentCameraComponents.Num();
-		}
-	}
-	else
-	{
-		const int32 RemovedCameraIndex = CurrentCameraComponents.Find(RemovedCamera);
-		if (CurrentCameraIndex > RemovedCameraIndex)
-		{
-			CurrentCameraIndex = (CurrentCameraIndex - 1) % CurrentCameraComponents.Num();
-		}
-		CurrentCameraComponents.RemoveAt(RemovedCameraIndex);
-	}
+	const int32 RemovedCameraIndex = CurrentCameraComponents.Find(RemovedCamera);
+	CurrentCameraComponents.RemoveAt(RemovedCameraIndex);
+	SetCurrentCameraIndex(CurrentCameraComponents.Num() - 1);
+	SetupCurrentCamera_Implementation();
 }
 
 void UG2ICameraControllerComponent::BroadcastCameraTypeAfterBlendFinish()
@@ -231,7 +189,7 @@ bool UG2ICameraControllerComponent::SetCurrentCamera(int32 NewCameraIndex)
 	
 	if (SetCamera(*NewCameraComponent))
 	{
-		CurrentCameraIndex = NewCameraIndex;
+		SetCurrentCameraIndex(NewCameraIndex);
 		return true;
 	}
 	
@@ -330,16 +288,11 @@ void UG2ICameraControllerComponent::BindPlayerControllerDelegates()
 void UG2ICameraControllerComponent::SetupCamerasDefaults()
 {
 	SetupThirdPersonCameras();
+	SetupFixedCameras();
+	
 	if (!CurrentCameraComponents.IsEmpty())
 	{
-		CurrentCameraIndex = CurrentCameraComponents.Num() - 1;
-	}
-	
-	SetupFixedCameras();
-	// Current camera is fixed, if fixed camera exists
-	if (CurrentCameraIndex < CurrentCameraComponents.Num() - 1)
-	{
-		++CurrentCameraIndex;
+		SetCurrentCameraIndex(CurrentCameraComponents.Num() - 1);
 	}
 
 	SetupCurrentCamera_Implementation();
@@ -379,4 +332,26 @@ void UG2ICameraControllerComponent::SetupFixedCameras() const
 			IG2ICameraInterface::Execute_SetupCameras(ActorCameraComponent);
 		}
 	}
+}
+
+void UG2ICameraControllerComponent::SetThirdPersonCameraYawRotation()
+{
+	if (CurrentCameraComponents.IsValidIndex(CurrentCameraIndex) && CurrentCameraComponents[CurrentCameraIndex])
+	{
+		if (CurrentCameraType == EG2ICameraTypeEnum::ThirdPersonCamera)
+		{
+			OldCameraYawRotation = CurrentCameraComponents[CurrentCameraIndex]->GetComponentRotation().Yaw;
+			OnThirdPersonCameraYawRotationDelegate.Broadcast(OldCameraYawRotation);
+		}
+	}
+}
+
+void UG2ICameraControllerComponent::SetCurrentCameraIndex(const int32 NewCameraIndex)
+{
+	if (CurrentCameraIndex == NewCameraIndex)
+	{
+		return;
+	}
+	SetThirdPersonCameraYawRotation();
+	CurrentCameraIndex = NewCameraIndex;
 }

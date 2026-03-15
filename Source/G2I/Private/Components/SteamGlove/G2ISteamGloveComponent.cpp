@@ -1,16 +1,25 @@
 #include "G2ISteamGloveComponent.h"
 #include "G2I.h"
 #include "G2IAimingComponent.h"
+#include "G2IGlovePunchComponent.h"
 #include "G2ISteamShotComponent.h"
 #include "G2IReloadingComponent.h"
 #include "GameFramework/Character.h"
 
+#if WITH_EDITORONLY_DATA
+#include "G2ISteamMovementComponent.h"
+#endif
+
 UG2ISteamGloveComponent::UG2ISteamGloveComponent()
 {
-	ReloadingComp = CreateDefaultSubobject<UG2IReloadingComponent>(FName("ReloadingComp"));
 	SteamGloveAimingComp = CreateDefaultSubobject<UG2IAimingComponent>(FName("SteamGloveAimingComp"));
 	SteamShotComp = CreateDefaultSubobject<UG2ISteamShotComponent>(FName("SteamShotComp"));
 	GlovePunchComp = CreateDefaultSubobject<UG2IGlovePunchComponent>(FName("GlovePunchComp"));
+
+#if WITH_EDITOR
+	ReloadingComp = CreateDefaultSubobject<UG2IReloadingComponent>(FName("ReloadingComp"));
+	SteamMovementComp = CreateDefaultSubobject<UG2ISteamMovementComponent>(FName("SteamMovementComp"));
+#endif
 }
 
 void UG2ISteamGloveComponent::OnRegister()
