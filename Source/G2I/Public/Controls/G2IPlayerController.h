@@ -79,6 +79,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
 	TArray<TObjectPtr<UInputMappingContext>> InputMappingContexts;
 
+#if WITH_EDITORONLY_DATA
+	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
+	TArray<TObjectPtr<UInputMappingContext>> DebugInputMappingContexts;
+#endif
+
 	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
 	TArray<FEnhancedActionKeyMapping> InputKeyMappings;
 	
@@ -89,15 +94,34 @@ protected:
 	void SetupCamera();
 
 	/** Actions */
-	/** Select camera actions */
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UActorComponent> CameraControllersComponent;
+#if WITH_EDITORONLY_DATA
+	UPROPERTY(EditAnywhere, Category="Debug Input")
+	TObjectPtr<UInputAction> ToggleDebugAction;
 
-	UPROPERTY(EditAnywhere, Category="Input")
+	bool bIsDebugAction = false;
+
+	void ToggleDebugMode();
+	
+	UPROPERTY(EditAnywhere, Category="Debug Input")
 	TObjectPtr<UInputAction> SwitchCameraBehaviorAction;
 	
 	void SwitchCameraBehavior();
 
+	UPROPERTY(EditAnywhere, Category = "Debug Input")
+	TObjectPtr<UInputAction> ToggleCrouchAction;
+
+	void ToggleCrouch();
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UActorComponent> SteamMovementComponent;
+
+	UPROPERTY(EditAnywhere, Category="Debug Input")
+	TObjectPtr<UInputAction> DebugPauseAction;
+#endif
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UActorComponent> CameraControllersComponent;
+	
 	UPROPERTY(VisibleAnywhere)
 	TSet<TObjectPtr<UActorComponent>> ThirdPersonCameraComponents;
 	
@@ -121,11 +145,6 @@ protected:
 	
 	void StopJumping(const FInputActionValue& Value);
 
-	/*UPROPERTY(EditAnywhere, Category = "Input")
-	TObjectPtr<UInputAction> ToggleCrouchAction;*/
-
-	void ToggleCrouch(const FInputActionValue& Value);
-
 	/** Select character actions */
 	UPROPERTY(EditAnywhere, Category="Input")
 	TObjectPtr<UInputAction> SelectNextCharacterAction;
@@ -143,9 +162,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Data")
 	TMap<TObjectPtr<UInputAction>, FName> ActionToTagMap;
-
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UActorComponent> SteamMovementComponent;
 
 	UPROPERTY(EditAnywhere, Category="Input")
 	TObjectPtr<UInputAction> TakeAimAction;
