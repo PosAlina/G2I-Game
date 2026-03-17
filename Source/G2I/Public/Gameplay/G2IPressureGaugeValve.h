@@ -38,6 +38,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Valve")
 	bool bIsValveOpen;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Valve")
+	bool bIsRotating;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Valve")
 	bool bCanOpen;
@@ -47,10 +49,12 @@ public:
 
 private:
 	bool bIsAState;
-	bool bIsRotating;
+
+	UPROPERTY()
+	FRotator InitialRotation;
 
 	UFUNCTION()
-	void OnTimelineUpdate(float Value);
+	void OnTimelineUpdate(const float Value);
 
 	UFUNCTION()
 	void OnTimelineFinished();
