@@ -118,6 +118,8 @@ public:
 
 	bool IsCurrentPawnClass(const TSubclassOf<APawn>& PawnClass) const;
 	
+	void RotateCameraTo(float Yaw, float Pitch);
+
 protected:
 
 	void SetupDefaults();

@@ -939,6 +939,7 @@ void AG2IPlayerController::GlovePunchActivation(const FInputActionInstance& Inst
 	}
 }
 
+
 #if WITH_EDITOR
 void AG2IPlayerController::SaveGameplay(const FInputActionValue& Value)
 {
@@ -993,3 +994,15 @@ void AG2IPlayerController::LoadGameplay(const FInputActionValue& Value)
 	}
 }
 #endif
+
+void AG2IPlayerController::RotateCameraTo(const float Yaw, const float Pitch)
+{
+	for (UActorComponent* Component : ThirdPersonCameraComponents)
+	{
+		if (Component->Implements<UG2IThirdPersonCameraInputInterface>())
+		{
+			IG2IThirdPersonCameraInputInterface::Execute_RotateToAction(Component, Yaw, Pitch);
+		}
+	}
+}
+
