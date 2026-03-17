@@ -1,9 +1,6 @@
-
-
-
-
 #include "Gameplay/G2ICoal.h"
 #include "Components/G2IDestructibleComponent.h"
+#include "G2I.h"
 #include "GameFramework/Actor.h"
 
 AG2ICoal::AG2ICoal() {
@@ -30,5 +27,9 @@ void AG2ICoal::Deactivate_Implementation() {
 }
 
 void AG2ICoal::Activate_Implementation() {
+	if (!ensure(DestructComp)) {
+		UE_LOG(LogG2I, Warning, TEXT("%s couldn't get Destructible Component"), *GetName());
+		return;
+	}
 	DestructComp->DestroyOwner();
 }

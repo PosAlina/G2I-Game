@@ -1,9 +1,6 @@
-
-
 #pragma once
 
 #include "CoreMinimal.h"
-
 #include "Interfaces/G2IActivationInterface.h"
 #include "GameFramework/Actor.h"
 #include "G2ICoal.generated.h"
@@ -25,8 +22,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Data|Components")
 	TObjectPtr<UStaticMeshComponent> StaticMeshComponent;
 
-	void Activate_Implementation();
-	void Deactivate_Implementation();
+	virtual void Activate_Implementation() override;
+	virtual void Deactivate_Implementation() override;
 
 	AG2ICoal();
 };
