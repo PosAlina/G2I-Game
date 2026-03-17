@@ -75,6 +75,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void LookAction_Implementation(const float Yaw, const float Pitch) override;
 
+	UFUNCTION()
+	virtual void RotateToAction_Implementation(const float Yaw, const float Pitch) override;
+
 protected:
 
 	UFUNCTION()
