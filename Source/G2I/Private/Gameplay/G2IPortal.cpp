@@ -1,38 +1,76 @@
 #include "Gameplay/G2IPortal.h"
 #include "GameFramework/Character.h"
 #include "Components/ArrowComponent.h"
+#include "Components/BoxComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "G2I.h"
 
 
 // Sets default values
 AG2IPortal::AG2IPortal()
 {
-
 	Arrow = CreateDefaultSubobject<UArrowComponent>(TEXT("Arrow"));
-	RootComponent = Arrow;
+    if (Arrow)
+        SetRootComponent(Arrow);
 
+    PortalMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PortalMesh"));
+    PortalMesh->SetupAttachment(RootComponent);
+    PortalMesh->SetCollisionProfileName(TEXT("BlockAll"));
+
+    TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox"));
+    TriggerBox->SetupAttachment(RootComponent);
+    TriggerBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    TriggerBox->SetCollisionObjectType(ECC_WorldDynamic);
+    TriggerBox->SetCollisionResponseToAllChannels(ECR_Ignore);
+    TriggerBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+    // Also enabling overlaps for passing through actor
+    TriggerBox->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Overlap);
+    TriggerBox->SetBoxExtent(FVector(5.f, 60.f, 125.f));
 }
 
+void AG2IPortal::BeginPlay()
+{
+    Super::BeginPlay();
+
+    if (TriggerBox)
+    {
+        TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AG2IPortal::OverlapTrigger);
+    }
+}
+
+void AG2IPortal::OverlapTrigger(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+    if (!OtherActor)
+    {
+        UE_LOG(LogG2I, Warning, TEXT("Overlapped Actor is null in %s"), *GetActorNameOrLabel());
+        return;
+    }
+
+    ACharacter* Character = Cast<ACharacter>(OtherActor);
+
+    if (!Character)
+    {
+        UE_LOG(LogG2I, Warning, TEXT("Overlapped Actor isn't character in %s"), *GetActorNameOrLabel());
+        return;
+    }
+
+    Teleport(Character);
+}
 
 void AG2IPortal::Teleport(ACharacter* Interactor)
 {
     if (Interactor)
     {
-        if (Portal && bIsActive && Portal->bIsActive && Portal->Arrow)
+        if (TargetPortal && bIsActive && TargetPortal->bIsActive && TargetPortal->Arrow)
         {
-            const FVector TargetLocation = Portal->Arrow->GetComponentLocation();
-            const FRotator TargetRotation = Portal->Arrow->GetComponentRotation();
+            const FVector TargetLocation = TargetPortal->Arrow->GetComponentLocation();
+            const FRotator TargetRotation = TargetPortal->Arrow->GetComponentRotation();
 
-            Interactor->SetActorLocationAndRotation(Portal->Arrow->GetComponentLocation(), Portal->Arrow->GetComponentRotation());
-        }
-
-        if (Interactor->ActorHasTag(TEXT("Ghost")))
-        {
-            bIsActive = true;
+            Interactor->SetActorLocationAndRotation(TargetLocation, TargetRotation);
         }
     }
     else
     {
-        UE_LOG(LogG2I, Warning, TEXT("No interactor in %s"), *GetActorNameOrLabel());
+        UE_LOG(LogG2I, Warning, TEXT("Interactor is null in %s"), *GetActorNameOrLabel());
     }
 }
