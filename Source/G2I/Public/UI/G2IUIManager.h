@@ -69,6 +69,7 @@ public:
 	void HideWidget(EG2IWidgetNames WidgetName) const;
 
 	void CloseAllWidgets() const;
+	void CloseUI() const;
 
 	// ==================== WORLD WIDGETS ====================
 	void OpenWorldWidget(UG2IWorldHintWidgetComponent *WidgetComponent) const;

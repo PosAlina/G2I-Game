@@ -190,7 +190,7 @@ void UG2IUIDisplayManager::OpenWidget(const EG2IWidgetNames WidgetName)
 		{
 			Widget->AddToViewport();
 			
-			TSet<EG2IWidgetNames> ActiveWidgetsNamesByType = AllActiveWidgetsNames.FindOrAdd(WidgetInfo->Type);
+			TSet<EG2IWidgetNames>& ActiveWidgetsNamesByType = AllActiveWidgetsNames.FindOrAdd(WidgetInfo->Type);
 			ActiveWidgetsNamesByType.Add(WidgetName);
 
 			if (WidgetInfo->Type == EG2IWidgetTypes::UI)
@@ -238,9 +238,16 @@ void UG2IUIDisplayManager::CloseActiveWidgetsByType(const EG2IWidgetTypes Widget
 {
 	if (TSet<EG2IWidgetNames> *ActiveWidgetsNamesByType = AllActiveWidgetsNames.Find(WidgetsType))
 	{
-		for (const EG2IWidgetNames WidgetName : *ActiveWidgetsNamesByType)
+		for (auto Iterator = ActiveWidgetsNamesByType->CreateIterator(); Iterator; ++Iterator)
 		{
-			CloseWidget(WidgetName);
+			if (const auto WidgetInfo = AllWidgets.Find(*Iterator))
+			{
+				if (UG2IUserWidget *Widget = WidgetInfo->Widget)
+				{
+					Widget->RemoveFromParent();
+				}
+			}
+			Iterator.RemoveCurrent();
 		}
 	}
 }
