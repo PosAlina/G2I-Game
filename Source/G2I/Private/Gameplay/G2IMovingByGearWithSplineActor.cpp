@@ -1,32 +1,33 @@
 #include "Gameplay/G2IMovingByGearWithSplineActor.h"
 #include "G2I.h"
 #include "Components/SplineComponent.h"
+#include "Components/BoxComponent.h"
 
 void AG2IMovingByGearWithSplineActor::SetLocationAndRotationWithSpline(float SplineDistance)
 {
-	FVector NewLocation = \
-		SplineComponent->GetLocationAtDistanceAlongSpline(
-			SplineDistance,
-			ESplineCoordinateSpace::World
-		);
+	if (!SplineComponent || !MainBoxComponent) return;
 
-	FRotator NewRotation = \
-		SplineComponent->GetRotationAtDistanceAlongSpline(
-			SplineDistance,
-			ESplineCoordinateSpace::World
-		);
+	FVector NewLocation = SplineComponent->GetLocationAtDistanceAlongSpline(
+		SplineDistance,
+		ESplineCoordinateSpace::World
+	);
 
-	TArray<USceneComponent*> ChildComponents;
-	SplineComponent->GetChildrenComponents(true, ChildComponents);
-	
-	for (USceneComponent* Child : ChildComponents)
+	FRotator NewRotation = SplineComponent->GetRotationAtDistanceAlongSpline(
+		SplineDistance,
+		ESplineCoordinateSpace::World
+	);
+
+	FHitResult Hit;
+	MainBoxComponent->SetWorldLocationAndRotation(NewLocation, NewRotation, true, &Hit);
+
+	if (Hit.bBlockingHit)
 	{
-		if (UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>(Child))
-		{
-			MeshComp->SetWorldLocationAndRotation(NewLocation, NewRotation);
-		}
+		CurrentSplineDistance = SplineComponent->GetDistanceAlongSplineAtLocation(
+			MainBoxComponent->GetComponentLocation(),
+			ESplineCoordinateSpace::World);
 	}
 }
+
 
 AG2IMovingByGearWithSplineActor::AG2IMovingByGearWithSplineActor()
 {
@@ -37,6 +38,13 @@ AG2IMovingByGearWithSplineActor::AG2IMovingByGearWithSplineActor()
 		return;
 	}
 	SplineComponent->SetupAttachment(RootComponent);
+
+	MainBoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("MainBoxComponent"));
+	if (!MainBoxComponent) {
+		UE_LOG(LogG2I, Warning, TEXT("MainBoxComponent was not created for %s"), *GetName());
+		return;
+	}
+	MainBoxComponent->SetupAttachment(SplineComponent);
 }
 
 void AG2IMovingByGearWithSplineActor::BeginPlay()
@@ -63,4 +71,3 @@ void AG2IMovingByGearWithSplineActor::OnPushing_Implementation(float ForceMagnit
 
 	SetLocationAndRotationWithSpline(CurrentSplineDistance);
 }
-
