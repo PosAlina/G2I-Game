@@ -86,6 +86,11 @@ private:
 	
 	FString GetWidgetNameString(EG2IWidgetNames WidgetName) const;
 	
+	// ==================== CONFIRMATION WIDGET ====================
+	void SetupConfirmationWidget(const TFunction<void()>& NewConfirmAction, const TFunction<void()>& NewCancelAction,
+		const FString& NewQuestionStringID = {},const FString& NewConfirmStringID = {},
+		const FString& NewCancelStringID = {}) const;
+
 	// ==================== OPTIONS PROPERTIES ====================
 	void SetPropertyRow(UG2ITextMultiValuePropertyRow* PropertySelector, const FString& PropertyNameStringID,
 					TArray<FString>& ValuesNamesStringID, int32 DefaultValueIndex = 0) const;

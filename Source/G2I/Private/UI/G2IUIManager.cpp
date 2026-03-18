@@ -1,6 +1,7 @@
 #include "G2IUIManager.h"
 #include "G2I.h"
 #include "G2IAimTypeEnum.h"
+#include "G2IConfirmationWidget.h"
 #include "G2IGameInstance.h"
 #include "G2IPlayerController.h"
 #include "G2IStringTablesTypes.h"
@@ -338,6 +339,31 @@ void UG2IUIManager::SetKeyWidgetSize(UG2IWorldHintKeyWidgetComponent* WidgetComp
 	}
 
 	WidgetComponent->SetWidgetSize(WidgetComponentParameters->KeyWidgetDefaultSize);
+}
+
+void UG2IUIManager::SetupConfirmationWidget(const TFunction<void()>& NewConfirmAction,
+	const TFunction<void()>& NewCancelAction, const FString& NewQuestionStringID,
+                                            const FString& NewConfirmStringID, const FString& NewCancelStringID) const
+{
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
+		return;
+	}
+	if (UG2IConfirmationWidget *Widget = Cast<UG2IConfirmationWidget>(
+		DisplayManager->GetWidget(EG2IWidgetNames::Confirmation)))
+	{
+		Widget->OnConfirm = NewConfirmAction;
+		Widget->OnCancel = NewCancelAction;
+		
+		DisplayManager->SetText<URichTextBlock>(Widget->QuestionTextBlock, EG2IStringTablesTypes::Confirmations,
+			NewQuestionStringID, "Confirmation.Question");
+		DisplayManager->SetText<URichTextBlock>(Widget->ConfirmTextBlock, EG2IStringTablesTypes::Confirmations,
+			NewConfirmStringID, "Confirmation.Confirm");
+		DisplayManager->SetText<URichTextBlock>(Widget->CancelTextBlock, EG2IStringTablesTypes::Confirmations,
+			NewCancelStringID, "Confirmation.Cancel");
+	}
 }
 
 void UG2IUIManager::SetPropertyRow(UG2ITextMultiValuePropertyRow* PropertySelector, const FString& PropertyNameStringID,
