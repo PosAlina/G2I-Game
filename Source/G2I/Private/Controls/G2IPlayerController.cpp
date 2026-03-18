@@ -18,6 +18,7 @@
 #include "G2ISteamMovementInputInterface.h"
 #include "G2ISteamShotInputInterface.h"
 #include "G2IUIManager.h"
+#include "G2IWidgetNames.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 void AG2IPlayerController::SetupInputComponent()
@@ -36,6 +37,14 @@ void AG2IPlayerController::SetupInputComponent()
 					Subsystem->AddMappingContext(CurrentContext, 0);
 					InputKeyMappings.Append(CurrentContext->GetMappings());
 				}
+
+#if WITH_EDITOR
+				for (const UInputMappingContext* CurrentContext : DebugInputMappingContexts)
+				{
+					Subsystem->AddMappingContext(CurrentContext, 0);
+					InputKeyMappings.Append(CurrentContext->GetMappings());
+				}
+#endif
 			}
 			else
 			{
@@ -51,11 +60,6 @@ void AG2IPlayerController::SetupInputComponent()
 				EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ThisClass::StopJumping);
 				EnhancedInputComponent->BindAction(FlightDownAction, ETriggerEvent::Triggered, this, &ThisClass::FlyDown);
 				EnhancedInputComponent->BindAction(FlightDownAction, ETriggerEvent::Completed, this, &ThisClass::StopJumping);
-				
-				//EnhancedInputComponent->BindAction(ToggleCrouchAction, ETriggerEvent::Started, this, &ThisClass::ToggleCrouch);
-
-				EnhancedInputComponent->BindAction(SwitchCameraBehaviorAction, ETriggerEvent::Started, this,
-					&ThisClass::SwitchCameraBehavior);
 				
 				EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ThisClass::Look);
 
@@ -74,9 +78,21 @@ void AG2IPlayerController::SetupInputComponent()
 				EnhancedInputComponent->BindAction(ToggleFollowAIBehindPlayerAction, ETriggerEvent::Started,
 					this, &ThisClass::ToggleFollowAIBehindPlayer);
 
-				EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Started,this, &ThisClass::CallPause);
+				// TODO: Add Pause Action after adding all UI systems
+				//EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Started,this, &ThisClass::CallPause);
 
 				EnhancedInputComponent->BindAction(GlovePunchAction, ETriggerEvent::Started, this, &ThisClass::GlovePunchActivation);
+
+#if WITH_EDITOR
+				EnhancedInputComponent->BindAction(ToggleDebugAction, ETriggerEvent::Started, this,
+					&ThisClass::ToggleDebugMode);
+				EnhancedInputComponent->BindAction(ToggleCrouchAction, ETriggerEvent::Started, this,
+					&ThisClass::ToggleCrouch);
+				EnhancedInputComponent->BindAction(SwitchCameraBehaviorAction, ETriggerEvent::Started, this,
+					&ThisClass::SwitchCameraBehavior);
+				// TODO: Add Pause Action after adding all UI systems
+				//EnhancedInputComponent->BindAction(DebugPauseAction, ETriggerEvent::Started,this, &ThisClass::CallPause);
+#endif
 			}
 			else
 			{
@@ -180,11 +196,11 @@ bool AG2IPlayerController::SetPause(bool bPause, FCanUnpause CanUnpauseDelegate)
 	}
 	if (bPause)
 	{
-		UIManager->OpenPauseWidget();
+		UIManager->OpenWidget(EG2IWidgetNames::Pause);
 	}
 	else
 	{
-		UIManager->ClosePauseWidget();
+		UIManager->CloseWidget(EG2IWidgetNames::Pause);
 	}
 	
 	return true;
@@ -237,11 +253,13 @@ void AG2IPlayerController::SetupCharacterActorComponents()
 	ThirdPersonCameraComponents.Empty();
 	InteractionComponents.Empty();
 	MovementComponent = nullptr;
-	SteamMovementComponent = nullptr;
 	AimingComponent = nullptr;
 	SteamShotComponent = nullptr;
 	FlightComponent = nullptr;
 	GlovePunchComponent = nullptr;
+#if WITH_EDITOR
+	SteamMovementComponent = nullptr;
+#endif
 	
 	if (const APawn *CurrentCharacter = GetPawn())
 	{
@@ -268,11 +286,6 @@ void AG2IPlayerController::SetupCharacterActorComponents()
 				InteractionComponents.Add(Component);
 			}
 
-			if (Component->Implements<UG2ISteamMovementInputInterface>())
-			{
-				SteamMovementComponent = Component;
-			}
-
 			if (Component->Implements<UG2IAimingInterface>())
 			{
 				AimingComponent = Component;
@@ -292,6 +305,13 @@ void AG2IPlayerController::SetupCharacterActorComponents()
 			{
 				GlovePunchComponent = Component;
 			}
+
+#if WITH_EDITOR
+			if (Component->Implements<UG2ISteamMovementInputInterface>())
+			{
+				SteamMovementComponent = Component;
+			}
+#endif
 		}
 	}
 	else
@@ -318,8 +338,29 @@ void AG2IPlayerController::SetupCamera()
 	IG2ICameraControllerInputInterface::Execute_SetupCurrentCamera(CameraControllersComponent);
 }
 
+#if WITH_EDITOR
+void AG2IPlayerController::ToggleDebugMode()
+{
+	bIsDebugAction = !bIsDebugAction;
+	if (GEngine)
+	{
+		if (bIsDebugAction)
+		{
+			GEngine->AddOnScreenDebugMessage(-2, MAX_FLT, FColor::Silver, "DEBUG MODE: ON");
+		}
+		else
+		{
+			GEngine->RemoveOnScreenDebugMessage(-2);
+		}
+	}
+}
+
 void AG2IPlayerController::SwitchCameraBehavior()
 {
+	if (!bIsDebugAction)
+	{
+		return;
+	}
 	if (!ensure(CameraControllersComponent))
 	{
 		UE_LOG(LogG2I, Error, TEXT("Player Controller %s hasn't camera controller component"), *GetName());
@@ -333,8 +374,13 @@ void AG2IPlayerController::SwitchCameraBehavior()
 		return;
 	}
 
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Silver, "DEBUG: Switch camera");
+	}
 	IG2ICameraControllerInputInterface::Execute_SwitchCameraBehavior(CameraControllersComponent);
 }
+#endif
 
 void AG2IPlayerController::Look(const FInputActionValue& Value)
 {
@@ -421,10 +467,20 @@ void AG2IPlayerController::Jump(const FInputActionValue& Value)
 		}
 		else
 		{
+#if WITH_EDITOR
+			if (!bIsDebugAction)
+			{
+				return;
+			}
 			if (SteamMovementComponent && SteamMovementComponent->Implements<UG2ISteamMovementInputInterface>())
 			{
+				if (GEngine)
+				{
+					GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Silver, "DEBUG: Steam jump");
+				}
 				IG2ISteamMovementInputInterface::Execute_SteamJumpAction(SteamMovementComponent);
 			}
+#endif
 		}
 	}
 	else
@@ -463,8 +519,13 @@ void AG2IPlayerController::StopJumping(const FInputActionValue& Value)
 	}
 }
 
-void AG2IPlayerController::ToggleCrouch(const FInputActionValue& Value)
+#if WITH_EDITOR
+void AG2IPlayerController::ToggleCrouch()
 {
+	if (!bIsDebugAction)
+	{
+		return;
+	}
 	if (!ensure(MovementComponent))
 	{
 		UE_LOG(LogG2I, Warning, TEXT("Pawn doesn't have component with movement interface in %s"), *GetName());
@@ -473,6 +534,10 @@ void AG2IPlayerController::ToggleCrouch(const FInputActionValue& Value)
 	
 	if (MovementComponent->Implements<UG2IMovementInputInterface>())
 	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Silver, "DEBUG: Toggle crouching");
+		}
 		IG2IMovementInputInterface::Execute_ToggleCrouchAction(MovementComponent);
 	}
 	else
@@ -481,6 +546,7 @@ void AG2IPlayerController::ToggleCrouch(const FInputActionValue& Value)
 			*MovementComponent->GetName());
 	}
 }
+#endif
 
 void AG2IPlayerController::SelectNextCharacter(const FInputActionValue& Value)
 {
@@ -566,5 +632,8 @@ void AG2IPlayerController::ToggleFollowAIBehindPlayer(const FInputActionValue& V
 
 void AG2IPlayerController::GlovePunchActivation(const FInputActionInstance& Instance)
 {
-	IG2IGlovePunchInterface::Execute_GlovePunchActivation(GlovePunchComponent);
+	if (GlovePunchComponent)
+	{
+		IG2IGlovePunchInterface::Execute_GlovePunchActivation(GlovePunchComponent);
+	}
 }

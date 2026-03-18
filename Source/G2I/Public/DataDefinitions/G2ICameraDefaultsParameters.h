@@ -40,4 +40,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float AimVerticalOffset = 70.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float PendingTimeAfterSwitchingToControlCharacter = 0.5f;
 };

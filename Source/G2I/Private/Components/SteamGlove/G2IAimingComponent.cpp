@@ -7,7 +7,10 @@
 #include "G2ICameraStateEnums.h"
 #include "G2ICharacterInterface.h"
 #include "G2IGameInstance.h"
+#include "G2IOutlineComponent.h"
+#include "G2ITraceableObectInterface.h"
 #include "G2IUIManager.h"
+#include "G2IWidgetNames.h"
 
 UG2IAimingComponent::UG2IAimingComponent()
 {
@@ -138,8 +141,9 @@ void UG2IAimingComponent::StartAimingAction_Implementation()
 			UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
 				*UG2IUIManager::StaticClass()->GetName(), *GetName());
 		}
-		UIManager->OpenAimingWidget();
+		UIManager->OpenWidget(EG2IWidgetNames::Aim);
 	}
+	OutlineController(AimTargetActor, true);
 }
 
 void UG2IAimingComponent::StopAimingAction_Implementation()
@@ -155,8 +159,9 @@ void UG2IAimingComponent::StopAimingAction_Implementation()
 			UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
 				*UG2IUIManager::StaticClass()->GetName(), *GetName());
 		}
-		UIManager->CloseAimingWidget();
+		UIManager->CloseWidget(EG2IWidgetNames::Aim);
 	}
+	OutlineController(AimTargetActor, false);
 }
 
 bool UG2IAimingComponent::IsAiming_Implementation()
@@ -288,10 +293,51 @@ void UG2IAimingComponent::DetectAimLineHitInfo()
 	
 	if (AimTargetActor != AimLineHitInfo.HitResult.GetActor())
 	{
+		auto PreviousAimTargetActor = AimTargetActor;
 		AimTargetActor = AimLineHitInfo.HitResult.GetActor();
 		SetAimType(AimTargetActor);
+		OutlineController(PreviousAimTargetActor, false);
+		OutlineController(AimTargetActor, true);
 	}
 }
 
+void UG2IAimingComponent::OutlineController(const AActor* ActorToChangeOutline, bool bOutlineMode)
+{
+	TArray<UStaticMeshComponent*> OutlineMeshes;
+	if (ActorToChangeOutline && ActorToChangeOutline->Implements<UG2ITraceableObectInterface>())
+	{
+		ActorToChangeOutline->GetComponents<UStaticMeshComponent>(OutlineMeshes);
+	}
 
+	for (auto OutlineMesh : OutlineMeshes)
+	{
+		if (!OutlineMesh)
+		{
+			UE_LOG(LogG2I, Error, TEXT("OutlineMesh in %s is null"), *ActorToChangeOutline->GetName());
+			return;
+		}
+		
+		OutlineMesh->bDisallowNanite = true;
+		if (bOutlineMode)
+		{
+			OutlineMesh->SetOverlayMaterial(ShootableObjOutlineMaterialInstance);
+		}
+		else
+		{
+			OutlineMesh->SetOverlayMaterial(nullptr);
+		}
+	}
+	
+	UG2IOutlineComponent* OutlineComp = nullptr;
+	
+	if (ActorToChangeOutline)
+	{
+		OutlineComp = ActorToChangeOutline->FindComponentByClass<UG2IOutlineComponent>();
+	}
+
+	if (OutlineComp)
+	{
+		OutlineComp->OutlineController(bOutlineMode);
+	}
+}
 

@@ -14,6 +14,7 @@ class UG2IThirdPersonCameraComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSetCameraTypeDelegate, EG2ICameraTypeEnum, CurrentCameraType,
 	EG2ICameraBlendState, CurrentBlendState);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FThirdPersonCameraYawRotationDelegate, double, OldCameraYawRotation);
 
 UCLASS(ClassGroup=(Camera), meta=(BlueprintSpawnableComponent))
 class G2I_API UG2ICameraControllerComponent : public UActorComponent, public IG2ICameraControllerInputInterface
@@ -24,6 +25,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FSetCameraTypeDelegate OnSetCameraTypeDelegate;
+
+	UPROPERTY(BlueprintAssignable)
+	FThirdPersonCameraYawRotationDelegate OnThirdPersonCameraYawRotationDelegate;
 	
 private:
 
@@ -42,6 +46,8 @@ private:
 	int32 CurrentCameraIndex = 0;
 
 	EG2ICameraTypeEnum CurrentCameraType = EG2ICameraTypeEnum::FixedCamera;
+
+	float OldCameraYawRotation = 0.;
 
 protected:
 
@@ -91,5 +97,9 @@ private:
 	void SetupThirdPersonCameras() const;
 
 	void SetupFixedCameras() const;
+
+	void SetThirdPersonCameraYawRotation();
+
+	void SetCurrentCameraIndex(int32 NewCameraIndex);
 	
 };

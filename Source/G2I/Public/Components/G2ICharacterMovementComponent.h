@@ -6,6 +6,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "G2ICharacterMovementComponent.generated.h"
 
+class UG2ICameraDefaultsParameters;
 enum class EG2ICameraBlendState : uint8;
 enum class EG2ICameraTypeEnum : uint8;
 class UCharacterMovementComponent;
@@ -22,6 +23,9 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UWorld> World;
+
+	UPROPERTY()
+	TObjectPtr<UG2ICameraDefaultsParameters> CameraDefaultsParameters;
 	
 protected:
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FJumpingDelegate);
@@ -38,6 +42,12 @@ protected:
 	bool bCanRotationTowardsCamera = false;
 
 	bool bWantsRotationTowardsCamera = false;
+
+	double CameraPendingYawRotation = 0.;
+
+private:
+
+	FTimerHandle TimerBeforeDisableRotationTowardsCamera;
 
 public:
 	
@@ -116,9 +126,16 @@ protected:
 
 	UFUNCTION()
 	void SetAbilityRotationTowardsCamera(EG2ICameraTypeEnum CurrentCameraType, EG2ICameraBlendState CurrentBlendState);
+	
+	void ResetCameraPendingYawRotation();
+
+	UFUNCTION()
+	void SetCameraPendingYawRotation(double YawValue);
 
 private:
 
+	void SetupDefaults();
+	
 	void PreInitializationDefaults();
 
 	void BindingOwnerComponentsDelegates();
