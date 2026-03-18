@@ -271,6 +271,18 @@ void UG2IUIManager::CloseAllWidgets() const
 	DisplayManager->CloseAllActiveWidgets();
 }
 
+void UG2IUIManager::CloseUI() const
+{
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
+		return;
+	}
+
+	DisplayManager->CloseActiveWidgetsByType(EG2IWidgetTypes::UI);
+}
+
 void UG2IUIManager::ChangeAimingType(const EG2IAimType NewAimType) const
 {
 	if (!ensure(DisplayManager))
