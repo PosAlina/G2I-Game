@@ -71,11 +71,16 @@ void UG2ITextPropertySelector::SetButtonsAreEnabledByIndex(const int32 Index) co
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find PreviousButton"), *GetName());
 	}
+	else
+	{
+		PreviousButton->SetIsEnabled(Index != 0);
+	}
 	if (!ensure(NextButton))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find NextButton"), *GetName());
 	}
-	
-	PreviousButton->SetIsEnabled(Index != 0);
-	NextButton->SetIsEnabled(Index != PropertyValues.Num() - 1);
+	else
+	{
+		NextButton->SetIsEnabled(Index != PropertyValues.Num() - 1);
+	}
 }
