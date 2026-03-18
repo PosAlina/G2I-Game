@@ -63,6 +63,9 @@ void UG2IUIManager::InitializeComponents(APlayerController* InPlayerController)
 		return;
 	}
 	OnUIManagerInitialized.Broadcast();
+
+	// TODO: OpenHUD should be moved into level begin
+	OpenHUD();
 }
 
 FString UG2IUIManager::GetWidgetNameString(EG2IWidgetNames WidgetName) const
