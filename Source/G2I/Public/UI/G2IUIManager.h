@@ -5,19 +5,18 @@
 
 enum class EG2IAimType : uint8;
 class UG2IWidgetComponentParameters;
-enum class EG2IStringTablesTypes : uint8;
 class UWidgetSwitcher;
 class UPanelWidget;
+class UG2IPropertyRow;
+class UG2INumericalMultiValuePropertyRow;
+class UG2ITextMultiValuePropertyRow;
 class UInputAction;
 enum class EG2IWidgetNames : uint8;
 class UG2IUserWidget;
 class UG2IWorldHintKeyWidgetComponent;
-class UG2IWidgetsCatalog;
 class UG2IUIDisplayManager;
 class AG2IPlayerController;
-class UG2IGameInstance;
 class UG2IWorldHintWidgetComponent;
-class AG2IPlayerState;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerControllerInitDelegate, APlayerController*, PlayerController);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FUIManagerInitialized);
@@ -87,4 +86,13 @@ private:
 	
 	FString GetWidgetNameString(EG2IWidgetNames WidgetName) const;
 	
+	// ==================== OPTIONS PROPERTIES ====================
+	void SetPropertyRow(UG2ITextMultiValuePropertyRow* PropertySelector, const FString& PropertyNameStringID,
+					TArray<FString>& ValuesNamesStringID, int32 DefaultValueIndex = 0) const;
+	void SetPropertyRow(UG2INumericalMultiValuePropertyRow* PropertySelector, const FString& PropertyNameStringID,
+		float MinValue, float MaxValue, float Step, float DefaultValue, int32 DecimalPlaces) const;
+	void ApplyPropertiesValues(TArray<UG2IPropertyRow*> Properties) const;
+	void SavePropertiesValues(TArray<UG2IPropertyRow*> Properties) const;
+	void ApplyPropertyValue(const UG2IPropertyRow* PropertyRow) const;
+	void SavePropertyValue(const UG2IPropertyRow* PropertyRow) const;
 };

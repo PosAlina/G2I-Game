@@ -39,8 +39,7 @@ void AG2IPressureGaugeValve::BeginPlay()
         if (ValveMesh)
         { 
             ValveTimeline->SetTimelineLength(1.0f);
-
-            ValveMesh->SetRelativeRotation(FRotator::ZeroRotator);
+            InitialRotation = ValveMesh->GetRelativeRotation();
         }
     }
 }
@@ -93,13 +92,18 @@ void AG2IPressureGaugeValve::CloseValve()
     }
 }
 
-void AG2IPressureGaugeValve::OnTimelineUpdate(float Value)
+void AG2IPressureGaugeValve::OnTimelineUpdate(const float Value)
 {
     if (ValveMesh)
     {
-        float TargetRoll = Value * 360.0f;
+        const float Angle = Value * 360.0f;
 
-        ValveMesh->SetRelativeRotation(FRotator(TargetRoll, 0.0f, 0.0f));
+        const FQuat InitialQuat = InitialRotation.Quaternion();
+        const FQuat RotationQuat = FQuat(FVector::LeftVector, FMath::DegreesToRadians(Angle));
+
+        const FQuat FinalQuat = InitialQuat * RotationQuat;
+
+        ValveMesh->SetRelativeRotation(FinalQuat);
     }
 }
 

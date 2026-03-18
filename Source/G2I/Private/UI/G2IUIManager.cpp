@@ -3,16 +3,18 @@
 #include "G2IAimTypeEnum.h"
 #include "G2IGameInstance.h"
 #include "G2IPlayerController.h"
+#include "G2IStringTablesTypes.h"
 #include "G2IUIDisplayManager.h"
 #include "G2IWidgetComponentParameters.h"
 #include "G2IWidgetNames.h"
-#include "G2IWidgetsCatalog.h"
 #include "G2IWorldHintKeyWidgetComponent.h"
 #include "Components/RichTextBlock.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "Gameplay/G2IKeyHintWidget.h"
 #include "HUD/G2IAimingWidget.h"
+#include "Menu/Elements/NumericalRow/G2INumericalMultiValuePropertyRow.h"
+#include "Menu/Elements/TextRow/G2ITextMultiValuePropertyRow.h"
 
 void UG2IUIManager::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -25,24 +27,30 @@ void UG2IUIManager::InitializeComponents(APlayerController* InPlayerController)
 	PlayerController = Cast<AG2IPlayerController>(InPlayerController);
 	if (!ensure(PlayerController))
 	{
-		UE_LOG(LogG2I, Error, TEXT("PlayerController doesn't exist in %s"), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*AG2IPlayerController::StaticClass()->GetName());
 		return;
 	}
 	
 	UG2IGameInstance *GameInstance = Cast<UG2IGameInstance>(GetGameInstance());
 	if (!ensure(GameInstance))
 	{
-		UE_LOG(LogG2I, Error, TEXT("Game Instance isn't %s in %s"),
-			*UG2IGameInstance::StaticClass()->GetName(), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IGameInstance::StaticClass()->GetName());
 		return;
 	}
 	WidgetComponentParameters = GameInstance->GetWidgetComponentParameters();
+	if (!ensure(WidgetComponentParameters))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+			*UG2IWidgetComponentParameters::StaticClass()->GetName(), *GetName());
+	}
 
 	DisplayManager = NewObject<UG2IUIDisplayManager>(this);
 	if (!ensure(DisplayManager))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
-			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
 		return;
 	}
 	DisplayManager->Initialize();
@@ -82,8 +90,8 @@ void UG2IUIManager::OpenWorldWidget(UG2IWorldHintWidgetComponent* WidgetComponen
 	}
 	if (!ensure(DisplayManager))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
-			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
 		return;
 	}
 
@@ -99,8 +107,8 @@ void UG2IUIManager::CloseWorldWidget(UG2IWorldHintWidgetComponent* WidgetCompone
 	}
 	if (!ensure(DisplayManager))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
-			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
 		return;
 	}
 
@@ -117,8 +125,8 @@ bool UG2IUIManager::CanSeeWorldWidget(UG2IWorldHintWidgetComponent *WidgetCompon
 	}
 	if (!ensure(DisplayManager))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
-			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
 		return false;
 	}
 
@@ -129,8 +137,8 @@ UG2IUserWidget* UG2IUIManager::CreateWidgetByName(const EG2IWidgetNames WidgetNa
 {
 	if (!ensure(DisplayManager))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
-			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
 		return nullptr;
 	}
 
@@ -147,8 +155,8 @@ void UG2IUIManager::AddWidgetToPanel(UPanelWidget* Panel, const EG2IWidgetNames 
 	}
 	if (!ensure(DisplayManager))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
-			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
 		return;
 	}
 	
@@ -173,8 +181,8 @@ void UG2IUIManager::SwitchWidget(UWidgetSwitcher* Switcher, const EG2IWidgetName
 	}
 	if (!ensure(DisplayManager))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
-			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
 		return;
 	}
 	UG2IUserWidget *Widget = DisplayManager->GetWidget(WidgetName);
@@ -192,8 +200,8 @@ void UG2IUIManager::OpenWidget(const EG2IWidgetNames WidgetName) const
 {
 	if (!ensure(DisplayManager))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
-			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
 		return;
 	}
 	
@@ -204,8 +212,8 @@ void UG2IUIManager::CloseWidget(const EG2IWidgetNames WidgetName) const
 {
 	if (!ensure(DisplayManager))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
-			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
 		return;
 	}
 	
@@ -216,8 +224,8 @@ void UG2IUIManager::ShowWidget(const EG2IWidgetNames WidgetName) const
 {
 	if (!ensure(DisplayManager))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
-			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
 		return;
 	}
 	UG2IUserWidget *Widget = DisplayManager->GetWidget(WidgetName);
@@ -235,8 +243,8 @@ void UG2IUIManager::HideWidget(const EG2IWidgetNames WidgetName) const
 {
 	if (!ensure(DisplayManager))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
-			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
 		return;
 	}
 	UG2IUserWidget *Widget = DisplayManager->GetWidget(WidgetName);
@@ -254,8 +262,8 @@ void UG2IUIManager::CloseAllWidgets() const
 {
 	if (!ensure(DisplayManager))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
-			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
 		return;
 	}
 
@@ -266,7 +274,7 @@ void UG2IUIManager::ChangeAimingType(const EG2IAimType NewAimType) const
 {
 	if (!ensure(DisplayManager))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
 			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
 		return;
 	}
@@ -324,10 +332,121 @@ void UG2IUIManager::SetKeyWidgetSize(UG2IWorldHintKeyWidgetComponent* WidgetComp
 	}
 	if (!ensure(WidgetComponentParameters))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s"),
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
 			*UG2IWidgetComponentParameters::StaticClass()->GetName(), *GetName());
 		return;
 	}
 
 	WidgetComponent->SetWidgetSize(WidgetComponentParameters->KeyWidgetDefaultSize);
+}
+
+void UG2IUIManager::SetPropertyRow(UG2ITextMultiValuePropertyRow* PropertySelector, const FString& PropertyNameStringID,
+                                   TArray<FString>& ValuesNamesStringID, const int32 DefaultValueIndex) const
+{
+	if (!ensure(PropertySelector))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("An attempt to change nullptr %s in %s"),
+			*UG2ITextMultiValuePropertyRow::StaticClass()->GetName(), *GetName());
+		return;
+	}
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
+		return;
+	}
+	
+	DisplayManager->SetText<URichTextBlock>(PropertySelector->PropertyName, EG2IStringTablesTypes::Options,
+		PropertyNameStringID, "PropertyName");
+	for (FString& ValueStringID : ValuesNamesStringID)
+	{
+		URichTextBlock *ValueTextBlock = NewObject<URichTextBlock>();
+		DisplayManager->SetText<URichTextBlock>(ValueTextBlock, EG2IStringTablesTypes::Options,
+			ValueStringID, "PropertyValue");
+		FText InValue = DisplayManager->GetText(EG2IStringTablesTypes::Options, ValueStringID);
+		PropertySelector->AddPropertyValue(InValue);
+	}
+	PropertySelector->SelectValueByIndex(DefaultValueIndex);
+}
+
+void UG2IUIManager::SetPropertyRow(UG2INumericalMultiValuePropertyRow* PropertySelector,
+	const FString& PropertyNameStringID, const float MinValue, const float MaxValue, const float Step,
+	const float DefaultValue, const int32 DecimalPlaces) const
+{
+	if (!ensure(PropertySelector))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("An attempt to change nullptr %s in %s"),
+			*UG2INumericalMultiValuePropertyRow::StaticClass()->GetName(), *GetName());
+		return;
+	}
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		return;
+	}
+	
+	DisplayManager->SetText<URichTextBlock>(PropertySelector->PropertyName, EG2IStringTablesTypes::Options,
+		PropertyNameStringID, "PropertyName");
+	PropertySelector->InitializeRow(MinValue, MaxValue, Step, DefaultValue, DecimalPlaces);
+}
+
+void UG2IUIManager::ApplyPropertiesValues(TArray<UG2IPropertyRow*> Properties) const
+{
+	for (const UG2IPropertyRow *PropertyRow : Properties)
+	{
+		if (!ensure(PropertyRow))
+		{
+			UE_LOG(LogG2I, Warning, TEXT("Attempting to change nullptr %s in %s"),
+				*UG2IPropertyRow::StaticClass()->GetName(), *GetName());
+			return;
+		}
+		
+		ApplyPropertyValue(PropertyRow);
+	}
+}
+
+void UG2IUIManager::SavePropertiesValues(TArray<UG2IPropertyRow*> Properties) const
+{
+	for (const UG2IPropertyRow *PropertyRow : Properties)
+	{
+		if (!ensure(PropertyRow))
+		{
+			UE_LOG(LogG2I, Warning, TEXT("Attempting to change nullptr %s in %s"),
+				*UG2IPropertyRow::StaticClass()->GetName(), *GetName());
+			return;
+		}
+		
+		SavePropertyValue(PropertyRow);
+	}
+}
+
+void UG2IUIManager::ApplyPropertyValue(const UG2IPropertyRow* PropertyRow) const
+{
+	if (!ensure(PropertyRow))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Attempting to change nullptr %s in %s"),
+			*UG2IPropertyRow::StaticClass()->GetName(), *GetName());
+		return;
+	}
+
+	if (PropertyRow->OnApplyPropertyValue)
+	{
+		PropertyRow->OnApplyPropertyValue();
+	}
+}
+
+void UG2IUIManager::SavePropertyValue(const UG2IPropertyRow* PropertyRow) const
+{
+	if (!ensure(PropertyRow))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Attempting to change nullptr %s in %s"),
+			*UG2IPropertyRow::StaticClass()->GetName(), *GetName());
+		return;
+	}
+
+	if (PropertyRow->OnSavePropertyValue)
+	{
+		PropertyRow->OnSavePropertyValue();
+	}
 }
