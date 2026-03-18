@@ -13,6 +13,7 @@
 #include "Components/WidgetSwitcher.h"
 #include "Gameplay/G2IKeyHintWidget.h"
 #include "HUD/G2IAimingWidget.h"
+#include "Menu/Elements/NumericalRow/G2INumericalMultiValuePropertyRow.h"
 #include "Menu/Elements/TextRow/G2ITextMultiValuePropertyRow.h"
 
 void UG2IUIManager::Initialize(FSubsystemCollectionBase& Collection)
@@ -366,6 +367,28 @@ void UG2IUIManager::SetPropertyRow(UG2ITextMultiValuePropertyRow* PropertySelect
 		PropertySelector->AddPropertyValue(InValue);
 	}
 	PropertySelector->SelectValueByIndex(DefaultValueIndex);
+}
+
+void UG2IUIManager::SetPropertyRow(UG2INumericalMultiValuePropertyRow* PropertySelector,
+	const FString& PropertyNameStringID, const float MinValue, const float MaxValue, const float Step,
+	const float DefaultValue, const int32 DecimalPlaces) const
+{
+	if (!ensure(PropertySelector))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("An attempt to change nullptr %s in %s"),
+			*UG2INumericalMultiValuePropertyRow::StaticClass()->GetName(), *GetName());
+		return;
+	}
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		return;
+	}
+	
+	DisplayManager->SetText<URichTextBlock>(PropertySelector->PropertyName, EG2IStringTablesTypes::Options,
+		PropertyNameStringID, "PropertyName");
+	PropertySelector->InitializeRow(MinValue, MaxValue, Step, DefaultValue, DecimalPlaces);
 }
 
 void UG2IUIManager::ApplyPropertiesValues(TArray<UG2IPropertyRow*> Properties) const
