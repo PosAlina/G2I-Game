@@ -1,13 +1,13 @@
 #pragma once
 
-
-
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "G2IGameSoundManager.generated.h"
 
 
 class UAudioComponent;
+class USceneComponent;
+class USoundCue;
 
 USTRUCT(BlueprintType)
 struct FSoundConfig 
@@ -23,7 +23,7 @@ struct FSoundConfig
 	TObjectPtr<USceneComponent> AttachToComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Attachment")
-	FAttachmentTransformRules AttachmentRules = FAttachmentTransformRules::SnapToTargetIncludingScale;
+	EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play", meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	float VolumeMultiplier = 1.0f;
@@ -44,22 +44,26 @@ private:
 
 	UPROPERTY()
 	TArray<int32> IdStack;
-	
+
+	int32 CurrentNumberAvailable;
+
 	UPROPERTY()
 	TMap<int32, TObjectPtr<UAudioComponent>> ActiveSounds;
 
+	void UpdateStackSize();
+
 protected:
 	
-	TObjectPtr<UAudioComponent> GetAudioById(int32 SoundId);
+	UAudioComponent* GetAudioById(int32 SoundId);
 public:
 
-	UFUNCTION(BlueprintPure, Category = "Sound Manager")
-	static TObjectPtr<UG2IGameSoundManager> Get(UObject* WorldContextObject);
+	UFUNCTION(BlueprintPure, Category = "Sound Manager", meta = (WorldContext = "WorldContextObject"))
+	static UG2IGameSoundManager* Get(UObject* WorldContextObject);
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
-	int32 AddSound(TObjectPtr<FSoundConfig> NewSoundConfig);
+	int32 AddSound(const FSoundConfig* NewSoundConfig);
 	bool RemoveSound(int32 SoundId);
 	void RemoveAllSounds();
 
@@ -71,9 +75,9 @@ public:
 	bool ChangeSoundPitch(int32 SoundId, float NewPitch);
 	bool ChangeSoundLocation(int32 SoundId, FVector NewLocation);
 	bool ChangeSoundAttachment(int32 SoundId,
-		TObjectPtr<USceneComponent> NewAttachementComponent,
-		FAttachmentTransformRules AttachmentRules);
+		USceneComponent* NewAttachementComponent,
+		FAttachmentTransformRules AttachmentRules = FAttachmentTransformRules::KeepRelativeTransform);
 	bool ChangeSoundAttachment(int32 SoundId,
-		TObjectPtr<AActor> NewAttachementActor,
-		FAttachmentTransformRules AttachmentRules);
+		AActor* NewAttachementActor,
+		FAttachmentTransformRules AttachmentRules = FAttachmentTransformRules::KeepRelativeTransform);
 };

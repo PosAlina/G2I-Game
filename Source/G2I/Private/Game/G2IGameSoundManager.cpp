@@ -2,18 +2,26 @@
 #define STARTSIZE 20
 #include "G2I.h"
 #include "Components/AudioComponent.h"
+#include "Components/SceneComponent.h"
+#include "Sound/SoundCue.h"
 
-TObjectPtr<UAudioComponent> UG2IGameSoundManager::GetAudioById(int32 SoundId) noexcept
+UAudioComponent* UG2IGameSoundManager::GetAudioById(int32 SoundId)
 {
 	if (SoundId < 0) {
 		UE_LOG(LogG2I, Warning, TEXT("Sound manager got wrong SoundId"));
 		return TObjectPtr<UAudioComponent>();
 	}
 
-	return *ActiveSounds.Find(SoundId);
+	TObjectPtr<UAudioComponent>* FoundAudio = ActiveSounds.Find(SoundId);
+	if (FoundAudio) {
+		return *FoundAudio;
+	}
+
+	UE_LOG(LogG2I, Warning, TEXT("Sound manager: SoundId %d not found"), SoundId);
+	return nullptr;
 }
 
-TObjectPtr<UG2IGameSoundManager> UG2IGameSoundManager::Get(UObject* WorldContextObject)
+UG2IGameSoundManager* UG2IGameSoundManager::Get(UObject* WorldContextObject)
 {
 	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull))
 	{
@@ -31,6 +39,7 @@ void UG2IGameSoundManager::Initialize(FSubsystemCollectionBase& Collection)
 	{
 		IdStack.Push(i);
 	}
+	CurrentNumberAvailable = STARTSIZE;
 }
 
 void UG2IGameSoundManager::Deinitialize()
@@ -42,7 +51,7 @@ void UG2IGameSoundManager::Deinitialize()
 	Super::Deinitialize();
 }
 
-int32 UG2IGameSoundManager::AddSound(TObjectPtr<FSoundConfig> NewSoundConfig)
+int32 UG2IGameSoundManager::AddSound(const FSoundConfig* NewSoundConfig)
 {
 	if (!ensure(NewSoundConfig)) {
 		UE_LOG(LogG2I, Warning, TEXT("The sound manager didn't get sound"));
@@ -52,25 +61,32 @@ int32 UG2IGameSoundManager::AddSound(TObjectPtr<FSoundConfig> NewSoundConfig)
 		UE_LOG(LogG2I, Warning, TEXT("The sound manager didn't get sound"));
 		return -1;
 	}
-	TObjectPtr<UAudioComponent> AudioComponent = NewObject<UAudioComponent>();
+	UAudioComponent* AudioComponent = NewObject<UAudioComponent>();
 	if (!ensure(AudioComponent)) {
 		UE_LOG(LogG2I, Warning, TEXT("The sound manager can't create an audio component"));
 		return -1;
 	}
 
 	AudioComponent->RegisterComponent();
-	AudioComponent->SetSound(NewSoundConfig->Sound);
+	AudioComponent->SetSound(NewSoundConfig->Sound.Get());
 	AudioComponent->SetWorldLocation(NewSoundConfig->WorldLocation);
 
 	if (NewSoundConfig->AttachToComponent) {
+		FAttachmentTransformRules Rules(
+			NewSoundConfig->AttachmentRules,
+			NewSoundConfig->AttachmentRules,
+			NewSoundConfig->AttachmentRules,
+			false);
 		AudioComponent->AttachToComponent(
 			NewSoundConfig->AttachToComponent,
-			NewSoundConfig->AttachmentRules);
+			Rules);
 	}
 
 	AudioComponent->SetVolumeMultiplier(NewSoundConfig->VolumeMultiplier);
 	AudioComponent->SetPitchMultiplier(NewSoundConfig->PitchMultiplier);
-
+	if (IdStack.IsEmpty()) {
+		UpdateStackSize();
+	}
 	int32 NewSoundId = IdStack.Pop();
 	ActiveSounds.Add(NewSoundId, AudioComponent);
 
@@ -79,7 +95,7 @@ int32 UG2IGameSoundManager::AddSound(TObjectPtr<FSoundConfig> NewSoundConfig)
 
 bool UG2IGameSoundManager::PlaySound(int32 SoundId)
 {
-	TObjectPtr<UAudioComponent> Component = GetAudioById(SoundId);
+	UAudioComponent* Component = GetAudioById(SoundId);
 	if (!ensure(Component)) {
 		UE_LOG(LogG2I, Warning, TEXT("The sound manager can't get an audio component"));
 		return false;
@@ -92,7 +108,7 @@ bool UG2IGameSoundManager::PlaySound(int32 SoundId)
 
 bool UG2IGameSoundManager::StopSound(int32 SoundId)
 {
-	TObjectPtr<UAudioComponent> Component = GetAudioById(SoundId);
+	UAudioComponent* Component = GetAudioById(SoundId);
 	if (!ensure(Component)) {
 		UE_LOG(LogG2I, Warning, TEXT("The sound manager can't get an audio component"));
 		return false;
@@ -116,7 +132,7 @@ void UG2IGameSoundManager::StopAllSounds()
 
 bool UG2IGameSoundManager::ChangeSoundVolume(int32 SoundId, float NewVolume)
 {
-	TObjectPtr<UAudioComponent> Component = GetAudioById(SoundId);
+	UAudioComponent* Component = GetAudioById(SoundId);
 	if (!ensure(Component)) {
 		UE_LOG(LogG2I, Warning, TEXT("The sound manager can't get an audio component"));
 		return false;
@@ -130,7 +146,7 @@ bool UG2IGameSoundManager::ChangeSoundVolume(int32 SoundId, float NewVolume)
 
 bool UG2IGameSoundManager::ChangeSoundPitch(int32 SoundId, float NewPitch)
 {
-	TObjectPtr<UAudioComponent> Component = GetAudioById(SoundId);
+	UAudioComponent* Component = GetAudioById(SoundId);
 	if (!ensure(Component)) {
 		UE_LOG(LogG2I, Warning, TEXT("The sound manager can't get an audio component"));
 		return false;
@@ -144,7 +160,7 @@ bool UG2IGameSoundManager::ChangeSoundPitch(int32 SoundId, float NewPitch)
 
 bool UG2IGameSoundManager::ChangeSoundLocation(int32 SoundId, FVector NewLocation)
 {
-	TObjectPtr<UAudioComponent> Component = GetAudioById(SoundId);
+	UAudioComponent* Component = GetAudioById(SoundId);
 	if (!ensure(Component)) {
 		UE_LOG(LogG2I, Warning, TEXT("The sound manager can't get an audio component"));
 		return false;
@@ -156,8 +172,8 @@ bool UG2IGameSoundManager::ChangeSoundLocation(int32 SoundId, FVector NewLocatio
 }
 
 bool UG2IGameSoundManager::ChangeSoundAttachment(int32 SoundId,
-	TObjectPtr<USceneComponent> NewAttachmentComponent,
-	FAttachmentTransformRules AttachmentRules = FAttachmentTransformRules::KeepRelativeTransform)
+	USceneComponent* NewAttachmentComponent,
+	FAttachmentTransformRules AttachmentRules)
 {
 	if (!ensure(NewAttachmentComponent)) {
 		UE_LOG(LogG2I, Warning, TEXT("The sound manager got wrong component to attach"));
@@ -175,8 +191,8 @@ bool UG2IGameSoundManager::ChangeSoundAttachment(int32 SoundId,
 }
 
 bool UG2IGameSoundManager::ChangeSoundAttachment(int32 SoundId,
-	TObjectPtr<AActor> NewAttachmentActor,
-	FAttachmentTransformRules AttachmentRules = FAttachmentTransformRules::KeepRelativeTransform)
+	AActor* NewAttachmentActor,
+	FAttachmentTransformRules AttachmentRules)
 {
 	if (!ensure(NewAttachmentActor)) {
 		UE_LOG(LogG2I, Warning, TEXT("The sound manager got wrong actor to attach"));
@@ -215,14 +231,23 @@ bool UG2IGameSoundManager::RemoveSound(int32 SoundId)
 
 void UG2IGameSoundManager::RemoveAllSounds()
 {
-	for (const auto& Pair : ActiveSounds)
+	for (auto Pair = ActiveSounds.CreateIterator(); Pair; ++Pair)
 	{
-		if (ensure(Pair.Value))
+		if (ensure(Pair.Value()))
 		{
-			Pair.Value->Stop();
-			Pair.Value->DestroyComponent();
-			IdStack.Push(Pair.Key);
-			ActiveSounds.Remove(Pair.Key);
+			Pair.Value()->Stop();
+			Pair.Value()->DestroyComponent();
 		}
 	}
+	ActiveSounds.Empty();
+	IdStack.Empty();
+	CurrentNumberAvailable = STARTSIZE;
+	UpdateStackSize();
+}
+
+void UG2IGameSoundManager::UpdateStackSize() {
+	for (int32 i = CurrentNumberAvailable; i < CurrentNumberAvailable * 2; ++i) {
+		IdStack.Push(i);
+	}
+	CurrentNumberAvailable *= 2;
 }
