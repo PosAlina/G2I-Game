@@ -53,40 +53,37 @@ void UG2IGameSoundManager::Deinitialize()
 
 int32 UG2IGameSoundManager::AddSound(const FSoundConfig* NewSoundConfig)
 {
-	if (!ensure(NewSoundConfig)) {
+	if (!ensure(NewSoundConfig) || !ensure(NewSoundConfig->Sound)) {
 		UE_LOG(LogG2I, Warning, TEXT("The sound manager didn't get sound"));
 		return -1;
 	}
-	if (!ensure(NewSoundConfig->Sound)) {
-		UE_LOG(LogG2I, Warning, TEXT("The sound manager didn't get sound"));
-		return -1;
-	}
-	UAudioComponent* AudioComponent = NewObject<UAudioComponent>();
+	UAudioComponent* AudioComponent = NewObject<UAudioComponent>(GetWorld());
 	if (!ensure(AudioComponent)) {
 		UE_LOG(LogG2I, Warning, TEXT("The sound manager can't create an audio component"));
 		return -1;
 	}
 
-	AudioComponent->RegisterComponent();
 	AudioComponent->SetSound(NewSoundConfig->Sound.Get());
 	AudioComponent->SetWorldLocation(NewSoundConfig->WorldLocation);
 
-	if (NewSoundConfig->AttachToComponent) {
+	if (NewSoundConfig->ResolvedAttachComponent) {
 		FAttachmentTransformRules Rules(
 			NewSoundConfig->AttachmentRules,
 			NewSoundConfig->AttachmentRules,
 			NewSoundConfig->AttachmentRules,
 			false);
 		AudioComponent->AttachToComponent(
-			NewSoundConfig->AttachToComponent,
+			NewSoundConfig->ResolvedAttachComponent,
 			Rules);
 	}
-
 	AudioComponent->SetVolumeMultiplier(NewSoundConfig->VolumeMultiplier);
 	AudioComponent->SetPitchMultiplier(NewSoundConfig->PitchMultiplier);
+	AudioComponent->RegisterComponent();
+
 	if (IdStack.IsEmpty()) {
 		UpdateStackSize();
 	}
+
 	int32 NewSoundId = IdStack.Pop();
 	ActiveSounds.Add(NewSoundId, AudioComponent);
 

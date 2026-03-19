@@ -20,7 +20,9 @@ struct FSoundConfig
 	FVector WorldLocation = FVector::ZeroVector;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Attachment")
-	TObjectPtr<USceneComponent> AttachToComponent;
+	FComponentReference AttachToComponent;
+
+	USceneComponent* ResolvedAttachComponent = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Attachment")
 	EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget;
