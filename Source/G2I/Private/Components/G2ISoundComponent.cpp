@@ -1,5 +1,5 @@
 #include "Components/G2ISoundComponent.h"
-#include "Game/G2IGameSoundManager.h"
+
 #include "G2I.h"
 
 void UG2ISoundComponent::BeginPlay()
@@ -12,7 +12,7 @@ void UG2ISoundComponent::BeginPlay()
 		return;
 	}
 	SoundManager = World->GetSubsystem<UG2IGameSoundManager>();
-	if (!ensure(SoundManager)) {
+	if (!SoundManager.IsValid()) {
 		UE_LOG(LogG2I, Error, TEXT("Couldn't get the Sound Manager in %s"), *GetName());
 	}
 }
@@ -20,7 +20,7 @@ void UG2ISoundComponent::BeginPlay()
 
 int32 UG2ISoundComponent::AddSound(const FSoundConfig* NewSoundConfig)
 {
-	if (!ensure(SoundManager)) {
+	if (!SoundManager.IsValid()) {
 		UE_LOG(LogG2I, Error, TEXT("Couldn't get the Sound Manager in %s"), *GetName());
 		return -1;
 	}
@@ -38,7 +38,7 @@ int32 UG2ISoundComponent::AddSound(const FSoundConfig* NewSoundConfig)
 
 bool UG2ISoundComponent::PlaySound(int32 SoundId)
 {
-	if (!ensure(SoundManager)) {
+	if (!SoundManager.IsValid()) {
 		UE_LOG(LogG2I, Error, TEXT("Couldn't get the Sound Manager in %s"), *GetName());
 		return false;
 	}
@@ -47,7 +47,7 @@ bool UG2ISoundComponent::PlaySound(int32 SoundId)
 
 bool UG2ISoundComponent::StopSound(int32 SoundId)
 {
-	if (!ensure(SoundManager)) {
+	if (!SoundManager.IsValid()) {
 		UE_LOG(LogG2I, Error, TEXT("Couldn't get the Sound Manager in %s"), *GetName());
 		return false;
 	}
@@ -56,7 +56,7 @@ bool UG2ISoundComponent::StopSound(int32 SoundId)
 
 void UG2ISoundComponent::StopAllSounds()
 {
-	if (!ensure(SoundManager)) {
+	if (!SoundManager.IsValid()) {
 		UE_LOG(LogG2I, Error, TEXT("Couldn't get the Sound Manager in %s"), *GetName());
 		return;
 	}
@@ -65,7 +65,7 @@ void UG2ISoundComponent::StopAllSounds()
 
 bool UG2ISoundComponent::ChangeSoundVolume(int32 SoundId, float NewVolume)
 {
-	if (!ensure(SoundManager)) {
+	if (!SoundManager.IsValid()) {
 		UE_LOG(LogG2I, Error, TEXT("Couldn't get the Sound Manager in %s"), *GetName());
 		return false;
 	}
@@ -74,7 +74,7 @@ bool UG2ISoundComponent::ChangeSoundVolume(int32 SoundId, float NewVolume)
 
 bool UG2ISoundComponent::ChangeSoundPitch(int32 SoundId, float NewPitch)
 {
-	if (!ensure(SoundManager)) {
+	if (!SoundManager.IsValid()) {
 		UE_LOG(LogG2I, Error, TEXT("Couldn't get the Sound Manager in %s"), *GetName());
 		return false;
 	}
@@ -83,7 +83,7 @@ bool UG2ISoundComponent::ChangeSoundPitch(int32 SoundId, float NewPitch)
 
 bool UG2ISoundComponent::ChangeSoundLocation(int32 SoundId, FVector NewLocation)
 {
-	if (!ensure(SoundManager)) {
+	if (!SoundManager.IsValid()) {
 		UE_LOG(LogG2I, Error, TEXT("Couldn't get the Sound Manager in %s"), *GetName());
 		return false;
 	}
@@ -94,7 +94,7 @@ bool UG2ISoundComponent::ChangeSoundAttachment(int32 SoundId,
 	USceneComponent* NewAttachmentComponent,
 	FAttachmentTransformRules AttachmentRules)
 {
-	if (!ensure(SoundManager)) {
+	if (!SoundManager.IsValid()) {
 		UE_LOG(LogG2I, Error, TEXT("Couldn't get the Sound Manager in %s"), *GetName());
 		return false;
 	}
@@ -105,7 +105,7 @@ bool UG2ISoundComponent::ChangeSoundAttachment(int32 SoundId,
 	AActor* NewAttachmentActor,
 	FAttachmentTransformRules AttachmentRules)
 {
-	if (!ensure(SoundManager)) {
+	if (!SoundManager.IsValid()) {
 		UE_LOG(LogG2I, Error, TEXT("Couldn't get the Sound Manager in %s"), *GetName());
 		return false;
 	}
@@ -115,7 +115,7 @@ bool UG2ISoundComponent::ChangeSoundAttachment(int32 SoundId,
 
 bool UG2ISoundComponent::RemoveSound(int32 SoundId)
 {
-	if (!ensure(SoundManager)) {
+	if (!SoundManager.IsValid()) {
 		UE_LOG(LogG2I, Error, TEXT("Couldn't get the Sound Manager in %s"), *GetName());
 		return false;
 	}
@@ -124,7 +124,7 @@ bool UG2ISoundComponent::RemoveSound(int32 SoundId)
 
 void UG2ISoundComponent::RemoveAllSounds()
 {
-	if (!ensure(SoundManager)) {
+	if (!SoundManager.IsValid()) {
 		UE_LOG(LogG2I, Error, TEXT("Couldn't get the Sound Manager in %s"), *GetName());
 		return;
 	}

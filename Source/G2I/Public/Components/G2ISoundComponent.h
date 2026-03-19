@@ -2,10 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "Components/SceneComponent.h"
+//TODO Move FSoundConfig to new .h file to resolve confilct
+#include "Game/G2IGameSoundManager.h"
 #include "G2ISoundComponent.generated.h"
-
-class UG2IGameSoundManager;
-struct FSoundConfig;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class G2I_API UG2ISoundComponent : public USceneComponent

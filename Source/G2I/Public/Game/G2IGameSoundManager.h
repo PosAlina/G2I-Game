@@ -22,6 +22,7 @@ struct FSoundConfig
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Attachment")
 	FComponentReference AttachToComponent;
 
+	UPROPERTY()
 	USceneComponent* ResolvedAttachComponent = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Attachment")
