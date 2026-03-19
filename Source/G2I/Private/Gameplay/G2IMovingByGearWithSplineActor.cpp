@@ -1,49 +1,65 @@
 #include "Gameplay/G2IMovingByGearWithSplineActor.h"
 #include "G2I.h"
 #include "Components/SplineComponent.h"
+#include "Components/BoxComponent.h"
 
 void AG2IMovingByGearWithSplineActor::SetLocationAndRotationWithSpline(float SplineDistance)
 {
-	FVector NewLocation = \
-		SplineComponent->GetLocationAtDistanceAlongSpline(
-			SplineDistance,
-			ESplineCoordinateSpace::World
-		);
+	if (!ensure(SplineComponent)) {
+		UE_LOG(LogG2I, Warning, TEXT("Couldn't get the Spline Component for %s"), *GetName());
+		return;
+	}
 
-	FRotator NewRotation = \
-		SplineComponent->GetRotationAtDistanceAlongSpline(
-			SplineDistance,
-			ESplineCoordinateSpace::World
-		);
+	if (!ensure(MainBoxComponent)) {
+		UE_LOG(LogG2I, Warning, TEXT("Couldn't get the Main Box Component for %s"), *GetName());
+		return;
+	}
 
-	TArray<USceneComponent*> ChildComponents;
-	SplineComponent->GetChildrenComponents(true, ChildComponents);
-	
-	for (USceneComponent* Child : ChildComponents)
+	FVector NewLocation = SplineComponent->GetLocationAtDistanceAlongSpline(
+		SplineDistance,
+		ESplineCoordinateSpace::World
+	);
+
+	FRotator NewRotation = SplineComponent->GetRotationAtDistanceAlongSpline(
+		SplineDistance,
+		ESplineCoordinateSpace::World
+	);
+
+	FHitResult Hit;
+	MainBoxComponent->SetWorldLocationAndRotation(NewLocation, NewRotation, true, &Hit);
+
+	if (Hit.bBlockingHit)
 	{
-		if (UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>(Child))
-		{
-			MeshComp->SetWorldLocationAndRotation(NewLocation, NewRotation);
-		}
+		CurrentSplineDistance = SplineComponent->GetDistanceAlongSplineAtLocation(
+			MainBoxComponent->GetComponentLocation(),
+			ESplineCoordinateSpace::World);
 	}
 }
+
 
 AG2IMovingByGearWithSplineActor::AG2IMovingByGearWithSplineActor()
 {
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 	SplineComponent = CreateDefaultSubobject<USplineComponent>(TEXT("SplineToMoveComponent"));
-	if (!SplineComponent) {
+	if (!ensure(SplineComponent)) {
 		UE_LOG(LogG2I, Warning, TEXT("SplineComponent was not created for %s"), *GetName());
 		return;
 	}
 	SplineComponent->SetupAttachment(RootComponent);
+
+	MainBoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("MainBoxComponent"));
+	if (!ensure(MainBoxComponent)) {
+		UE_LOG(LogG2I, Warning, TEXT("MainBoxComponent was not created for %s"), *GetName());
+		return;
+	}
+	MainBoxComponent->SetupAttachment(SplineComponent);
 }
 
 void AG2IMovingByGearWithSplineActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (!SplineComponent) {
+	if (!ensure(SplineComponent)) {
 		UE_LOG(LogG2I, Warning, TEXT("SplineComponent is not set for %s"), *GetName());
 		return;
 	}
@@ -53,7 +69,7 @@ void AG2IMovingByGearWithSplineActor::BeginPlay()
 
 void AG2IMovingByGearWithSplineActor::OnPushing_Implementation(float ForceMagnitude)
 {
-	if (!SplineComponent) {
+	if (!ensure(SplineComponent)) {
 		UE_LOG(LogG2I, Warning, TEXT("SplineComponent is not set for %s"), *GetName());
 		return;
 	}
@@ -63,4 +79,3 @@ void AG2IMovingByGearWithSplineActor::OnPushing_Implementation(float ForceMagnit
 
 	SetLocationAndRotationWithSpline(CurrentSplineDistance);
 }
-

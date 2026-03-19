@@ -6,6 +6,7 @@
 #include "G2IMovingByGearWithSplineActor.generated.h"
 
 class USplineComponent;
+class UBoxComponent;
 UCLASS()
 class G2I_API AG2IMovingByGearWithSplineActor : public AActor, public IG2IMovingByGearObjectInterface
 {
@@ -16,6 +17,9 @@ private:
 public:
 	UPROPERTY(EditAnywhere, Category = "Data|Spline")
 	TObjectPtr<USplineComponent> SplineComponent;
+
+	UPROPERTY(EditAnywhere, Category = "Data|Spline")
+	TObjectPtr<UBoxComponent> MainBoxComponent;
 
 	UPROPERTY(EditAnywhere, Category = "Data|Spline")
 	float CurrentSplineDistance;
