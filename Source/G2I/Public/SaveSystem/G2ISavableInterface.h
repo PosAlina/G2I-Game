@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "Game/G2IGameplaySaveGame.h"
+#include "G2IGameplaySaveGame.h"
 #include "G2ISavableInterface.generated.h"
 
 // This class does not need to be modified.

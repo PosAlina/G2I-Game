@@ -19,6 +19,7 @@
 #include "G2ISteamShotInputInterface.h"
 #include "G2IUIManager.h"
 #include "G2IWidgetNames.h"
+#include "G2ISavingGameplayManager.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 void AG2IPlayerController::SetupInputComponent()
@@ -617,26 +618,54 @@ void AG2IPlayerController::GlovePunchActivation(const FInputActionInstance& Inst
 #if WITH_EDITOR
 void AG2IPlayerController::SaveGameplay(const FInputActionValue& Value)
 {
-	if (auto* GameInstance = GetGameInstance())
+	if (!bIsDebugAction)
 	{
-		if (GameInstance->Implements<UG2ISaveGameplayInterface>())
-			IG2ISaveGameplayInterface::Execute_SaveAllDataAndGameplay(GameInstance, true);
+		return;
+	}
+
+	if (const auto* GameInstance = GetGameInstance())
+	{
+
+		if (UG2ISavingGameplayManager* SavingGameplayManager = GameInstance->GetSubsystem<UG2ISavingGameplayManager>())
+		{
+			SavingGameplayManager->SaveAllDataAndGameplay(true);
+
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Silver, "DEBUG: Saved gameplay data.");
+			}
+		}
 		else
-			UE_LOG(LogG2I, Warning, TEXT("%s doesn't implement interface UG2ISaveGameplayInterface."), *GameInstance->GetName());
+		{
+			UE_LOG(LogG2I, Warning, TEXT("Couldn't get SavingGameplayManager subsystem from GameInstance in %s."), *GetName());
+			return;
+		}
 	}
 }
 
 void AG2IPlayerController::LoadGameplay(const FInputActionValue& Value)
 {
-	if (auto* GameInstance = GetGameInstance())
+	if (!bIsDebugAction)
 	{
-		if (GameInstance->Implements<UG2ISaveGameplayInterface>())
+		return;
+	}
+
+	if (const auto* GameInstance = GetGameInstance())
+	{
+		if (UG2ISavingGameplayManager* SavingGameplayManager = GameInstance->GetSubsystem<UG2ISavingGameplayManager>())
 		{
-			IG2ISaveGameplayInterface::Execute_LoadGameplay(GameInstance, false);
-			IG2ISaveGameplayInterface::Execute_LoadAllData(GameInstance);
+			SavingGameplayManager->LoadGameplay(false);
+			SavingGameplayManager->LoadAllData();
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Silver, "DEBUG: Gameplay data loaded.");
+			}
 		}
 		else
-			UE_LOG(LogG2I, Warning, TEXT("%s doesn't implement interface UG2ISaveGameplayInterface."), *GameInstance->GetName());
+		{
+			UE_LOG(LogG2I, Warning, TEXT("Couldn't get SavingGameplayManager subsystem from GameInstance in %s."), *GetName());
+			return;
+		}
 	}
 }
 #endif

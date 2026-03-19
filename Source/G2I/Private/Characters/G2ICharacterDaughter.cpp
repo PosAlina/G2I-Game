@@ -74,6 +74,12 @@ FUnPossessedDelegate& AG2ICharacterDaughter::GetUnPossessedDelegate()
 
 void AG2ICharacterDaughter::SaveData_Implementation(UG2IGameplaySaveGame* SaveGameRef)
 {
+	if (!ensure(SaveGameRef))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Got null SaveGameRef while trying to save %s's data."), *GetName());
+		return;
+	}
+
 	if (IsPlayerControlled())
 	{
 		SaveGameRef->PlayersSaveData.CurrentCharacter = GetClass();
@@ -84,14 +90,23 @@ void AG2ICharacterDaughter::SaveData_Implementation(UG2IGameplaySaveGame* SaveGa
 
 void AG2ICharacterDaughter::LoadData_Implementation(const UG2IGameplaySaveGame* SaveGameRef)
 {
-	if (IsPlayerControlled() && !this->IsA(SaveGameRef->PlayersSaveData.CurrentCharacter))
+	if (!ensure(SaveGameRef))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Got null SaveGameRef while trying to save %s's data."), *GetName());
+		return;
+	}
+
+	const TSubclassOf<ACharacter> CurrentCharacterClass = SaveGameRef->PlayersSaveData.CurrentCharacter;
+	if (IsPlayerControlled() && !IsA(CurrentCharacterClass))
 	{
 		if (auto* G2IPlayerState = Cast<AG2IPlayerState>(GetPlayerState()))
 		{
-			G2IPlayerState->SelectNextCharacter();
+			G2IPlayerState->SetCharacterByClass(CurrentCharacterClass);
 		}
 	}
 
-	if (auto* KeyTransform = SaveGameRef->PlayersSaveData.CharactersTransform.Find(GetClass()))
+	if (const FTransform* KeyTransform = SaveGameRef->PlayersSaveData.CharactersTransform.Find(GetClass()))
+	{
 		SetActorTransform(*KeyTransform);
+	}
 }

@@ -3,8 +3,7 @@
 #include "CoreMinimal.h"
 #include "G2ICharacterInterface.h"
 #include "GameFramework/Character.h"
-#include "Interfaces/SavingSystem/G2ISaveGameplayInterface.h"
-#include "Interfaces/SavingSystem/G2ISavableInterface.h"
+#include "G2ISavableInterface.h"
 #include "G2ICharacterDaughter.generated.h"
 
 class UG2IFlightComponent;
@@ -63,9 +62,9 @@ public:
 
 	explicit AG2ICharacterDaughter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
-	void SaveData_Implementation(UG2IGameplaySaveGame* SaveGameRef);
+	virtual void SaveData_Implementation(UG2IGameplaySaveGame* SaveGameRef) override;
 
-	void LoadData_Implementation(const UG2IGameplaySaveGame* SaveGameRef);
+	virtual void LoadData_Implementation(const UG2IGameplaySaveGame* SaveGameRef) override;
 
 	virtual void PossessedBy(AController* NewController) override;
 	
