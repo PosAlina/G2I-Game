@@ -3,7 +3,6 @@
 #include "CoreMinimal.h"
 #include "EnhancedActionKeyMapping.h"
 #include "GameFramework/PlayerController.h"
-#include "Interfaces/SavingSystem/G2ISaveGameplayInterface.h"
 #include "G2IPlayerController.generated.h"
 
 class UG2IUIManager;
