@@ -18,22 +18,17 @@ void UG2ISoundComponent::BeginPlay()
 }
 
 
-int32 UG2ISoundComponent::AddSound(const FSoundConfig* NewSoundConfig)
+int32 UG2ISoundComponent::AddSound(const FSoundConfig& NewSoundConfig)
 {
 	if (!SoundManager.IsValid()) {
 		UE_LOG(LogG2I, Error, TEXT("Couldn't get the Sound Manager in %s"), *GetName());
 		return -1;
 	}
-	if (!NewSoundConfig) {
-		UE_LOG(LogG2I, Warning, TEXT("Got empty config in %s"), *GetName());
-		return -1;
-	}
 
-	FSoundConfig ConfigToSend = *NewSoundConfig;
-
+	FSoundConfig ConfigToSend = NewSoundConfig;
 	ConfigToSend.ResolvedAttachComponent = Cast<USceneComponent>(ConfigToSend.AttachToComponent.GetComponent(GetOwner()));
 
-	return SoundManager->AddSound(&ConfigToSend);
+	return SoundManager->AddSound(ConfigToSend);
 }
 
 bool UG2ISoundComponent::PlaySound(int32 SoundId)
@@ -92,23 +87,25 @@ bool UG2ISoundComponent::ChangeSoundLocation(int32 SoundId, FVector NewLocation)
 
 bool UG2ISoundComponent::ChangeSoundAttachment(int32 SoundId,
 	USceneComponent* NewAttachmentComponent,
-	FAttachmentTransformRules AttachmentRules)
+	EAttachmentRule AttachmentRules)
 {
 	if (!SoundManager.IsValid()) {
 		UE_LOG(LogG2I, Error, TEXT("Couldn't get the Sound Manager in %s"), *GetName());
 		return false;
 	}
+
 	return SoundManager->ChangeSoundAttachment(SoundId, NewAttachmentComponent, AttachmentRules);
 }
 
 bool UG2ISoundComponent::ChangeSoundAttachment(int32 SoundId,
 	AActor* NewAttachmentActor,
-	FAttachmentTransformRules AttachmentRules)
+	EAttachmentRule AttachmentRules)
 {
 	if (!SoundManager.IsValid()) {
 		UE_LOG(LogG2I, Error, TEXT("Couldn't get the Sound Manager in %s"), *GetName());
 		return false;
 	}
+
 	return SoundManager->ChangeSoundAttachment(SoundId, NewAttachmentActor, AttachmentRules);
 }
 

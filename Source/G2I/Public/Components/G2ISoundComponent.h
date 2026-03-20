@@ -1,8 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/SceneComponent.h"
-//TODO Move FSoundConfig to new .h file to resolve confilct
+//TODO Move FSoundConfig to new .h file to resolve conflict
 #include "Game/G2IGameSoundManager.h"
 #include "G2ISoundComponent.generated.h"
 
@@ -17,24 +16,41 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
-	UPROPERTY(EditDefaultsOnly, Category = "G2I Sounds")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Sounds")
 	TMap<FName, FSoundConfig> SetupSounds;
 
-	int32 AddSound(const FSoundConfig* NewSoundConfig);
+
+	UFUNCTION(BlueprintCallable, Category = "Sounds")
+	int32 AddSound(const FSoundConfig& NewSoundConfig);
+
+	UFUNCTION(BlueprintCallable, Category = "Sounds")
 	bool RemoveSound(int32 SoundId);
+
+	UFUNCTION(BlueprintCallable, Category = "Sounds")
 	void RemoveAllSounds();
 
+	UFUNCTION(BlueprintCallable, Category = "Sounds")
 	bool PlaySound(int32 SoundId);
+
+	UFUNCTION(BlueprintCallable, Category = "Sounds")
 	bool StopSound(int32 SoundId);
+
+	UFUNCTION(BlueprintCallable, Category = "Sounds")
 	void StopAllSounds();
 
+	UFUNCTION(BlueprintCallable, Category = "Sounds")
 	bool ChangeSoundVolume(int32 SoundId, float NewVolume);
+
+	UFUNCTION(BlueprintCallable, Category = "Sounds")
 	bool ChangeSoundPitch(int32 SoundId, float NewPitch);
+
+	UFUNCTION(BlueprintCallable, Category = "Sounds")
 	bool ChangeSoundLocation(int32 SoundId, FVector NewLocation);
+
 	bool ChangeSoundAttachment(int32 SoundId,
 		USceneComponent* NewAttachementComponent,
-		FAttachmentTransformRules AttachmentRules = FAttachmentTransformRules::KeepRelativeTransform);
+		EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget);
 	bool ChangeSoundAttachment(int32 SoundId,
 		AActor* NewAttachementActor,
-		FAttachmentTransformRules AttachmentRules = FAttachmentTransformRules::KeepRelativeTransform);
+		EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget);
 };

@@ -2,15 +2,14 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
+#include "Engine/EngineTypes.h"
+#include "Components/AudioComponent.h"
+#include "Components/SceneComponent.h"
+#include "Sound/SoundCue.h"
 #include "G2IGameSoundManager.generated.h"
 
-
-class UAudioComponent;
-class USceneComponent;
-class USoundCue;
-
 USTRUCT(BlueprintType)
-struct FSoundConfig 
+struct FSoundConfig
 {
 	GENERATED_BODY()
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Sound")
@@ -66,7 +65,7 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
-	int32 AddSound(const FSoundConfig* NewSoundConfig);
+	int32 AddSound(const FSoundConfig& NewSoundConfig);
 	bool RemoveSound(int32 SoundId);
 	void RemoveAllSounds();
 
@@ -79,8 +78,8 @@ public:
 	bool ChangeSoundLocation(int32 SoundId, FVector NewLocation);
 	bool ChangeSoundAttachment(int32 SoundId,
 		USceneComponent* NewAttachementComponent,
-		FAttachmentTransformRules AttachmentRules = FAttachmentTransformRules::KeepRelativeTransform);
+		EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget);
 	bool ChangeSoundAttachment(int32 SoundId,
 		AActor* NewAttachementActor,
-		FAttachmentTransformRules AttachmentRules = FAttachmentTransformRules::KeepRelativeTransform);
+		EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget);
 };

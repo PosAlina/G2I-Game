@@ -51,9 +51,9 @@ void UG2IGameSoundManager::Deinitialize()
 	Super::Deinitialize();
 }
 
-int32 UG2IGameSoundManager::AddSound(const FSoundConfig* NewSoundConfig)
+int32 UG2IGameSoundManager::AddSound(const FSoundConfig& NewSoundConfig)
 {
-	if (!ensure(NewSoundConfig) || !ensure(NewSoundConfig->Sound)) {
+	if (!ensure(NewSoundConfig.Sound)) {
 		UE_LOG(LogG2I, Warning, TEXT("The sound manager didn't get sound"));
 		return -1;
 	}
@@ -63,21 +63,21 @@ int32 UG2IGameSoundManager::AddSound(const FSoundConfig* NewSoundConfig)
 		return -1;
 	}
 
-	AudioComponent->SetSound(NewSoundConfig->Sound.Get());
-	AudioComponent->SetWorldLocation(NewSoundConfig->WorldLocation);
+	AudioComponent->SetSound(NewSoundConfig.Sound.Get());
+	AudioComponent->SetWorldLocation(NewSoundConfig.WorldLocation);
 
-	if (NewSoundConfig->ResolvedAttachComponent) {
+	if (NewSoundConfig.ResolvedAttachComponent) {
 		FAttachmentTransformRules Rules(
-			NewSoundConfig->AttachmentRules,
-			NewSoundConfig->AttachmentRules,
-			NewSoundConfig->AttachmentRules,
+			NewSoundConfig.AttachmentRules,
+			NewSoundConfig.AttachmentRules,
+			NewSoundConfig.AttachmentRules,
 			false);
 		AudioComponent->AttachToComponent(
-			NewSoundConfig->ResolvedAttachComponent,
+			NewSoundConfig.ResolvedAttachComponent,
 			Rules);
 	}
-	AudioComponent->SetVolumeMultiplier(NewSoundConfig->VolumeMultiplier);
-	AudioComponent->SetPitchMultiplier(NewSoundConfig->PitchMultiplier);
+	AudioComponent->SetVolumeMultiplier(NewSoundConfig.VolumeMultiplier);
+	AudioComponent->SetPitchMultiplier(NewSoundConfig.PitchMultiplier);
 	AudioComponent->RegisterComponent();
 
 	if (IdStack.IsEmpty()) {
@@ -170,7 +170,7 @@ bool UG2IGameSoundManager::ChangeSoundLocation(int32 SoundId, FVector NewLocatio
 
 bool UG2IGameSoundManager::ChangeSoundAttachment(int32 SoundId,
 	USceneComponent* NewAttachmentComponent,
-	FAttachmentTransformRules AttachmentRules)
+	EAttachmentRule AttachmentRules)
 {
 	if (!ensure(NewAttachmentComponent)) {
 		UE_LOG(LogG2I, Warning, TEXT("The sound manager got wrong component to attach"));
@@ -182,14 +182,20 @@ bool UG2IGameSoundManager::ChangeSoundAttachment(int32 SoundId,
 		return false;
 	}
 
-	Component->AttachToComponent(NewAttachmentComponent, AttachmentRules);
+	FAttachmentTransformRules Rules(
+		AttachmentRules,
+		AttachmentRules,
+		AttachmentRules,
+		false);
+
+	Component->AttachToComponent(NewAttachmentComponent, Rules);
 
 	return true;
 }
 
 bool UG2IGameSoundManager::ChangeSoundAttachment(int32 SoundId,
 	AActor* NewAttachmentActor,
-	FAttachmentTransformRules AttachmentRules)
+	EAttachmentRule AttachmentRules)
 {
 	if (!ensure(NewAttachmentActor)) {
 		UE_LOG(LogG2I, Warning, TEXT("The sound manager got wrong actor to attach"));
@@ -204,8 +210,14 @@ bool UG2IGameSoundManager::ChangeSoundAttachment(int32 SoundId,
 	if (!ensure(Component)) {
 		return false;
 	}
+	
+	FAttachmentTransformRules Rules(
+		AttachmentRules,
+		AttachmentRules,
+		AttachmentRules,
+		false);
 
-	Component->AttachToComponent(RootComponent, AttachmentRules);
+	Component->AttachToComponent(RootComponent, Rules);
 
 	return true;
 }
