@@ -35,8 +35,9 @@ void UG2ITrainingScreen::BindDelegates()
 
 void UG2ITrainingScreen::OnSwitchCharactersDescription(APawn* Pawn)
 {
-	if (!Pawn)
+	if (!ensure(Pawn))
 	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: An attempt to switch character description for null pawn"), *GetName());
 		return;
 	}
 	if (!ensure(CharactersDescriptionsSwitcher))
@@ -48,16 +49,17 @@ void UG2ITrainingScreen::OnSwitchCharactersDescription(APawn* Pawn)
 	if (!ensure(PawnClass))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find class of %s"), *GetName(), *Pawn->GetName());
+		return;
 	}
+	
 	if (PawnClass->IsChildOf<AG2ICharacterEngineer>())
 	{
 		CharactersDescriptionsSwitcher->SetActiveWidget(EngineerDescription);
+		return;
 	}
-	else
+	
+	if (PawnClass->IsChildOf<AG2ICharacterDaughter>())
 	{
-		if (PawnClass->IsChildOf<AG2ICharacterDaughter>())
-		{
-			CharactersDescriptionsSwitcher->SetActiveWidget(DaughterDescription);
-		}
+		CharactersDescriptionsSwitcher->SetActiveWidget(DaughterDescription);
 	}
 }
