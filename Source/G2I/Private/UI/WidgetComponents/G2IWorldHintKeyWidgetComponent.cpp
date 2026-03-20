@@ -13,7 +13,7 @@ void UG2IWorldHintKeyWidgetComponent::BeginPlay()
 
 	if (!ensure(UIManager))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
 			*UG2IUIManager::StaticClass()->GetName(), *GetName());
 		return;
 	}
@@ -34,7 +34,7 @@ void UG2IWorldHintKeyWidgetComponent::OpenKeyHint(UInputAction *KeyInput)
 	{
 		if (!ensure(UIManager))
 		{
-			UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+			UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
 				*UG2IUIManager::StaticClass()->GetName(), *GetName());
 			return;
 		}

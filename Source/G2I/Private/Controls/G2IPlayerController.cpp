@@ -78,8 +78,8 @@ void AG2IPlayerController::SetupInputComponent()
 				EnhancedInputComponent->BindAction(ToggleFollowAIBehindPlayerAction, ETriggerEvent::Started,
 					this, &ThisClass::ToggleFollowAIBehindPlayer);
 
-				// TODO: Add Pause Action after adding all UI systems
-				//EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Started,this, &ThisClass::CallPause);
+				EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Started,this,
+					&ThisClass::CallPause);
 
 				EnhancedInputComponent->BindAction(GlovePunchAction, ETriggerEvent::Started, this, &ThisClass::GlovePunchActivation);
 
@@ -90,8 +90,8 @@ void AG2IPlayerController::SetupInputComponent()
 					&ThisClass::ToggleCrouch);
 				EnhancedInputComponent->BindAction(SwitchCameraBehaviorAction, ETriggerEvent::Started, this,
 					&ThisClass::SwitchCameraBehavior);
-				// TODO: Add Pause Action after adding all UI systems
-				//EnhancedInputComponent->BindAction(DebugPauseAction, ETriggerEvent::Started,this, &ThisClass::CallPause);
+				EnhancedInputComponent->BindAction(DebugPauseAction, ETriggerEvent::Started,this,
+					&ThisClass::CallPause);
 #endif
 			}
 			else
@@ -120,7 +120,7 @@ void AG2IPlayerController::SetupInputComponent()
 	UIManager = GameInstance->GetSubsystem<UG2IUIManager>();
 	if (!ensure(UIManager))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
 			*UG2IUIManager::StaticClass()->GetName(), *GetName());
 	}
 	UIManager->OnPlayerControllerInitDelegate.Broadcast(this);
@@ -178,32 +178,15 @@ void AG2IPlayerController::SetViewTargetWithBlend(class AActor* NewViewTarget, f
 
 void AG2IPlayerController::CallPause(const FInputActionValue& Value)
 {
-	SetPause(true);
-}
-
-bool AG2IPlayerController::SetPause(bool bPause, FCanUnpause CanUnpauseDelegate)
-{
-	if (!Super::SetPause(bPause, CanUnpauseDelegate))
-	{
-		return false;
-	}
-
 	if (!ensure(UIManager))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
 			*UG2IUIManager::StaticClass()->GetName(), *GetName());
-		return true;
+		return;
 	}
-	if (bPause)
-	{
-		UIManager->OpenWidget(EG2IWidgetNames::Pause);
-	}
-	else
-	{
-		UIManager->CloseWidget(EG2IWidgetNames::Pause);
-	}
+	SetPause(true);
 	
-	return true;
+	UIManager->OpenWidget(EG2IWidgetNames::Pause);
 }
 
 void AG2IPlayerController::SetRotationTowardsCamera(const UCameraComponent& Camera)

@@ -73,7 +73,7 @@ void UG2IWorldHintWidgetComponent::InitializationUIManager()
 	UIManager = GameInstance->GetSubsystem<UG2IUIManager>();
 	if (!ensure(UIManager))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
 			*UG2IUIManager::StaticClass()->GetName(), *GetName());
 	}
 }
@@ -167,7 +167,7 @@ UG2IUserWidget *UG2IWorldHintWidgetComponent::FindOrAddWidgetByName(const EG2IWi
 	
 	if (!ensure(UIManager))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
 			*UG2IUIManager::StaticClass()->GetName(), *GetName());
 		return nullptr;
 	}
@@ -215,7 +215,7 @@ void UG2IWorldHintWidgetComponent::OpenWidget()
 {
 	if (!ensure(UIManager))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
 			*UG2IUIManager::StaticClass()->GetName(), *GetName());
 		return;
 	}
@@ -227,7 +227,7 @@ void UG2IWorldHintWidgetComponent::CloseWidget()
 {
 	if (!ensure(UIManager))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
 			*UG2IUIManager::StaticClass()->GetName(), *GetName());
 		return;
 	}
