@@ -57,7 +57,7 @@ int32 UG2IGameSoundManager::AddSound(const FSoundConfig& NewSoundConfig)
 		UE_LOG(LogG2I, Warning, TEXT("The sound manager didn't get sound"));
 		return -1;
 	}
-	UAudioComponent* AudioComponent = NewObject<UAudioComponent>(GetWorld());
+	UAudioComponent* AudioComponent = NewObject<UAudioComponent>(GetWorld()->GetWorldSettings());
 	if (!ensure(AudioComponent)) {
 		UE_LOG(LogG2I, Warning, TEXT("The sound manager can't create an audio component"));
 		return -1;
@@ -78,6 +78,7 @@ int32 UG2IGameSoundManager::AddSound(const FSoundConfig& NewSoundConfig)
 	}
 	AudioComponent->SetVolumeMultiplier(NewSoundConfig.VolumeMultiplier);
 	AudioComponent->SetPitchMultiplier(NewSoundConfig.PitchMultiplier);
+
 	AudioComponent->RegisterComponent();
 
 	if (IdStack.IsEmpty()) {

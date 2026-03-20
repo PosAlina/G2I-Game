@@ -16,7 +16,7 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Sounds")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sounds")
 	TMap<FName, FSoundConfig> SetupSounds;
 
 
