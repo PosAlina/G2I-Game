@@ -59,8 +59,6 @@ public:
 	virtual void SetViewTargetWithBlend(AActor* NewViewTarget, float BlendTime = 0,
 		EViewTargetBlendFunction BlendFunc = VTBlend_Linear, float BlendExp = 0, bool bLockOutgoing = false) override;
 
-	virtual bool SetPause(bool bPause, FCanUnpause CanUnpauseDelegate = FCanUnpause()) override;
-
 public:
 
 	void SetRotationTowardsCamera(const UCameraComponent& Camera);

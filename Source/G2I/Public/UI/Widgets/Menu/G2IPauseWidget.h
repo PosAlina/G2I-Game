@@ -17,6 +17,20 @@ public:
 	TObjectPtr<UButton> ContinueButton;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> QuitGameButton;
+	TObjectPtr<UButton> OptionsButton;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> MainMenuButton;
+
+protected:
+
+	virtual void InitializeAfterManagerLoading() override;
+
+	UFUNCTION()
+	void OnContinueButtonClicked();
+
+private:
+	
+	void BindDelegates();
 	
 };

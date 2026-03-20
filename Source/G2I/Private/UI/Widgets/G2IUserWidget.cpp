@@ -24,7 +24,7 @@ void UG2IUserWidget::InitializeUIManager()
 	UIManager = GameInstance->GetSubsystem<UG2IUIManager>();
 	if (!ensure(UIManager))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("Couldn't get %s subsystem from GameInstance in %s"), *UG2IUIManager::StaticClass()->GetName(),
+		UE_LOG(LogG2I, Error, TEXT("Couldn't get %s subsystem from GameInstance in %s"), *UG2IUIManager::StaticClass()->GetName(),
 			*GetName());
 	}
 	UIManager->OnUIManagerInitialized.AddDynamic(this, &ThisClass::InitializeAfterManagerLoading);
