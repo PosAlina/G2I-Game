@@ -45,7 +45,7 @@ void UG2IAimingComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 			PendingAimViewElapsedTime = 0.f;
 			if (!ensure(UIManager))
 			{
-				UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+				UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
 					*UG2IUIManager::StaticClass()->GetName(), *GetName());
 			}
 			UIManager->ChangeAimingType(CurrentAimType);
@@ -138,7 +138,7 @@ void UG2IAimingComponent::StartAimingAction_Implementation()
 
 		if (!ensure(UIManager))
 		{
-			UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+			UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
 				*UG2IUIManager::StaticClass()->GetName(), *GetName());
 		}
 		UIManager->OpenWidget(EG2IWidgetNames::Aim);
@@ -156,7 +156,7 @@ void UG2IAimingComponent::StopAimingAction_Implementation()
 
 		if (!ensure(UIManager))
 		{
-			UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+			UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
 				*UG2IUIManager::StaticClass()->GetName(), *GetName());
 		}
 		UIManager->CloseWidget(EG2IWidgetNames::Aim);
@@ -221,7 +221,7 @@ void UG2IAimingComponent::SetPendingAimType(EG2IAimType NewAimType)
 
 	if (!ensure(UIManager))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
 			*UG2IUIManager::StaticClass()->GetName(), *GetName());
 	}
 	UIManager->ChangeAimingType(NewAimType);
@@ -252,7 +252,7 @@ void UG2IAimingComponent::SetAimType(const AActor* TargetActor)
 			{
 				if (!ensure(UIManager))
 				{
-					UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+					UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
 						*UG2IUIManager::StaticClass()->GetName(), *GetName());
 				}
 				UIManager->ChangeAimingType(NewAimType);

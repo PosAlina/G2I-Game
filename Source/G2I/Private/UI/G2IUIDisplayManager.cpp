@@ -240,7 +240,7 @@ void UG2IUIDisplayManager::CloseActiveWidgetsByType(const EG2IWidgetTypes Widget
 	{
 		for (auto Iterator = ActiveWidgetsNamesByType->CreateIterator(); Iterator; ++Iterator)
 		{
-			if (const auto WidgetInfo = AllWidgets.Find(*Iterator))
+			if (const FG2IWidgetInfo *WidgetInfo = AllWidgets.Find(*Iterator))
 			{
 				if (UG2IUserWidget *Widget = WidgetInfo->Widget)
 				{

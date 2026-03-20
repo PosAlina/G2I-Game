@@ -43,7 +43,7 @@ void UG2IPauseWidget::OnContinueButtonClicked()
 {
 	if (!ensure(UIManager))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't find %s"), *GetName(),
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
 			*UG2IUIManager::StaticClass()->GetName());
 		return;
 	}

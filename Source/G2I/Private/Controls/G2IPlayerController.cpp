@@ -120,7 +120,7 @@ void AG2IPlayerController::SetupInputComponent()
 	UIManager = GameInstance->GetSubsystem<UG2IUIManager>();
 	if (!ensure(UIManager))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
 			*UG2IUIManager::StaticClass()->GetName(), *GetName());
 	}
 	UIManager->OnPlayerControllerInitDelegate.Broadcast(this);
@@ -180,7 +180,7 @@ void AG2IPlayerController::CallPause(const FInputActionValue& Value)
 {
 	if (!ensure(UIManager))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("%s isn't defined in %s"),
+		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
 			*UG2IUIManager::StaticClass()->GetName(), *GetName());
 		return;
 	}
