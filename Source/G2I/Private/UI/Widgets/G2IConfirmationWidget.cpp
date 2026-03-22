@@ -34,13 +34,9 @@ void UG2IConfirmationWidget::BindDelegates()
 
 void UG2IConfirmationWidget::OnConfirmButtonClicked()
 {
-	if (ensure(OnConfirm))
+	if (OnConfirm)
 	{
 		OnConfirm();
-	}
-	else
-	{
-		UE_LOG(LogG2I, Warning, TEXT("Confirm function is undefined in %s"), *GetName());
 	}
 
 	if (!ensure(UIManager))
@@ -54,13 +50,9 @@ void UG2IConfirmationWidget::OnConfirmButtonClicked()
 
 void UG2IConfirmationWidget::OnCancelButtonClicked()
 {
-	if (ensure(OnCancel))
+	if (OnCancel)
 	{
 		OnCancel();
-	}
-	else
-	{
-		UE_LOG(LogG2I, Warning, TEXT("Cancel function is undefined in %s"), *GetName());
 	}
 	
 	if (!ensure(UIManager))

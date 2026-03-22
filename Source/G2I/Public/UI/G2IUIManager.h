@@ -19,7 +19,6 @@ class UG2IUIDisplayManager;
 class AG2IPlayerController;
 class UG2IWorldHintWidgetComponent;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerControllerInitDelegate, APlayerController*, PlayerController);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FUIManagerInitialized);
 
 /**
@@ -85,8 +84,12 @@ public:
 
 	void OpenHUD() const;
 
+	void ShowAllWidgets() const;
+
 	void CloseAllWidgets() const;
 	void CloseUI() const;
+
+	FString GetWidgetNameString(EG2IWidgetNames WidgetName) const;
 
 	// ==================== WORLD WIDGETS ====================
 	void OpenWorldWidget(UG2IWorldHintWidgetComponent *WidgetComponent) const;
@@ -99,10 +102,6 @@ public:
 	// ====================KEY HINT WIDGET ====================
 	void SetKeyByInputAction(UG2IWorldHintWidgetComponent *WidgetComponent, UInputAction* InputAction, const TSubclassOf<APawn>& PawnClass) const;
 	void SetKeyWidgetSize(UG2IWorldHintKeyWidgetComponent *WidgetComponent) const;
-
-private:
-	
-	FString GetWidgetNameString(EG2IWidgetNames WidgetName) const;
 	
 	// ==================== CONFIRMATION WIDGET ====================
 	void SetupConfirmationWidget(const TFunction<void()>& NewConfirmAction, const TFunction<void()>& NewCancelAction,

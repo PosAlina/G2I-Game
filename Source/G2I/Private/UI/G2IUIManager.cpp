@@ -310,15 +310,7 @@ void UG2IUIManager::ShowWidget(const EG2IWidgetNames WidgetName) const
 			*UG2IUIDisplayManager::StaticClass()->GetName());
 		return;
 	}
-	UG2IUserWidget *Widget = DisplayManager->GetWidget(WidgetName);
-	if (!ensure(Widget))
-	{
-		UE_LOG(LogG2I, Warning, TEXT("Widget %s doesn't exist in %s"), *GetWidgetNameString(WidgetName),
-			*GetName());
-		return;
-	}
-
-	Widget->SetVisibility(ESlateVisibility::Visible);
+	DisplayManager->ShowWidget(WidgetName);
 }
 
 void UG2IUIManager::HideWidget(const EG2IWidgetNames WidgetName) const
@@ -329,15 +321,19 @@ void UG2IUIManager::HideWidget(const EG2IWidgetNames WidgetName) const
 			*UG2IUIDisplayManager::StaticClass()->GetName());
 		return;
 	}
-	UG2IUserWidget *Widget = DisplayManager->GetWidget(WidgetName);
-	if (!ensure(Widget))
+	DisplayManager->HideWidget(WidgetName);
+}
+
+void UG2IUIManager::ShowAllWidgets() const
+{
+	if (!ensure(DisplayManager))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("Widget %s doesn't exist in %s"), *GetWidgetNameString(WidgetName),
-			*GetName());
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
 		return;
 	}
-	
-	Widget->SetVisibility(ESlateVisibility::Hidden);
+
+	DisplayManager->ShowAllHiddenWidgets();
 }
 
 void UG2IUIManager::CloseAllWidgets() const
