@@ -14,6 +14,12 @@ void UG2IUserWidget::NativeOnInitialized()
 	InitializeUIManager();
 }
 
+void UG2IUserWidget::StartLevelInitialize()
+{
+	World = GetWorld();
+	InitializePlayerController();
+}
+
 void UG2IUserWidget::InitializeUIManager()
 {
 	if (!ensure(GameInstance))
@@ -66,4 +72,5 @@ void UG2IUserWidget::InitializeGameInstance()
 		UE_LOG(LogG2I, Error, TEXT("Game Instance isn't %s in %s"),
 			*UG2IGameInstance::StaticClass()->GetName(), *GetName());
 	}
+	GameInstance->OnStartLevelInitDelegate.AddDynamic(this, &ThisClass::StartLevelInitialize);
 }

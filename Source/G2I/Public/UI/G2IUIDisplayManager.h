@@ -65,6 +65,24 @@ private:
 	FText OverrideMissingStringInStringTable = FText::GetEmpty();
 
 	TMap<EG2IStringTablesTypes, FName> StringTablesNames;
+
+	// ==================== INITIALIZE ====================
+public:
+
+	void InitializeInStartLevel();
+	void PostInitializeInStartGame();
+
+private:
+
+	void RegisterWidget(const EG2IWidgetNames WidgetName, const FG2IWidgetClassesInfo& WidgetClassInfo);
+
+	void InitializeGameInstanceDefaults();
+	
+	void InitializeDefaults();
+	void BindDelegatesForLevel();
+
+	UFUNCTION()
+	void UpdateBindingDelegatesForChangedPawn(APawn *Pawn);
 	
 	// ==================== UI ELEMENTS ====================
 public:
@@ -82,8 +100,6 @@ private:
 	
 	// ==================== BASE WIDGET FUNCTIONS ====================
 public:
-	void Initialize();
-	void InitializeGameInstanceDefaults();
 
 	UG2IUserWidget *GetWidget(const EG2IWidgetNames WidgetName);
 
@@ -102,11 +118,6 @@ private:
 	void RegisterWidget(const EG2IWidgetNames WidgetName, const FG2IWidgetClassesInfo& WidgetClassInfo);
 	void ShowAllHiddenWidgets();
 	
-	void SetupDefaults();
-	void BindDelegates();
-
-	UFUNCTION()
-	void UpdateBindingDelegatesForChangedPawn(APawn *Pawn);
 	
 	// ==================== BASE WIDGET COMPONENTS FUNCTIONS ====================
 public:
