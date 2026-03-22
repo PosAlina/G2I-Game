@@ -15,6 +15,8 @@ AG2IPipe::AG2IPipe()
 
 void AG2IPipe::OnConstruction(const FTransform& Transform)
 {
+	Super::OnConstruction(Transform);
+
 	if (!SplineComponent)
 	{
 		UE_LOG(LogG2I, Error, TEXT("SplineComponent is null in %s"), *GetActorNameOrLabel());
@@ -26,15 +28,15 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 	//  *** Remove when custom spline metadata gets fixed ***
 	if (PointParams.Num() < SplineComponent->GetNumberOfSplinePoints())
 	{
-		int Diff = SplineComponent->GetNumberOfSplinePoints() - PointParams.Num();
+		int32 Diff = SplineComponent->GetNumberOfSplinePoints() - PointParams.Num();
 		PointParams.Reserve(SplineComponent->GetNumberOfSplinePoints());
-		for (int i = 0; i < Diff; i++)
+		for (int32 i = 0; i < Diff; i++)
 			PointParams.AddDefaulted();
 	}
 	else if (PointParams.Num() > SplineComponent->GetNumberOfSplinePoints())
 	{
-		int Diff = PointParams.Num() - SplineComponent->GetNumberOfSplinePoints();
-		PointParams.RemoveAt<int>(SplineComponent->GetNumberOfSplinePoints(), Diff, EAllowShrinking::Yes);
+		int32 Diff = PointParams.Num() - SplineComponent->GetNumberOfSplinePoints();
+		PointParams.RemoveAt<int32>(SplineComponent->GetNumberOfSplinePoints(), Diff, EAllowShrinking::Yes);
 	}
 	//  *** End of the custom metadata crutch ***
 
@@ -53,7 +55,7 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 	UStaticMesh* Mesh = nullptr;
 	bCanAirPassThrough = true;
 
-	for (int PointIndex = 0; PointIndex < SplineComponent->GetNumberOfSplinePoints(); PointIndex++)
+	for (int32 PointIndex = 0; PointIndex < SplineComponent->GetNumberOfSplinePoints(); PointIndex++)
 	{
 		// Setting Up Static Mesh & Interactable Objects
 
@@ -161,7 +163,7 @@ void AG2IPipe::ForceOverlaps()
 void AG2IPipe::SpawnValves()
 {
 	if (ensure(SplineComponent))
-		for (int i = 0; i < SplineComponent->GetNumberOfSplinePoints() - 1; i++)
+		for (int32 i = 0; i < SplineComponent->GetNumberOfSplinePoints() - 1; i++)
 		{
 			if (GetHasValveAtSplinePoint(i))
 				SpawnValve(i);
@@ -171,7 +173,7 @@ void AG2IPipe::SpawnValves()
 void AG2IPipe::SpawnTechnicalHoles()
 {
 	if (ensure(SplineComponent))
-		for (int i = 0; i < SplineComponent->GetNumberOfSplinePoints() - 1; i++)
+		for (int32 i = 0; i < SplineComponent->GetNumberOfSplinePoints() - 1; i++)
 		{
 			if (GetHasTechnicalHoleAtSplinePoint(i))
 				SpawnTechnicalHole(i);
@@ -207,8 +209,8 @@ void AG2IPipe::OnPipeBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* O
 {
 	UE_LOG(LogG2I, Log, TEXT("Overlap in %s Actor"), *GetActorNameOrLabel());
 
-	UG2IPipesBoxComponent* Box = Cast<UG2IPipesBoxComponent>(OverlappedComp);
-	UG2IPipesBoxComponent* OtherBox = Cast<UG2IPipesBoxComponent>(OtherComp);
+	const UG2IPipesBoxComponent* Box = Cast<UG2IPipesBoxComponent>(OverlappedComp);
+	const UG2IPipesBoxComponent* OtherBox = Cast<UG2IPipesBoxComponent>(OtherComp);
 
 	if (ensure(Box && OtherBox))
 	{
@@ -229,7 +231,7 @@ void AG2IPipe::OnPipeEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* Oth
 {
 	UE_LOG(LogG2I, Verbose, TEXT("End overlap in %s Actor"), *GetActorNameOrLabel());
 
-	if (UG2IPipesBoxComponent* Box = Cast<UG2IPipesBoxComponent>(OtherComp))
+	if (const UG2IPipesBoxComponent* Box = Cast<UG2IPipesBoxComponent>(OtherComp))
 	{
 		if (Box->bRecieves)
 			ActorsToSendAirTo.Remove(Box->Owner);
@@ -435,9 +437,6 @@ UG2IPipesBoxComponent* AG2IPipe::SpawnPipesBoxComponent(int32 PointIndex, bool b
 		CollisionBox->bRecieves = bRecieves;
 		CollisionBox->Owner = this;
 		CollisionBox->PointIndex = PointIndex;
-		CollisionBox->SetGenerateOverlapEvents(true);
-		CollisionBox->SetCollisionObjectType(ECC_GameTraceChannel3);					 // Pipes Custom Collision
-		CollisionBox->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Overlap); // Pipes Custom Collision
 		CollisionBox->OnComponentBeginOverlap.AddDynamic(this, &AG2IPipe::OnPipeBeginOverlap);
 		CollisionBox->OnComponentEndOverlap.AddDynamic(this, &AG2IPipe::OnPipeEndOverlap);
 	}
@@ -598,10 +597,23 @@ void AG2IPipe::RemoveActorFromSendAirTo(AActor* Actor)
 
 void AG2IPipe::SendAir()
 {
-	for (int i = 0; i < ActorsToSendAirTo.Num(); i++)
+	const bool bAir = GetAir();
+	for (int32 i = 0; i < ActorsToSendAirTo.Num(); i++)
 	{
-		// In Execute_RecieveAir we also call SendAir()
-		IG2IAirRecieverInterface::Execute_RecieveAir(ActorsToSendAirTo[i], this, GetAir());
+		if (!ActorsToSendAirTo[i])
+		{
+			UE_LOG(LogG2I, Warning, TEXT("Attempted to send air to null actor at index %i in %s."), i, *GetName());
+			continue;
+		}
+
+		if (ActorsToSendAirTo[i]->Implements<UG2IAirRecieverInterface>())
+		{
+			IG2IAirRecieverInterface::Execute_RecieveAir(ActorsToSendAirTo[i], this, bAir);
+		}
+		else
+		{
+			UE_LOG(LogG2I, Warning, TEXT("Actor %s doesn't implement interface G2IAirRecieverInterface."), *ActorsToSendAirTo[i]->GetActorNameOrLabel());
+		}
 	}
 }
 

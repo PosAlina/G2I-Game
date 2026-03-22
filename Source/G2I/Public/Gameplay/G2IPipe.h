@@ -20,12 +20,12 @@ public:
 	AG2IPipe();
 
 	// Generates Meshes, Interactable Objects & Pipes Connections
-	void OnConstruction(const FTransform& Transform) override;
+	virtual void OnConstruction(const FTransform& Transform) override;
 
-	void BeginPlay() override;
+	virtual void BeginPlay() override;
 
 	// Interface function
-	void RecieveAir_Implementation(AActor* Sender, bool bAirPassed) override;
+	virtual void RecieveAir_Implementation(AActor* Sender, bool bAirPassed) override;
 
 	UFUNCTION()
 	void OnPipeBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
