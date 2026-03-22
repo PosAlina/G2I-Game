@@ -39,6 +39,9 @@ protected:
 	UFUNCTION()
 	virtual void InitializeAfterManagerLoading() {}
 
+	UFUNCTION()
+	virtual void StartLevelInitialize();
+
 private:
 	
 	void InitializeUIManager();

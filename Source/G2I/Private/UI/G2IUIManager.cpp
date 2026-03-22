@@ -21,26 +21,45 @@
 void UG2IUIManager::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-	OnPlayerControllerInitDelegate.AddDynamic(this, &ThisClass::InitializeComponents);
-}
 
-void UG2IUIManager::InitializeComponents(APlayerController* InPlayerController)
-{
-	PlayerController = Cast<AG2IPlayerController>(InPlayerController);
-	if (!ensure(PlayerController))
+	GameInstance = Cast<UG2IGameInstance>(GetGameInstance());
+	if (!ensure(GameInstance))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
-			*AG2IPlayerController::StaticClass()->GetName());
-		return;
+			*UG2IGameInstance::StaticClass()->GetName());
 	}
-	
-	UG2IGameInstance *GameInstance = Cast<UG2IGameInstance>(GetGameInstance());
+	GameInstance->OnStartLevelInitDelegate.AddDynamic(this, &ThisClass::InitializeInStartGame);
+}
+
+void UG2IUIManager::InitializeInStartGame()
+{
 	if (!ensure(GameInstance))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
 			*UG2IGameInstance::StaticClass()->GetName());
 		return;
 	}
+	GameInstance->OnStartLevelInitDelegate.RemoveDynamic(this, &ThisClass::InitializeInStartGame);
+	
+	InitializeDefaultsInStartGame();
+	InitializeDefaultsInStartLevel();
+	PostInitializeDefaultsInStartGame();
+	PostInitializeDefaultsInStartLevel();
+
+	GameInstance->OnCloseLevelDelegate.AddDynamic(this, &ThisClass::CloseLevelUI);
+	GameInstance->OnStartLevelInitDelegate.AddDynamic(this, &ThisClass::InitializeInStartLevel);
+	
+	OnUIManagerInitialized.Broadcast();
+}
+
+void UG2IUIManager::InitializeInStartLevel()
+{
+	InitializeDefaultsInStartLevel();
+	PostInitializeDefaultsInStartLevel();
+}
+
+void UG2IUIManager::InitializeDefaultsInStartGame()
+{
 	WidgetComponentParameters = GameInstance->GetWidgetComponentParameters();
 	if (!ensure(WidgetComponentParameters))
 	{
@@ -55,18 +74,72 @@ void UG2IUIManager::InitializeComponents(APlayerController* InPlayerController)
 			*UG2IUIDisplayManager::StaticClass()->GetName());
 		return;
 	}
-	DisplayManager->Initialize();
+}
 
+void UG2IUIManager::InitializeDefaultsInStartLevel()
+{
 	const UWorld *World = GetWorld();
 	if (!ensure(World))
 	{
-		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("World is null in %s"), *GetName());
 		return;
 	}
-	OnUIManagerInitialized.Broadcast();
+	
+	PlayerController = Cast<AG2IPlayerController>(World->GetFirstPlayerController());
+	if (!ensure(PlayerController))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*AG2IPlayerController::StaticClass()->GetName());
+		return;
+	}
+	
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
+		return;
+	}
+	DisplayManager->InitializeInStartLevel();
+}
 
-	// TODO: OpenHUD should be moved into level begin
-	OpenHUD();
+void UG2IUIManager::PostInitializeDefaultsInStartGame() const
+{
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
+		return;
+	}
+	DisplayManager->PostInitializeInStartGame();
+}
+
+void UG2IUIManager::PostInitializeDefaultsInStartLevel() const
+{
+	InitializeNewLevelUI();
+}
+
+void UG2IUIManager::InitializeNewLevelUI() const
+{
+	if (!ensure(GameInstance))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IGameInstance::StaticClass()->GetName());
+	}
+	
+	if (GameInstance->IsMainMenuLevel())
+	{
+		OpenWidget(EG2IWidgetNames::MainMenu);
+	}
+	else
+	{
+		OpenHUD();
+	}
+}
+
+void UG2IUIManager::CloseLevelUI()
+{
+	CloseAllWidgets();
+	ShowAllWidgets(); // For visibility widgets in next level
 }
 
 FString UG2IUIManager::GetWidgetNameString(EG2IWidgetNames WidgetName) const
@@ -83,6 +156,10 @@ FString UG2IUIManager::GetWidgetNameString(EG2IWidgetNames WidgetName) const
 
 void UG2IUIManager::OpenHUD() const
 {
+	PlayerController->SetInputMode(FInputModeGameOnly());
+	PlayerController->bShowMouseCursor = false;
+	PlayerController->SetPause(false);
+	
 	OpenWidget(EG2IWidgetNames::TrainingScreen);
 }
 

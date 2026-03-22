@@ -80,7 +80,7 @@ void AG2IPlayerController::SetupDefaults()
 		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
 			*UG2IUIManager::StaticClass()->GetName(), *GetActorNameOrLabel());
 	}
-	UIManager->OnPlayerControllerInitDelegate.Broadcast(this);
+	GameInstance->OnPlayerControllerInitDelegate.Broadcast();
 }
 
 void AG2IPlayerController::SetupKeyMapping()
