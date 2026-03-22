@@ -2,6 +2,7 @@
 #include "G2I.h"
 #include "G2IFlightComponent.h"
 #include "Engine/LocalPlayer.h"
+#include "Game/G2IPlayerState.h"
 #include "Components/Camera/G2IThirdPersonCameraComponent.h"
 #include "Components/G2ICharacterMovementComponent.h"
 #include "Components/G2IInteractionComponent.h"
@@ -9,6 +10,7 @@
 #include "Components/Camera/G2ICameraControllerComponent.h"
 #include "Components/Camera/G2IFixedCamerasComponent.h"
 #include "Components/G2IInventoryComponent.h"
+#include <InputActionValue.h>
 
 AG2ICharacterDaughter::AG2ICharacterDaughter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UG2ICharacterMovementComponent>(
@@ -68,4 +70,43 @@ FPossessedDelegate& AG2ICharacterDaughter::GetPossessedDelegate()
 FUnPossessedDelegate& AG2ICharacterDaughter::GetUnPossessedDelegate()
 {
 	return OnUnPossessedDelegate;
+}
+
+void AG2ICharacterDaughter::SaveData_Implementation(UG2IGameplaySaveGame* SaveGameRef)
+{
+	if (!ensure(SaveGameRef))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Got null SaveGameRef while trying to save %s's data."), *GetName());
+		return;
+	}
+
+	if (IsPlayerControlled())
+	{
+		SaveGameRef->PlayersSaveData.CurrentCharacter = GetClass();
+	}
+
+	SaveGameRef->PlayersSaveData.CharactersTransform.Add(GetClass(), GetTransform());
+}
+
+void AG2ICharacterDaughter::LoadData_Implementation(const UG2IGameplaySaveGame* SaveGameRef)
+{
+	if (!ensure(SaveGameRef))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Got null SaveGameRef while trying to save %s's data."), *GetName());
+		return;
+	}
+
+	const TSubclassOf<ACharacter> CurrentCharacterClass = SaveGameRef->PlayersSaveData.CurrentCharacter;
+	if (IsPlayerControlled() && !IsA(CurrentCharacterClass))
+	{
+		if (auto* G2IPlayerState = Cast<AG2IPlayerState>(GetPlayerState()))
+		{
+			G2IPlayerState->SetCharacterByClass(CurrentCharacterClass);
+		}
+	}
+
+	if (const FTransform* KeyTransform = SaveGameRef->PlayersSaveData.CharactersTransform.Find(GetClass()))
+	{
+		SetActorTransform(*KeyTransform);
+	}
 }

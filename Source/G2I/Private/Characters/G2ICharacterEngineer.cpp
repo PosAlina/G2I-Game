@@ -7,6 +7,7 @@
 #include "Components/SteamGlove/G2ISteamGloveComponent.h"
 #include "Components/Camera/G2ICameraControllerComponent.h"
 #include "Components/Camera/G2IFixedCamerasComponent.h"
+#include "Game/G2IPlayerState.h"
 #include "GameFramework/Controller.h"
 #include "Engine/World.h"
 #include "G2I.h"
@@ -59,4 +60,43 @@ FPossessedDelegate& AG2ICharacterEngineer::GetPossessedDelegate()
 FUnPossessedDelegate& AG2ICharacterEngineer::GetUnPossessedDelegate()
 {
 	return OnUnPossessedDelegate;
+}
+
+void AG2ICharacterEngineer::SaveData_Implementation(UG2IGameplaySaveGame* SaveGameRef)
+{
+	if (!ensure(SaveGameRef))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Got null SaveGameRef while trying to save %s's data."), *GetName());
+		return;
+	}
+
+	if (IsPlayerControlled())
+	{
+		SaveGameRef->PlayersSaveData.CurrentCharacter = GetClass();
+	}
+
+	SaveGameRef->PlayersSaveData.CharactersTransform.Add(GetClass(), GetTransform());
+}
+
+void AG2ICharacterEngineer::LoadData_Implementation(const UG2IGameplaySaveGame* SaveGameRef)
+{
+	if (!ensure(SaveGameRef))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Got null SaveGameRef while trying to save %s's data."), *GetName());
+		return;
+	}
+
+	const TSubclassOf<ACharacter> CurrentCharacterClass = SaveGameRef->PlayersSaveData.CurrentCharacter;
+	if (IsPlayerControlled() && !IsA(CurrentCharacterClass))
+	{
+		if (auto* G2IPlayerState = Cast<AG2IPlayerState>(GetPlayerState()))
+		{
+			G2IPlayerState->SetCharacterByClass(CurrentCharacterClass);
+		}
+	}
+
+	if (const FTransform* KeyTransform = SaveGameRef->PlayersSaveData.CharactersTransform.Find(GetClass()))
+	{
+		SetActorTransform(*KeyTransform);
+	}
 }

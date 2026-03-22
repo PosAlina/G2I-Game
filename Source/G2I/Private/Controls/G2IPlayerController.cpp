@@ -19,6 +19,7 @@
 #include "G2ISteamShotInputInterface.h"
 #include "G2IUIManager.h"
 #include "G2IWidgetNames.h"
+#include "G2ISavingGameplayManager.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 void AG2IPlayerController::SetupInputComponent()
@@ -92,6 +93,8 @@ void AG2IPlayerController::SetupInputComponent()
 					&ThisClass::SwitchCameraBehavior);
 				EnhancedInputComponent->BindAction(DebugPauseAction, ETriggerEvent::Started,this,
 					&ThisClass::CallPause);
+				EnhancedInputComponent->BindAction(SaveAction, ETriggerEvent::Triggered, this, &ThisClass::SaveGameplay);
+				EnhancedInputComponent->BindAction(LoadAction, ETriggerEvent::Triggered, this, &ThisClass::LoadGameplay);
 #endif
 			}
 			else
@@ -418,27 +421,18 @@ void AG2IPlayerController::Fly(int Direction)
 	{
 		IG2IFlightInterface::Execute_Fly(FlightComponent, MovementComponent, Direction);
 	}
-	else
-	{
-		UE_LOG(LogG2I, Log, TEXT("Pawn doesn't have component with fly interface in %s"), *GetName());
-		UE_LOG(LogG2I, Log, TEXT("Pawn doesn't have component with movement interface in %s"), *GetName());
-	}
 }
 
 void AG2IPlayerController::Jump(const FInputActionValue& Value)
 {
-	if (!FlightComponent)
-	{
-		UE_LOG(LogG2I, Log, TEXT("Pawn doesn't have component with fly interface in %s"), *GetName());
-	}
-	else
+	if (FlightComponent)
 	{
 		return;
 	}
 	
 	if (!ensure(MovementComponent))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("Pawn doesn't have component with movement interface in %s"), *GetName());
+		UE_LOG(LogG2I, Warning, TEXT("Pawn doesn't have movement component in %s"), *GetName());
 		return;
 	}
 	
@@ -620,3 +614,58 @@ void AG2IPlayerController::GlovePunchActivation(const FInputActionInstance& Inst
 		IG2IGlovePunchInterface::Execute_GlovePunchActivation(GlovePunchComponent);
 	}
 }
+
+#if WITH_EDITOR
+void AG2IPlayerController::SaveGameplay(const FInputActionValue& Value)
+{
+	if (!bIsDebugAction)
+	{
+		return;
+	}
+
+	if (const auto* GameInstance = GetGameInstance())
+	{
+
+		if (UG2ISavingGameplayManager* SavingGameplayManager = GameInstance->GetSubsystem<UG2ISavingGameplayManager>())
+		{
+			SavingGameplayManager->SaveAllDataAndGameplay(true);
+
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Silver, "DEBUG: Saved gameplay data.");
+			}
+		}
+		else
+		{
+			UE_LOG(LogG2I, Warning, TEXT("Couldn't get SavingGameplayManager subsystem from GameInstance in %s."), *GetName());
+			return;
+		}
+	}
+}
+
+void AG2IPlayerController::LoadGameplay(const FInputActionValue& Value)
+{
+	if (!bIsDebugAction)
+	{
+		return;
+	}
+
+	if (const auto* GameInstance = GetGameInstance())
+	{
+		if (UG2ISavingGameplayManager* SavingGameplayManager = GameInstance->GetSubsystem<UG2ISavingGameplayManager>())
+		{
+			SavingGameplayManager->LoadGameplay(false);
+			SavingGameplayManager->LoadAllData();
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Silver, "DEBUG: Gameplay data loaded.");
+			}
+		}
+		else
+		{
+			UE_LOG(LogG2I, Warning, TEXT("Couldn't get SavingGameplayManager subsystem from GameInstance in %s."), *GetName());
+			return;
+		}
+	}
+}
+#endif

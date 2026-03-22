@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "G2ICharacterInterface.h"
 #include "GameFramework/Character.h"
+#include "G2ISavableInterface.h"
 #include "Components/G2IValveInteractionComponent.h"
 #include "Components/G2IHoleInteractionComponent.h"
 #include "G2ICharacterEngineer.generated.h"
@@ -20,7 +21,7 @@ class UG2IInventoryComponent;
  *  Implements a controllable orbiting camera
  */
 UCLASS(Blueprintable)
-class G2I_API AG2ICharacterEngineer : public ACharacter, public IG2ICharacterInterface
+class G2I_API AG2ICharacterEngineer : public ACharacter, public IG2ICharacterInterface, public IG2ISavableInterface
 {
 	GENERATED_BODY()
 
@@ -66,6 +67,10 @@ private:
 public:
 
 	explicit AG2ICharacterEngineer(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+	virtual void SaveData_Implementation(UG2IGameplaySaveGame* SaveGameRef) override;
+
+	virtual void LoadData_Implementation(const UG2IGameplaySaveGame* SaveGameRef) override;
 
 	virtual void PossessedBy(AController* NewController) override;
 	
