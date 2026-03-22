@@ -96,8 +96,11 @@ public:
 	void CloseActiveWidgetsByType(const EG2IWidgetTypes WidgetsType);
 
 private:
+	void ShowWidget(const EG2IWidgetNames WidgetName);
+	void HideWidget(const EG2IWidgetNames WidgetName);
 
 	void RegisterWidget(const EG2IWidgetNames WidgetName, const FG2IWidgetClassesInfo& WidgetClassInfo);
+	void ShowAllHiddenWidgets();
 	
 	void SetupDefaults();
 	void BindDelegates();

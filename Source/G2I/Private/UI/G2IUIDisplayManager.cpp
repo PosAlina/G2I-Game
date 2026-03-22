@@ -226,6 +226,45 @@ void UG2IUIDisplayManager::CloseWidget(const EG2IWidgetNames WidgetName)
 	}
 }
 
+void UG2IUIDisplayManager::ShowWidget(const EG2IWidgetNames WidgetName)
+{
+	if (const auto WidgetInfo = AllWidgets.Find(WidgetName))
+	{
+		if (UG2IUserWidget *Widget = WidgetInfo->Widget)
+		{
+			Widget->SetVisibility(ESlateVisibility::Visible);
+			AllHiddenWidgets.Remove(WidgetName);
+		}
+	}
+}
+
+void UG2IUIDisplayManager::HideWidget(const EG2IWidgetNames WidgetName)
+{
+	if (const auto WidgetInfo = AllWidgets.Find(WidgetName))
+	{
+		if (UG2IUserWidget *Widget = WidgetInfo->Widget)
+		{
+			Widget->SetVisibility(ESlateVisibility::Hidden);
+			AllHiddenWidgets.Add(WidgetName);
+		}
+	}
+}
+
+void UG2IUIDisplayManager::ShowAllHiddenWidgets()
+{
+	for (auto Iterator = AllHiddenWidgets.CreateIterator(); Iterator; ++Iterator)
+	{
+		if (const auto WidgetInfo = AllWidgets.Find(*Iterator))
+		{
+			if (UG2IUserWidget *Widget = WidgetInfo->Widget)
+			{
+				Widget->SetVisibility(ESlateVisibility::Visible);
+				Iterator.RemoveCurrent();
+			}
+		}
+	}
+}
+
 void UG2IUIDisplayManager::CloseAllActiveWidgets()
 {
 	for (auto [ActiveWidgetsType, _] : AllActiveWidgetsNames)
