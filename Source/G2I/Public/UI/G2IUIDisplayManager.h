@@ -51,6 +51,9 @@ protected:
 
 	TMap<EG2IWidgetTypes, TSet<EG2IWidgetNames>> AllActiveWidgetsNames;
 
+	UPROPERTY()
+	TSet<EG2IWidgetNames> AllHiddenWidgets;
+
 private:
 
 	UPROPERTY()
@@ -108,16 +111,13 @@ public:
 	void OpenWidget(const EG2IWidgetNames WidgetName);
 	void CloseWidget(const EG2IWidgetNames WidgetName);
 
-	void CloseAllActiveWidgets();
-	void CloseActiveWidgetsByType(const EG2IWidgetTypes WidgetsType);
-
-private:
 	void ShowWidget(const EG2IWidgetNames WidgetName);
 	void HideWidget(const EG2IWidgetNames WidgetName);
 
-	void RegisterWidget(const EG2IWidgetNames WidgetName, const FG2IWidgetClassesInfo& WidgetClassInfo);
 	void ShowAllHiddenWidgets();
 	
+	void CloseAllActiveWidgets();
+	void CloseActiveWidgetsByType(const EG2IWidgetTypes WidgetsType);
 	
 	// ==================== BASE WIDGET COMPONENTS FUNCTIONS ====================
 public:
