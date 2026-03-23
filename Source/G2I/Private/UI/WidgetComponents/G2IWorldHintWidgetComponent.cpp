@@ -139,6 +139,7 @@ void UG2IWorldHintWidgetComponent::SetPlayerPawn(APawn* Pawn)
 	if (Pawn)
 	{
 		PlayerPawn = Pawn;
+		PlayerPawnClass = Pawn->GetClass();
 		ReactWidgetOnOverlappingActors();
 	}
 }

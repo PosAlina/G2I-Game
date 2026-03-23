@@ -80,7 +80,7 @@ public:
 	void ChangeAimingType(EG2IAimType NewAimType) const;
 	
 	// ====================KEY HINT WIDGET ====================
-	void SetKeyByInputAction(UG2IWorldHintWidgetComponent *WidgetComponent, UInputAction* InputAction) const;
+	void SetKeyByInputAction(UG2IWorldHintWidgetComponent *WidgetComponent, UInputAction* InputAction, const TSubclassOf<APawn>& PawnClass) const;
 	void SetKeyWidgetSize(UG2IWorldHintKeyWidgetComponent *WidgetComponent) const;
 
 private:
