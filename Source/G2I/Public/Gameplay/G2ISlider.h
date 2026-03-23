@@ -55,6 +55,9 @@ private:
 	void FindAndSwitchLamp();
 	void FindLamps();
 	void SetImpulse();
+
+	void SetInputMappingContext();
+	void RevertInputMappingContext() const;
 	
 public:
 	UPROPERTY(BlueprintAssignable)
@@ -83,8 +86,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TObjectPtr<UInputMappingContext> SliderIMC;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TObjectPtr<UInputMappingContext> DefaultIMC;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TObjectPtr<UInputAction> MoveSliderAction;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)

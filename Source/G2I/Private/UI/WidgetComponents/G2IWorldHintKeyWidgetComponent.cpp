@@ -1,6 +1,9 @@
 #include "G2IWorldHintKeyWidgetComponent.h"
 #include "G2I.h"
+#include "G2IPlayerController.h"
 #include "G2IUIManager.h"
+#include "InputAction.h"
+#include "GameFramework/Character.h"
 
 UG2IWorldHintKeyWidgetComponent::UG2IWorldHintKeyWidgetComponent()
 {
@@ -22,24 +25,37 @@ void UG2IWorldHintKeyWidgetComponent::BeginPlay()
 	FindOrAddWidgetByName(EG2IWidgetNames::KeyHint);
 	FindOrAddWidgetByName(EG2IWidgetNames::PointHint);
 
-	if (OverridenInputAction)
+	if (!ensure(UIManager))
 	{
-		UIManager->SetKeyByInputAction(this, OverridenInputAction);
+		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
+			*UG2IUIManager::StaticClass()->GetName(), *GetName());
+		return;
+	}
+
+	if (const TObjectPtr<UInputAction> *OverrideKeyInput = OverridenInputAction.Find(PlayerPawnClass))
+	{
+		UIManager->SetKeyByInputAction(this, *OverrideKeyInput, PlayerPawnClass);
 	}
 }
 
 void UG2IWorldHintKeyWidgetComponent::OpenKeyHint(UInputAction *KeyInput)
 {
-	if (!OverridenInputAction)
+	if (!ensure(UIManager))
 	{
-		if (!ensure(UIManager))
-		{
-			UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
-				*UG2IUIManager::StaticClass()->GetName(), *GetName());
-			return;
-		}
-		UIManager->SetKeyByInputAction(this, KeyInput);
+		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
+			*UG2IUIManager::StaticClass()->GetName(), *GetName());
+		return;
 	}
+
+	if (const TObjectPtr<UInputAction> *OverrideKeyInput = OverridenInputAction.Find(PlayerPawnClass))
+	{
+		UIManager->SetKeyByInputAction(this, *OverrideKeyInput, PlayerPawnClass);
+	}
+	else
+	{
+		UIManager->SetKeyByInputAction(this, KeyInput, PlayerPawnClass);
+	}
+	
 	SetWidgetByName(EG2IWidgetNames::KeyHint);
 }
 
