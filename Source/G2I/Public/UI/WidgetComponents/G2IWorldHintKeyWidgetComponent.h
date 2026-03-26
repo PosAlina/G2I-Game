@@ -15,7 +15,7 @@ class G2I_API UG2IWorldHintKeyWidgetComponent : public UG2IWorldHintWidgetCompon
 private:
 
 	UPROPERTY(EditAnywhere, Category = "Key widget", meta = (AllowPrivateAccess = true, ToolTip = "Input action, if manual input is required"))
-	TObjectPtr<UInputAction> OverridenInputAction;
+	TMap<TSubclassOf<APawn>, TObjectPtr<UInputAction>> OverridenInputAction;
 	
 public:
 

@@ -1,14 +1,12 @@
 #include "Gameplay/G2ISlider.h"
-
 #include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
 #include "G2I.h"
 #include "G2ICharacterEngineer.h"
 #include "G2IColorZoneComponent.h"
+#include "G2IPlayerController.h"
 #include "G2ISliderLampComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
-#include "Components/PointLightComponent.h"
 
 AG2ISlider::AG2ISlider()
 {
@@ -90,26 +88,41 @@ void AG2ISlider::Interact_Implementation(const ACharacter* Interactor)
 {
 	if (ensure(PC) && !bIsSliderActive)
 	{
-		auto* LocalPlayer = PC->GetLocalPlayer();
-		if (!LocalPlayer)
-		{
-			UE_LOG(LogG2I, Error, TEXT("LocalPlayer is null in %s"), *GetActorNameOrLabel());
-			return;
-		}
-		
-		auto* Subsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
-		if (!Subsystem)
-		{
-			UE_LOG(LogG2I, Error, TEXT("Sybsystem is null in %s"), *GetActorNameOrLabel());
-			return;
-		}
-		
+		// TODO: Rewrite to use Camera Controller
 		OriginalViewTarget = PC->GetViewTarget();
 		PC->SetViewTargetWithBlend(this, BlendTime);
+		
 		bIsSliderActive = true;
-		Subsystem->AddMappingContext(SliderIMC, 0);
-		Subsystem->RemoveMappingContext(DefaultIMC);
+
+		SetInputMappingContext();
 	}
+}
+
+void AG2ISlider::SetInputMappingContext()
+{
+	AG2IPlayerController *PlayerController = Cast<AG2IPlayerController>(PC);
+	if (!ensure(PlayerController))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*AG2IPlayerController::StaticClass()->GetName());
+		return;
+	}
+	const APawn *CurrentPawn = PlayerController->GetPawn();
+	if (!ensure(CurrentPawn))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find pawn in %s"), *GetName(),
+			*PlayerController->GetActorNameOrLabel());
+		return;
+	}
+	const TSubclassOf<APawn> CurrentPawnClass = CurrentPawn->GetClass();
+	if (!ensure(CurrentPawnClass))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find pawn class for %s"), *GetName(),
+			*CurrentPawn->GetActorNameOrLabel());
+		return;
+	}
+
+	PlayerController->OverrideInputMappingContext(CurrentPawnClass, {SliderIMC});
 }
 
 bool AG2ISlider::CanInteract_Implementation(const ACharacter* Interactor)
@@ -310,25 +323,39 @@ void AG2ISlider::SliderExit(const FInputActionValue& Value)
 {
 	if (ensure(PC) && bIsSliderActive)
 	{
-		auto* LocalPlayer = PC->GetLocalPlayer();
-		if (!LocalPlayer)
-		{
-			UE_LOG(LogG2I, Error, TEXT("LocalPlayer is null in %s"), *GetActorNameOrLabel());
-			return;
-		}
-		
-		auto* Subsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
-		if (!Subsystem)
-		{
-			UE_LOG(LogG2I, Error, TEXT("Sybsystem is null in %s"), *GetActorNameOrLabel());
-			return;
-		}
-		
+		// TODO: Rewrite used to Camera Controller
 		PC->SetViewTargetWithBlend(OriginalViewTarget, BlendTime);
+		
 		bIsSliderActive = false;
-		Subsystem->RemoveMappingContext(SliderIMC);
-		Subsystem->AddMappingContext(DefaultIMC, 0);
+
+		RevertInputMappingContext();
 	}
+}
+
+void AG2ISlider::RevertInputMappingContext() const
+{
+	AG2IPlayerController *PlayerController = Cast<AG2IPlayerController>(PC);
+	if (!ensure(PlayerController))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*AG2IPlayerController::StaticClass()->GetName());
+		return;
+	}
+	const APawn *CurrentPawn = PlayerController->GetPawn();
+	if (!ensure(CurrentPawn))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find pawn in %s"), *GetName(),
+			*PlayerController->GetActorNameOrLabel());
+		return;
+	}
+	const TSubclassOf<APawn> CurrentPawnClass = CurrentPawn->GetClass();
+	if (!ensure(CurrentPawnClass))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find pawn class for %s"), *GetName(),
+			*CurrentPawn->GetActorNameOrLabel());
+		return;
+	}
+	PlayerController->StopOverrideInputMappingContext(CurrentPawnClass);
 }
 
 void AG2ISlider::FindAndSwitchLamp()

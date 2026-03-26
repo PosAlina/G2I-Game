@@ -12,6 +12,7 @@
 #include "Components/RichTextBlock.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
+#include "GameFramework/Character.h"
 #include "Gameplay/G2IKeyHintWidget.h"
 #include "HUD/G2IAimingWidget.h"
 #include "Menu/Elements/NumericalRow/G2INumericalMultiValuePropertyRow.h"
@@ -305,7 +306,8 @@ void UG2IUIManager::ChangeAimingType(const EG2IAimType NewAimType) const
 	Widget->SetAimingViewType(NewAimType);
 }
 
-void UG2IUIManager::SetKeyByInputAction(UG2IWorldHintWidgetComponent* WidgetComponent, UInputAction* InputAction) const
+void UG2IUIManager::SetKeyByInputAction(UG2IWorldHintWidgetComponent* WidgetComponent, UInputAction* InputAction,
+                                        const TSubclassOf<APawn>& PawnClass) const
 {
 	if (!ensure(InputAction))
 	{
@@ -324,6 +326,11 @@ void UG2IUIManager::SetKeyByInputAction(UG2IWorldHintWidgetComponent* WidgetComp
 		UE_LOG(LogG2I, Error, TEXT("PlayerController doesn't exist in %s"), *GetName());
 		return;
 	}
+	if (!ensure(PawnClass))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Attempting to set key of null character in widget in %s"), *GetName());
+		return;
+	}
 
 	if (const UG2IKeyHintWidget *Widget =
 		Cast<UG2IKeyHintWidget>(WidgetComponent->FindOrAddWidgetByName(EG2IWidgetNames::KeyHint)))
@@ -334,7 +341,7 @@ void UG2IUIManager::SetKeyByInputAction(UG2IWorldHintWidgetComponent* WidgetComp
 				*Widget->GetName(), *GetName());
 			return;
 		}
-		const FName Key = PlayerController->GetKeyName(InputAction);
+		const FName Key = PlayerController->GetKeyName(InputAction, PawnClass);
 		Widget->KeyTextBlock->SetText(FText::FromName(Key));
 	}
 }

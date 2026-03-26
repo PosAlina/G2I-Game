@@ -22,111 +22,365 @@
 #include "G2ISavingGameplayManager.h"
 #include "Kismet/KismetSystemLibrary.h"
 
+void FG2IInputMappingContexts::AddAllContextsToMapping(UEnhancedInputLocalPlayerSubsystem& Subsystem) const
+{
+	for (const UInputMappingContext *Context : Contexts)
+	{
+		if (!Context)
+		{
+			continue;
+		}
+
+		Subsystem.AddMappingContext(Context, 0);
+	}
+}
+
+void FG2IInputMappingContexts::RemoveAllContextsToMapping(UEnhancedInputLocalPlayerSubsystem& Subsystem) const
+{
+	for (const UInputMappingContext *Context : Contexts)
+	{
+		if (!Context)
+		{
+			continue;
+		}
+		
+		Subsystem.RemoveMappingContext(Context);
+	}
+}
+
 void AG2IPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
 	bAutoManageActiveCameraTarget = false;
-	if (IsLocalPlayerController())
-	{
-		if (const ULocalPlayer *LocalPlayer = GetLocalPlayer())
-		{
-			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer))
-			{
-				for (const UInputMappingContext* CurrentContext : InputMappingContexts)
-				{
-					Subsystem->AddMappingContext(CurrentContext, 0);
-					InputKeyMappings.Append(CurrentContext->GetMappings());
-				}
+	
+	SetupDefaults();
+	SetupKeyMapping();
+	SetupCommonInput();
+	BindEnhancedDelegates();
+}
 
-#if WITH_EDITOR
-				for (const UInputMappingContext* CurrentContext : DebugInputMappingContexts)
-				{
-					Subsystem->AddMappingContext(CurrentContext, 0);
-					InputKeyMappings.Append(CurrentContext->GetMappings());
-				}
-#endif
-			}
-			else
-			{
-				UE_LOG(LogG2I, Log, TEXT("Player Controller \"%s\" has not any mapping context"), *GetNameSafe(this));
-			}
-
-			if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
-			{
-				EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
-
-				EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ThisClass::Jump);
-				EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ThisClass::FlyUp);
-				EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ThisClass::StopJumping);
-				EnhancedInputComponent->BindAction(FlightDownAction, ETriggerEvent::Triggered, this, &ThisClass::FlyDown);
-				EnhancedInputComponent->BindAction(FlightDownAction, ETriggerEvent::Completed, this, &ThisClass::StopJumping);
-				
-				EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ThisClass::Look);
-
-				EnhancedInputComponent->BindAction(SelectNextCharacterAction, ETriggerEvent::Started, this,
-					&ThisClass::SelectNextCharacter);
-
-				for (const auto& InteractAction : InteractActions) {
-					EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &ThisClass::Interact);
-				}
-
-				EnhancedInputComponent->BindAction(TakeAimAction, ETriggerEvent::Started, this, &ThisClass::StartAiming);
-				EnhancedInputComponent->BindAction(TakeAimAction, ETriggerEvent::Completed, this, &ThisClass::StopAiming);
-
-				EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &ThisClass::Shoot);
-
-				EnhancedInputComponent->BindAction(ToggleFollowAIBehindPlayerAction, ETriggerEvent::Started,
-					this, &ThisClass::ToggleFollowAIBehindPlayer);
-
-				EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Started,this,
-					&ThisClass::CallPause);
-
-				EnhancedInputComponent->BindAction(GlovePunchAction, ETriggerEvent::Started, this, &ThisClass::GlovePunchActivation);
-
-#if WITH_EDITOR
-				EnhancedInputComponent->BindAction(ToggleDebugAction, ETriggerEvent::Started, this,
-					&ThisClass::ToggleDebugMode);
-				EnhancedInputComponent->BindAction(ToggleCrouchAction, ETriggerEvent::Started, this,
-					&ThisClass::ToggleCrouch);
-				EnhancedInputComponent->BindAction(SwitchCameraBehaviorAction, ETriggerEvent::Started, this,
-					&ThisClass::SwitchCameraBehavior);
-				EnhancedInputComponent->BindAction(DebugPauseAction, ETriggerEvent::Started,this,
-					&ThisClass::CallPause);
-				EnhancedInputComponent->BindAction(SaveAction, ETriggerEvent::Triggered, this, &ThisClass::SaveGameplay);
-				EnhancedInputComponent->BindAction(LoadAction, ETriggerEvent::Triggered, this, &ThisClass::LoadGameplay);
-#endif
-			}
-			else
-			{
-				UE_LOG(LogG2I, Log, TEXT("Player Controller \"%s\" used not Enhanced Input Component"), *GetNameSafe(this));
-			}
-		}
-		else
-		{
-			UE_LOG(LogG2I, Log, TEXT("Local character is not defined"));
-		}
-	}
-
+void AG2IPlayerController::SetupDefaults()
+{
 	const UWorld *World = GetWorld();
 	if (!ensure(World))
 	{
-		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetActorNameOrLabel());
 		return;
 	}
 	const UG2IGameInstance *GameInstance = Cast<UG2IGameInstance>(World->GetGameInstance());
 	if (!ensure(GameInstance))
 	{
-		UE_LOG(LogG2I, Error, TEXT("Game Instance doesn't exist in %s"), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("Game Instance doesn't exist in %s"), *GetActorNameOrLabel());
 		return;
 	}
 	UIManager = GameInstance->GetSubsystem<UG2IUIManager>();
 	if (!ensure(UIManager))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
-			*UG2IUIManager::StaticClass()->GetName(), *GetName());
+			*UG2IUIManager::StaticClass()->GetName(), *GetActorNameOrLabel());
 	}
 	UIManager->OnPlayerControllerInitDelegate.Broadcast(this);
+}
+
+void AG2IPlayerController::SetupKeyMapping()
+{
+	for (const auto& [PawnClass, ContextsInfo] : InputMappingContextsByPawn)
+	{
+		InputKeyMappings.Add(PawnClass);
+		for (const UInputMappingContext *Context : ContextsInfo.Contexts)
+		{
+			if (!Context)
+			{
+				continue;
+			}
+			InputKeyMappings[PawnClass].Mappings.Append(Context->GetMappings());
+		}
+	}
+	for (const auto& [_,ContextsInfo] : CommonInputMappingContexts)
+	{
+		for (const UInputMappingContext *Context : ContextsInfo.Contexts)
+		{
+			if (!Context)
+			{
+				continue;
+			}
+			for (auto& [__, Mapping] : InputKeyMappings)
+			{
+				Mapping.Mappings.Append(Context->GetMappings());
+			}
+		}
+	}
+}
+
+void AG2IPlayerController::SetupCommonInput()
+{
+	UEnhancedInputLocalPlayerSubsystem* Subsystem = GetSubsystem();
+	if (!Subsystem)
+	{
+		return;
+	}
+
+	for (const auto& [_,ContextsInfo] : CommonInputMappingContexts)
+	{
+		ContextsInfo.AddAllContextsToMapping(*Subsystem);
+	}
+
+#if WITH_EDITOR
+	for (const auto& [_,DebugContextsInfo] : DebugCommonInputMappingContexts)
+	{
+		DebugContextsInfo.AddAllContextsToMapping(*Subsystem);
+	}
+#endif
+}
+
+void AG2IPlayerController::BindEnhancedDelegates()
+{
+	UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
+	if (!ensure(EnhancedInputComponent))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Input Component isn't Enhanced"), *GetActorNameOrLabel());
+		return;
+	}
+	
+	EnhancedInputComponent->BindAction(
+		MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
+
+	EnhancedInputComponent->BindAction(
+		JumpAction, ETriggerEvent::Started, this, &ThisClass::Jump);
+	EnhancedInputComponent->BindAction(
+		JumpAction, ETriggerEvent::Completed, this, &ThisClass::StopJumping);
+
+	EnhancedInputComponent->BindAction(
+		FlightUpAction, ETriggerEvent::Triggered, this, &ThisClass::FlyUp);
+	EnhancedInputComponent->BindAction(
+		FlightUpAction, ETriggerEvent::Completed, this, &ThisClass::StopFlight);
+	EnhancedInputComponent->BindAction(
+		FlightDownAction, ETriggerEvent::Triggered, this, &ThisClass::FlyDown);
+	EnhancedInputComponent->BindAction(
+		FlightDownAction, ETriggerEvent::Completed, this, &ThisClass::StopFlight);
+	
+	EnhancedInputComponent->BindAction(
+		LookAction, ETriggerEvent::Triggered, this, &ThisClass::Look);
+
+	EnhancedInputComponent->BindAction(
+		SelectNextCharacterAction, ETriggerEvent::Started, this, &ThisClass::SelectNextCharacter);
+
+	for (const auto& InteractAction : InteractActions) {
+		EnhancedInputComponent->BindAction(
+			InteractAction, ETriggerEvent::Started, this, &ThisClass::Interact);
+	}
+
+	EnhancedInputComponent->BindAction(
+		TakeAimAction, ETriggerEvent::Started, this, &ThisClass::StartAiming);
+	EnhancedInputComponent->BindAction(
+		TakeAimAction, ETriggerEvent::Completed, this, &ThisClass::StopAiming);
+
+	EnhancedInputComponent->BindAction(
+		ShootAction, ETriggerEvent::Started, this, &ThisClass::Shoot);
+
+	EnhancedInputComponent->BindAction(
+		ToggleFollowAIBehindPlayerAction, ETriggerEvent::Started, this, &ThisClass::ToggleFollowAIBehindPlayer);
+
+	EnhancedInputComponent->BindAction(
+		GlovePunchAction, ETriggerEvent::Started, this, &ThisClass::GlovePunchActivation);
+
+#if WITH_EDITOR
+	EnhancedInputComponent->BindAction(
+	DebugPauseAction, ETriggerEvent::Started,this, &ThisClass::CallPause);
+#else
+	EnhancedInputComponent->BindAction(
+		PauseAction, ETriggerEvent::Started, this, &ThisClass::CallPause);
+#endif
+	
+#if WITH_EDITOR
+	EnhancedInputComponent->BindAction(
+		ToggleDebugAction, ETriggerEvent::Started, this, &ThisClass::ToggleDebugMode);
+	EnhancedInputComponent->BindAction(
+		ToggleCrouchAction, ETriggerEvent::Started, this, &ThisClass::ToggleCrouch);
+	EnhancedInputComponent->BindAction(
+		SwitchCameraBehaviorAction, ETriggerEvent::Started, this, &ThisClass::SwitchCameraBehavior);
+	EnhancedInputComponent->BindAction(
+		SaveAction, ETriggerEvent::Triggered, this, &ThisClass::SaveGameplay);
+	EnhancedInputComponent->BindAction(
+		LoadAction, ETriggerEvent::Triggered, this, &ThisClass::LoadGameplay);
+#endif
+}
+
+UEnhancedInputLocalPlayerSubsystem* AG2IPlayerController::GetSubsystem() const
+{
+	const ULocalPlayer *LocalPlayer = GetLocalPlayer();
+	if (!ensure(LocalPlayer))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Local character is null"), *GetActorNameOrLabel());
+		return nullptr;
+	}
+
+	UEnhancedInputLocalPlayerSubsystem* Subsystem =
+		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer);
+	if (!ensure(Subsystem))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s doesn't used Enhanced Input System"), *GetActorNameOrLabel());
+		return nullptr;
+	}
+	return Subsystem;
+}
+
+TSubclassOf<APawn> AG2IPlayerController::GetPawnClass(const APawn* NewPawn) const
+{
+	if (!NewPawn)
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: Attempt to set input for null pawn"), *GetActorNameOrLabel());
+		return nullptr;
+	}
+
+	const TSubclassOf<APawn> PawnClass = NewPawn->GetClass();
+	if (!ensure(PawnClass))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: Pawn %s - Class is not ACharacter Class"), *GetActorNameOrLabel(),
+			*NewPawn->GetActorNameOrLabel());
+		return nullptr;
+	}
+	return PawnClass;
+}
+
+bool AG2IPlayerController::IsCurrentPawnClass(const TSubclassOf<APawn>& PawnClass) const
+{
+	return PawnClass == GetPawnClass(GetPawn());
+}
+
+void AG2IPlayerController::SetupInputForPawn(const APawn* NewPawn)
+{
+	const TSubclassOf<APawn>& PawnClass = GetPawnClass(NewPawn);
+	UEnhancedInputLocalPlayerSubsystem *Subsystem = GetSubsystem();
+	
+	if (!Subsystem || !PawnClass)
+	{
+		return;
+	}
+
+	if (const FG2IInputMappingContexts *ContextsInfoForOverriden =
+		InputMappingContextsForOverridingByPawn.Find(PawnClass))
+	{
+		SetupInputOverridenForPawn(*ContextsInfoForOverriden, *Subsystem);
+	}
+	else
+	{
+		SetupInputWithoutOverridenForPawn(PawnClass, *Subsystem);
+	}
+}
+
+void AG2IPlayerController::SetupInputIfPawnClassIsCurrent(const TSubclassOf<APawn>& PawnClass)
+{
+	if (!ensure(PawnClass))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: PawnClass is null"), *GetActorNameOrLabel());
+		return;
+	}
+	if (IsCurrentPawnClass(PawnClass))
+	{
+		SetupInputForPawn(GetPawn());
+	}
+}
+
+void AG2IPlayerController::SetupInputOverridenForPawn(
+	const FG2IInputMappingContexts& ContextsInfoForOverriden, UEnhancedInputLocalPlayerSubsystem& Subsystem)
+{
+	ContextsInfoForOverriden.AddAllContextsToMapping(Subsystem);
+	if (const FG2IInputMappingContexts *ContextsInfo =
+		CommonInputMappingContexts.Find(EG2IInputMappingContextType::Changeable))
+	{
+		ContextsInfo->RemoveAllContextsToMapping(Subsystem);
+	}
+#if WITH_EDITOR
+	if (const FG2IInputMappingContexts *DebugContextsInfo =
+		DebugCommonInputMappingContexts.Find(EG2IInputMappingContextType::Changeable))
+	{
+		DebugContextsInfo->RemoveAllContextsToMapping(Subsystem);
+	}
+#endif
+}
+
+void AG2IPlayerController::SetupInputWithoutOverridenForPawn(
+	const TSubclassOf<APawn>& PawnClass, UEnhancedInputLocalPlayerSubsystem& Subsystem)
+{
+	if (const FG2IInputMappingContexts *ContextsInfo = InputMappingContextsByPawn.Find(PawnClass))
+	{
+		ContextsInfo->AddAllContextsToMapping(Subsystem);
+	}
+#if WITH_EDITOR
+	if (const FG2IInputMappingContexts *DebugContextsInfo = DebugInputMappingContextsByPawn.Find(PawnClass))
+	{
+		DebugContextsInfo->AddAllContextsToMapping(Subsystem);
+	}
+#endif
+}
+
+void AG2IPlayerController::RemovedInputForPawn(const APawn* NewPawn)
+{
+	const TSubclassOf<APawn>& PawnClass = GetPawnClass(NewPawn);
+	UEnhancedInputLocalPlayerSubsystem *Subsystem = GetSubsystem();
+	
+	if (!Subsystem || !PawnClass)
+	{
+		return;
+	}
+
+	if (const FG2IInputMappingContexts *ContextsInfoForOverriden =
+		InputMappingContextsForOverridingByPawn.Find(PawnClass))
+	{
+		RemovedInputOverridenForPawn(*ContextsInfoForOverriden, *Subsystem);
+	}
+	else
+	{
+		RemovedInputWithoutOverridenForPawn(PawnClass, *Subsystem);
+	}
+}
+
+void AG2IPlayerController::RemovedInputIfPawnClassIsCurrent(const TSubclassOf<APawn>& PawnClass)
+{
+	if (!ensure(PawnClass))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: PawnClass is null"), *GetActorNameOrLabel());
+		return;
+	}
+	if (IsCurrentPawnClass(PawnClass))
+	{
+		RemovedInputForPawn(GetPawn());
+	}
+}
+
+void AG2IPlayerController::RemovedInputOverridenForPawn(
+	const FG2IInputMappingContexts& ContextsInfoForOverriden, UEnhancedInputLocalPlayerSubsystem& Subsystem)
+{
+	ContextsInfoForOverriden.RemoveAllContextsToMapping(Subsystem);
+	if (const FG2IInputMappingContexts *ContextsInfo =
+		CommonInputMappingContexts.Find(EG2IInputMappingContextType::Changeable))
+	{
+		ContextsInfo->AddAllContextsToMapping(Subsystem);
+	}
+#if WITH_EDITOR
+	if (const FG2IInputMappingContexts *DebugContextsInfo =
+		DebugCommonInputMappingContexts.Find(EG2IInputMappingContextType::Changeable))
+	{
+		DebugContextsInfo->AddAllContextsToMapping(Subsystem);
+	}
+#endif
+}
+
+void AG2IPlayerController::RemovedInputWithoutOverridenForPawn(
+	const TSubclassOf<APawn>& PawnClass, UEnhancedInputLocalPlayerSubsystem& Subsystem)
+{
+	if (const FG2IInputMappingContexts *ContextsInfo = InputMappingContextsByPawn.Find(PawnClass))
+	{
+		ContextsInfo->RemoveAllContextsToMapping(Subsystem);
+	}
+#if WITH_EDITOR
+	if (const FG2IInputMappingContexts *DebugContextsInfo = DebugInputMappingContextsByPawn.Find(PawnClass))
+	{
+		DebugContextsInfo->RemoveAllContextsToMapping(Subsystem);
+	}
+#endif
 }
 
 AG2IPlayerController::AG2IPlayerController()
@@ -138,13 +392,19 @@ void AG2IPlayerController::OnPossess(APawn* NewPawn)
 {
 	Super::OnPossess(NewPawn);
 
-	if (NewPawn && GetPawn() == NewPawn)
+	if (!NewPawn)
+	{
+		return;
+	}
+	
+	if (GetPawn() == NewPawn)
 	{
 		OnPossessPawnDelegate.Broadcast(NewPawn);
 	}
-	
+	// TODO: SetupCharacterACtorComponents should be only once in start level, store in map with key - character class
 	SetupCharacterActorComponents();
 	SetupCamera();
+	SetupInputForPawn(GetPawn());
 }
 
 void AG2IPlayerController::OnUnPossess()
@@ -160,10 +420,17 @@ void AG2IPlayerController::OnUnPossess()
 	}
 	SetPawn(nullptr);
 
-	if (CurrentPawn && !GetPawn())
+	if (!CurrentPawn)
+	{
+		return;
+	}
+
+	if (!GetPawn())
 	{
 		OnUnPossessPawnDelegate.Broadcast(CurrentPawn);
 	}
+
+	RemovedInputForPawn(CurrentPawn);
 }
 
 void AG2IPlayerController::SetViewTargetWithBlend(class AActor* NewViewTarget, float BlendTime,
@@ -217,9 +484,22 @@ void AG2IPlayerController::QuitGame()
 	UKismetSystemLibrary::QuitGame(World, this, EQuitPreference::Quit, true);
 }
 
-FName AG2IPlayerController::GetKeyName(UInputAction* InputAction)
+FName AG2IPlayerController::GetKeyName(UInputAction* InputAction, const TSubclassOf<APawn>& PawnClass)
 {
-	for (const FEnhancedActionKeyMapping& Mapping : InputKeyMappings)
+	if (!ensure(PawnClass))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Attempt to find mapping for null class"), *GetActorNameOrLabel());
+		return NAME_None;;
+	}
+	FG2IInputKeyMapping *Mappings = InputKeyMappings.Find(PawnClass);
+	if (!ensure(Mappings))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't find input key mappings for character %s"), *GetActorNameOrLabel(),
+			*PawnClass->GetName());
+		return NAME_None;
+	}
+	
+	for (const FEnhancedActionKeyMapping& Mapping : Mappings->Mappings)
 	{
 		if (Mapping.Action == InputAction)
 		{
@@ -232,6 +512,32 @@ FName AG2IPlayerController::GetKeyName(UInputAction* InputAction)
 TMap<TObjectPtr<UInputAction>, FName>& AG2IPlayerController::GetActionToTagMap()
 {
 	return ActionToTagMap;
+}
+
+void AG2IPlayerController::OverrideInputMappingContext(
+	const TSubclassOf<APawn>& PawnClass, const TArray<TObjectPtr<UInputMappingContext>>& ContextsForOverride)
+{
+	if (!ensure(PawnClass))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: PawnClass is null"), *GetActorNameOrLabel());
+		return;
+	}
+	RemovedInputIfPawnClassIsCurrent(PawnClass);
+	const FG2IInputMappingContexts MappingContextForOverride = {ContextsForOverride};
+	InputMappingContextsForOverridingByPawn.Add(PawnClass, MappingContextForOverride);
+	SetupInputIfPawnClassIsCurrent(PawnClass);
+}
+
+void AG2IPlayerController::StopOverrideInputMappingContext(const TSubclassOf<APawn>& PawnClass)
+{
+	if (!ensure(PawnClass))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: PawnClass is null"), *GetActorNameOrLabel());
+		return;
+	}
+	RemovedInputIfPawnClassIsCurrent(PawnClass);
+	InputMappingContextsForOverridingByPawn.Remove(PawnClass);
+	SetupInputIfPawnClassIsCurrent(PawnClass);
 }
 
 void AG2IPlayerController::SetupCharacterActorComponents()
@@ -306,7 +612,7 @@ void AG2IPlayerController::SetupCharacterActorComponents()
 	}
 }
 
-void AG2IPlayerController::SetupCamera()
+void AG2IPlayerController::SetupCamera() const
 {
 	if (!ensure(CameraControllersComponent))
 	{
@@ -415,21 +721,42 @@ void AG2IPlayerController::FlyDown(const FInputActionValue& Value)
 	Fly(-1);
 }
 
-void AG2IPlayerController::Fly(int Direction)
+void AG2IPlayerController::Fly(const int Direction) const
 {
-	if (FlightComponent && MovementComponent)
+	if (!ensure(FlightComponent))
 	{
-		IG2IFlightInterface::Execute_Fly(FlightComponent, MovementComponent, Direction);
+		UE_LOG(LogG2I, Warning, TEXT("%s: Pawn doesn't have flight component"), *GetActorNameOrLabel());
+		return;
 	}
+	if (!ensure(FlightComponent->Implements<UG2IFlightInterface>()))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s does not implemented flight interface"),
+			*FlightComponent->GetName());
+		return;
+	}
+	
+	IG2IFlightInterface::Execute_Fly(FlightComponent, Direction);
+}
+
+void AG2IPlayerController::StopFlight(const FInputActionValue& Value)
+{
+	if (!ensure(FlightComponent))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: Pawn doesn't have flight component"), *GetActorNameOrLabel());
+		return;
+	}
+	if (!ensure(FlightComponent->Implements<UG2IFlightInterface>()))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s does not implemented flight interface"),
+			*FlightComponent->GetName());
+		return;
+	}
+	
+	IG2IFlightInterface::Execute_StopFly(FlightComponent);
 }
 
 void AG2IPlayerController::Jump(const FInputActionValue& Value)
 {
-	if (FlightComponent)
-	{
-		return;
-	}
-	
 	if (!ensure(MovementComponent))
 	{
 		UE_LOG(LogG2I, Warning, TEXT("Pawn doesn't have movement component in %s"), *GetName());
@@ -469,16 +796,6 @@ void AG2IPlayerController::Jump(const FInputActionValue& Value)
 
 void AG2IPlayerController::StopJumping(const FInputActionValue& Value)
 {
-	if (!FlightComponent)
-	{
-		UE_LOG(LogG2I, Log, TEXT("Pawn doesn't have component with fly interface in %s"), *GetName());
-	}
-	else
-	{
-		IG2IFlightInterface::Execute_StopFly(FlightComponent, MovementComponent);
-		return;
-	}
-	
 	if (!ensure(MovementComponent))
 	{
 		UE_LOG(LogG2I, Warning, TEXT("Pawn doesn't have component with movement interface in %s"), *GetName());
