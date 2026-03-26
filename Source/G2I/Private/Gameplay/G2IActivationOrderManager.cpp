@@ -1,6 +1,8 @@
-
 #include "Gameplay/G2IActivationOrderManager.h"
 #include "G2I.h"
+#include "G2IInteractiveObjectInterface.h"
+#include "G2IWorldHintKeyWidgetComponent.h"
+#include "LaunchingIndication/G2ILauncherComponent.h"
 
 AG2IActivationOrderManager::AG2IActivationOrderManager()
 {
@@ -8,11 +10,28 @@ AG2IActivationOrderManager::AG2IActivationOrderManager()
 
 	if (RootSceneComponent)
 		SetRootComponent(RootSceneComponent);
+
+	LauncherComp = CreateDefaultSubobject<UG2ILauncherComponent>(TEXT("LauncherComp"));
+	if (!ensure(LauncherComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+			*UG2ILauncherComponent::StaticClass()->GetName());
+	}
 }
 
 void AG2IActivationOrderManager::OrderCompleted()
 {
 	OnActivationWithOrderEndedDelegate.Broadcast(this, true);
+	if (!ensure(LauncherComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+			*UG2ILauncherComponent::StaticClass()->GetName());
+	}
+	else
+	{
+		LauncherComp->SetIsLaunched(true);
+	}
+	
 	UnbindToAllDelegates();
 	UE_LOG(LogG2I, Log, TEXT("Order completed successfully in %s"), *GetActorNameOrLabel());
 }
@@ -20,12 +39,21 @@ void AG2IActivationOrderManager::OrderCompleted()
 void AG2IActivationOrderManager::OrderFailed()
 {
 	CurrentIndex = 0;
-	for (AActor* Actor : ActivatedActorsArray)
+	for (const AActor* Actor : ActivatedActorsArray)
 	{
-		if (Actor)
+		if (!ensure(Actor))
 		{
-			if (auto* ActivationComponent = Actor->GetComponentByClass<UG2IActivationWithOrderComponent>())
-				ActivationComponent->Restored();
+			UE_LOG(LogG2I, Error, TEXT("%s: In ActivatedActorsArray actor is null"), *GetActorNameOrLabel());
+			continue;
+		}
+		if (auto* ActivationComponent = Actor->GetComponentByClass<UG2IActivationWithOrderComponent>())
+		{
+			ActivationComponent->Restored();
+		}
+		else
+		{
+			UE_LOG(LogG2I, Error, TEXT("Failed to get ActivationWithOrder component from %s actor in %s"),
+				*Actor->GetActorNameOrLabel(), *GetActorNameOrLabel());
 		}
 	}
 	ActivatedActorsArray.Empty();
@@ -36,17 +64,26 @@ void AG2IActivationOrderManager::OrderFailed()
 void AG2IActivationOrderManager::OrderCancelled()
 {
 	CurrentIndex = 0;
-	for (AActor* Actor : ActivatedActorsArray)
+	for (const AActor* Actor : ActivatedActorsArray)
 	{
-		if (Actor)
+		if (!ensure(Actor))
 		{
-			if (auto* ActivationComponent = Actor->GetComponentByClass<UG2IActivationWithOrderComponent>())
-				ActivationComponent->Restored();
+			UE_LOG(LogG2I, Error, TEXT("%s: In ActivatedActorsArray actor is null"), *GetActorNameOrLabel());
+			continue;
+		}
+		if (auto* ActivationComponent = Actor->GetComponentByClass<UG2IActivationWithOrderComponent>())
+		{
+			ActivationComponent->Restored();
+		}
+		else
+		{
+			UE_LOG(LogG2I, Error, TEXT("Failed to get ActivationWithOrder component from %s actor in %s"),
+				*Actor->GetActorNameOrLabel(), *GetActorNameOrLabel());
 		}
 	}
 	ActivatedActorsArray.Empty();
 	OnActivationWithOrderEndedDelegate.Broadcast(this, false);
-	UE_LOG(LogG2I, Log, TEXT("Order calcelled in %s"), *GetActorNameOrLabel());
+	UE_LOG(LogG2I, Log, TEXT("Order cancelled in %s"), *GetActorNameOrLabel());
 }
 
 void AG2IActivationOrderManager::BeginPlay()
@@ -54,38 +91,79 @@ void AG2IActivationOrderManager::BeginPlay()
 	Super::BeginPlay();
 	
 	BindToAllDelegates();
-	NumberOfActors = CorrectOrderOfActors.Num();
-	ActivatedActorsArray.Reserve(NumberOfActors);
+	SetupDefaults();
 }
 
-void AG2IActivationOrderManager::BindToAllDelegates()
+void AG2IActivationOrderManager::SetupDefaults()
 {
+	NumberOfActors = CorrectOrderOfActors.Num();
+	ActivatedActorsArray.Reserve(NumberOfActors);
+	
+	if (!ensure(LauncherComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+			*UG2ILauncherComponent::StaticClass()->GetName());
+		return;
+	}
 	for (AActor* Actor : CorrectOrderOfActors)
 	{
-		if (Actor)
+		if (!ensure(Actor))
 		{
-			if (auto* ActivationComponent = Actor->GetComponentByClass<UG2IActivationWithOrderComponent>())
-			{
-				ActivationComponent->OnActivatedDelegate.BindUObject(this, &AG2IActivationOrderManager::OnActorActivated);
-			}
-			else
-				UE_LOG(LogG2I, Error, TEXT("Failed to get ActivationWithOrder component from %s actor in %s"), *Actor->GetActorNameOrLabel(), *GetActorNameOrLabel());
+			UE_LOG(LogG2I, Error, TEXT("%s: In ActivatedActorsArray actor is null"), *GetActorNameOrLabel());
+			continue;
+		}
+		if (Actor->Implements<UG2ILockingInterface>())
+		{
+			IG2ILockingInterface::Execute_SetIsLocked(Actor, LauncherComp->IsLocked_Implementation());
 		}
 	}
 }
 
+void AG2IActivationOrderManager::BindToAllDelegates()
+{
+	for (const AActor* Actor : CorrectOrderOfActors)
+	{
+		if (!ensure(Actor))
+		{
+			UE_LOG(LogG2I, Error, TEXT("%s: In ActivatedActorsArray actor is null"), *GetActorNameOrLabel());
+			continue;
+		}
+		if (auto* ActivationComponent = Actor->GetComponentByClass<UG2IActivationWithOrderComponent>())
+		{
+			ActivationComponent->OnActivatedDelegate.BindUObject(this, &AG2IActivationOrderManager::OnActorActivated);
+		}
+		else
+		{
+			UE_LOG(LogG2I, Error, TEXT("Failed to get ActivationWithOrder component from %s actor in %s"),
+				*Actor->GetActorNameOrLabel(), *GetActorNameOrLabel());
+		}
+	}
+	if (!ensure(LauncherComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+			*UG2ILauncherComponent::StaticClass()->GetName());
+		return;
+	}
+	LauncherComp->GetOnLockedDelegate().AddDynamic(this, &ThisClass::LockedCorrectOrderActors);
+}
+
 void AG2IActivationOrderManager::UnbindToAllDelegates()
 {
-	for (AActor* Actor : CorrectOrderOfActors)
+	for (const AActor* Actor : CorrectOrderOfActors)
 	{
-		if (Actor)
+		if (!ensure(Actor))
 		{
-			if (auto* ActivationComponent = Actor->GetComponentByClass<UG2IActivationWithOrderComponent>())
-			{
-				ActivationComponent->OnActivatedDelegate.Unbind();
-			}
-			else
-				UE_LOG(LogG2I, Error, TEXT("Failed to get ActivationWithOrder component from %s actor in %s"), *Actor->GetActorNameOrLabel(), *GetActorNameOrLabel());
+			UE_LOG(LogG2I, Error, TEXT("%s: In ActivatedActorsArray actor is null"), *GetActorNameOrLabel());
+			continue;
+		}
+		if (auto* ActivationComponent = Actor->GetComponentByClass<UG2IActivationWithOrderComponent>())
+		{
+			ActivationComponent->OnActivatedDelegate.Unbind();
+		}
+		else
+		{
+			UE_LOG(LogG2I, Error, TEXT("Failed to get ActivationWithOrder component from %s actor in %s"),
+				*Actor->GetActorNameOrLabel(), *GetActorNameOrLabel());
 		}
 	}
 }
@@ -113,4 +191,21 @@ void AG2IActivationOrderManager::CheckIfOrderCompleted()
 		}
 	}
 	OrderCompleted();
+}
+
+void AG2IActivationOrderManager::LockedCorrectOrderActors(UG2ILauncherComponent* LauncherComponent,
+	AActor* ComponentOwner, const bool bIsLocked)
+{
+	for (AActor* Actor : CorrectOrderOfActors)
+	{
+		if (!ensure(Actor))
+		{
+			UE_LOG(LogG2I, Error, TEXT("%s: In ActivatedActorsArray actor is null"), *GetActorNameOrLabel());
+			continue;
+		}
+		if (Actor->Implements<UG2ILockingInterface>())
+		{
+			IG2ILockingInterface::Execute_SetIsLocked(Actor, bIsLocked);
+		}
+	}
 }

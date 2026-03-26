@@ -1,6 +1,6 @@
-
 #include "Gameplay/G2IValve.h"
 #include "G2I.h"
+#include "G2IWorldHintKeyWidgetComponent.h"
 #include "Characters/G2ICharacterEngineer.h"
 #include "Components/G2IValveInteractionComponent.h"
 #include "Gameplay/G2IPipe.h"
@@ -23,6 +23,17 @@ AG2IValve::AG2IValve()
 		if (StaticMeshComponent)
 			StaticMeshComponent->AttachToComponent(SceneRootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	}
+
+	HintKeyWidgetComp = CreateDefaultSubobject<UG2IWorldHintKeyWidgetComponent>(TEXT("HintKeyWidget"));
+	if (!ensure(HintKeyWidgetComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't create %s"), *GetActorNameOrLabel(),
+			*UG2IWorldHintKeyWidgetComponent::StaticClass()->GetName());
+	}
+	else
+	{
+		HintKeyWidgetComp->SetupAttachment(SceneRootComponent);
+	}
 }
 
 void AG2IValve::Tick(float DeltaTime)
@@ -34,12 +45,24 @@ void AG2IValve::Tick(float DeltaTime)
 void AG2IValve::BeginPlay()
 {
 	Super::BeginPlay();
+	
 	DeltaRotation *= -1.;
 	PassActivationToPipe();
+	if (!ensure(HintKeyWidgetComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+			*UG2IWorldHintKeyWidgetComponent::StaticClass()->GetName());
+		return;
+	}
+	HintKeyWidgetComp->SetIsLocked_Implementation(bIsLocked);
 }
 
 bool AG2IValve::CanInteract_Implementation(const ACharacter* Interactor)
 {
+	if (bIsLocked)
+	{
+		return false;
+	}
 	if (Interactor->FindComponentByClass<UG2IValveInteractionComponent>())
 		return true;
 
@@ -50,6 +73,29 @@ void AG2IValve::Interact_Implementation(const ACharacter* Interactor)
 {
 	ChangeActivation();
 	PassActivationToPipe();
+}
+
+UG2IWorldHintKeyWidgetComponent* AG2IValve::GetInteractionKeyHintComponent_Implementation()
+{
+	return HintKeyWidgetComp;
+}
+
+void AG2IValve::SetIsLocked_Implementation(const bool bIsNewLocked)
+{
+	bIsLocked = bIsNewLocked;
+
+	if (!ensure(HintKeyWidgetComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+			*UG2IWorldHintKeyWidgetComponent::StaticClass()->GetName());
+		return;
+	}
+	HintKeyWidgetComp->SetIsLocked_Implementation(bIsLocked);
+}
+
+bool AG2IValve::IsLocked_Implementation()
+{
+	return bIsLocked;
 }
 
 void AG2IValve::PassActivationToPipe()
@@ -93,5 +139,5 @@ void AG2IValve::ChangeActivation()
 	if (StaticMeshComponent)
 		SetActorTickEnabled(true);
 
-	// TODO play sound
+	// TODO: play sound
 }

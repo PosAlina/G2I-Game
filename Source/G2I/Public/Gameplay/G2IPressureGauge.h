@@ -1,8 +1,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "G2IChangingAnglesInterface.h"
+#include "G2ILockingInterface.h"
 #include "GameFramework/Actor.h"
 #include "G2IPressureGauge.generated.h"
+
+class UG2ILauncherComponent;
 
 USTRUCT(BlueprintType)
 struct FArrowInfo
@@ -33,7 +37,7 @@ struct FActiveMovement
 };
 
 UCLASS()
-class G2I_API AG2IPressureGauge : public AActor
+class G2I_API AG2IPressureGauge : public AActor, public IG2IChangingAnglesInterface, public IG2ILockingInterface
 {
     GENERATED_BODY()
 
@@ -43,8 +47,17 @@ public:
 protected:
 
     virtual void Tick(float DeltaTime) override;
+    
+    virtual void BeginPlay() override;
 
+    UFUNCTION()
+    void LockedPuzzleActors(UG2ILauncherComponent* LauncherComponent, AActor* ComponentOwner, bool bIsLocked);
+    
 public:
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    TObjectPtr<UG2ILauncherComponent> LauncherComp;
+    
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gauge")
     TArray<FArrowInfo> Arrows;
 
@@ -57,6 +70,8 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Gauge")
     void InitializeArrowsComponent(TArray<USceneComponent*> InArrows);
 
+    virtual void ChangeAngles_Implementation(const TArray<float>& AngleDeltas, bool bIsOn) override;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TSet<TObjectPtr<AActor>> PuzzleActors;
 
@@ -65,4 +80,9 @@ private:
 
     UPROPERTY()
     TArray<FActiveMovement> ActiveMovements;
+    
+    void BindDelegates();
+    void SetupDefaults();
+
+    void SetIsLockedPuzzleActors(bool bIsNewLocked);
 };

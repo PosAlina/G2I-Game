@@ -109,12 +109,12 @@ public:
 
 	TMap<TObjectPtr<UInputAction>, FName>& GetActionToTagMap();
 
-	void OverrideInputMappingContext(
-		const TSubclassOf<APawn>& PawnClass, const TArray<TObjectPtr<UInputMappingContext>>& ContextsForOverride);
-	void StopOverrideInputMappingContext(const TSubclassOf<APawn>& PawnClass);
+	void OverrideInputMappingContext(const TArray<TObjectPtr<UInputMappingContext>>& ContextsForOverride);
+	void StopOverrideInputMappingContext();
 
 	UEnhancedInputLocalPlayerSubsystem *GetSubsystem() const;
 	TSubclassOf<APawn> GetPawnClass(const APawn* NewPawn) const;
+	TSubclassOf<APawn> GetCurrentPawnClass() const;
 
 	bool IsCurrentPawnClass(const TSubclassOf<APawn>& PawnClass) const;
 	
