@@ -181,7 +181,6 @@ void UG2IThirdPersonCameraComponent::InitializeCameraBoom()
 
 	SetDefaultCameraLocation();
 	ThirdPersonCameraBoom->bUsePawnControlRotation = true;
-	ThirdPersonCameraBoom->bDoCollisionTest = false;
 }
 
 void UG2IThirdPersonCameraComponent::InitializeFollowCamera()
