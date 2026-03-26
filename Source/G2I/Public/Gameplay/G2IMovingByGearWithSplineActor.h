@@ -23,7 +23,16 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Data|Spline")
 	float CurrentSplineDistance;
-public:	
+
+	UPROPERTY(EditAnywhere, Category = "Data|Spline")
+	bool bChangeRotationThroughSpline = true;
+
+	UPROPERTY(EditAnywhere, Category = "Data|Spline")
+	bool bChangeLocationThroughSpline = true;
+
+	UPROPERTY(EditAnywhere, Category = "Data|Spline")
+	bool bCheckHit = true;
+
 	AG2IMovingByGearWithSplineActor();
 
 	virtual void BeginPlay() override;
@@ -31,5 +40,5 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Data")
 	float ForceModifier = 1.0f;
 
-	void OnPushing_Implementation(float ForceMagnitude);
+	virtual void OnPushing_Implementation(float ForceMagnitude) override;
 };
