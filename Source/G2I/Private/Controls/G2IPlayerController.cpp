@@ -22,6 +22,32 @@
 #include "G2ISavingGameplayManager.h"
 #include "Kismet/KismetSystemLibrary.h"
 
+void FG2IInputMappingContexts::AddAllContextsToMapping(UEnhancedInputLocalPlayerSubsystem& Subsystem) const
+{
+	for (const UInputMappingContext *Context : Contexts)
+	{
+		if (!Context)
+		{
+			continue;
+		}
+
+		Subsystem.AddMappingContext(Context, 0);
+	}
+}
+
+void FG2IInputMappingContexts::RemoveAllContextsToMapping(UEnhancedInputLocalPlayerSubsystem& Subsystem) const
+{
+	for (const UInputMappingContext *Context : Contexts)
+	{
+		if (!Context)
+		{
+			continue;
+		}
+		
+		Subsystem.RemoveMappingContext(Context);
+	}
+}
+
 void AG2IPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
@@ -39,20 +65,20 @@ void AG2IPlayerController::SetupDefaults()
 	const UWorld *World = GetWorld();
 	if (!ensure(World))
 	{
-		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetActorNameOrLabel());
 		return;
 	}
 	const UG2IGameInstance *GameInstance = Cast<UG2IGameInstance>(World->GetGameInstance());
 	if (!ensure(GameInstance))
 	{
-		UE_LOG(LogG2I, Error, TEXT("Game Instance doesn't exist in %s"), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("Game Instance doesn't exist in %s"), *GetActorNameOrLabel());
 		return;
 	}
 	UIManager = GameInstance->GetSubsystem<UG2IUIManager>();
 	if (!ensure(UIManager))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
-			*UG2IUIManager::StaticClass()->GetName(), *GetName());
+			*UG2IUIManager::StaticClass()->GetName(), *GetActorNameOrLabel());
 	}
 	UIManager->OnPlayerControllerInitDelegate.Broadcast(this);
 }
@@ -64,6 +90,10 @@ void AG2IPlayerController::SetupKeyMapping()
 		InputKeyMappings.Add(PawnClass);
 		for (const UInputMappingContext *Context : ContextsInfo.Contexts)
 		{
+			if (!Context)
+			{
+				continue;
+			}
 			InputKeyMappings[PawnClass].Mappings.Append(Context->GetMappings());
 		}
 	}
@@ -71,6 +101,10 @@ void AG2IPlayerController::SetupKeyMapping()
 	{
 		for (const UInputMappingContext *Context : ContextsInfo.Contexts)
 		{
+			if (!Context)
+			{
+				continue;
+			}
 			for (auto& [__, Mapping] : InputKeyMappings)
 			{
 				Mapping.Mappings.Append(Context->GetMappings());
@@ -81,36 +115,21 @@ void AG2IPlayerController::SetupKeyMapping()
 
 void AG2IPlayerController::SetupCommonInput()
 {
-	const ULocalPlayer *LocalPlayer = GetLocalPlayer();
-	if (!ensure(LocalPlayer))
+	UEnhancedInputLocalPlayerSubsystem* Subsystem = GetSubsystem();
+	if (!Subsystem)
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Local character is null"), *GetName());
-		return;
-	}
-
-	UEnhancedInputLocalPlayerSubsystem* Subsystem =
-		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer);
-	if (!ensure(Subsystem))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't used Enhanced Input System"), *GetName());
 		return;
 	}
 
 	for (const auto& [_,ContextsInfo] : CommonInputMappingContexts)
 	{
-		for (const UInputMappingContext *Context : ContextsInfo.Contexts)
-		{
-			Subsystem->AddMappingContext(Context, 0);
-		}
+		ContextsInfo.AddAllContextsToMapping(*Subsystem);
 	}
 
 #if WITH_EDITOR
-	for (const auto& [_,ContextsInfo] : DebugCommonInputMappingContexts)
+	for (const auto& [_,DebugContextsInfo] : DebugCommonInputMappingContexts)
 	{
-		for (const UInputMappingContext *Context : ContextsInfo.Contexts)
-		{
-			Subsystem->AddMappingContext(Context, 0);
-		}
+		DebugContextsInfo.AddAllContextsToMapping(*Subsystem);
 	}
 #endif
 }
@@ -120,7 +139,7 @@ void AG2IPlayerController::BindEnhancedDelegates()
 	UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
 	if (!ensure(EnhancedInputComponent))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Input Component isn't Enhanced"), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("%s: Input Component isn't Enhanced"), *GetActorNameOrLabel());
 		return;
 	}
 	
@@ -188,180 +207,178 @@ void AG2IPlayerController::BindEnhancedDelegates()
 #endif
 }
 
-void AG2IPlayerController::SetupInputForPawn(const APawn* NewPawn)
+UEnhancedInputLocalPlayerSubsystem* AG2IPlayerController::GetSubsystem() const
 {
-	if (!NewPawn)
-	{
-		UE_LOG(LogG2I, Warning, TEXT("%s: Attempt to set input for null pawn"), *GetName());
-		return;
-	}
 	const ULocalPlayer *LocalPlayer = GetLocalPlayer();
 	if (!ensure(LocalPlayer))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Local character is null"), *GetName());
-		return;
+		UE_LOG(LogG2I, Error, TEXT("%s: Local character is null"), *GetActorNameOrLabel());
+		return nullptr;
 	}
 
 	UEnhancedInputLocalPlayerSubsystem* Subsystem =
 		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer);
 	if (!ensure(Subsystem))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't used Enhanced Input System"), *GetName());
-		return;
+		UE_LOG(LogG2I, Error, TEXT("%s doesn't used Enhanced Input System"), *GetActorNameOrLabel());
+		return nullptr;
 	}
-	
+	return Subsystem;
+}
+
+TSubclassOf<APawn> AG2IPlayerController::GetPawnClass(const APawn* NewPawn) const
+{
+	if (!NewPawn)
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: Attempt to set input for null pawn"), *GetActorNameOrLabel());
+		return nullptr;
+	}
+
 	const TSubclassOf<APawn> PawnClass = NewPawn->GetClass();
 	if (!ensure(PawnClass))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("%s: Pawn %s - Class is not ACharacter Class"), *GetName(),
+		UE_LOG(LogG2I, Warning, TEXT("%s: Pawn %s - Class is not ACharacter Class"), *GetActorNameOrLabel(),
 			*NewPawn->GetActorNameOrLabel());
+		return nullptr;
+	}
+	return PawnClass;
+}
+
+bool AG2IPlayerController::IsCurrentPawnClass(const TSubclassOf<APawn>& PawnClass) const
+{
+	return PawnClass == GetPawnClass(GetPawn());
+}
+
+void AG2IPlayerController::SetupInputForPawn(const APawn* NewPawn)
+{
+	const TSubclassOf<APawn>& PawnClass = GetPawnClass(NewPawn);
+	UEnhancedInputLocalPlayerSubsystem *Subsystem = GetSubsystem();
+	
+	if (!Subsystem || !PawnClass)
+	{
 		return;
 	}
 
 	if (const FG2IInputMappingContexts *ContextsInfoForOverriden =
 		InputMappingContextsForOverridingByPawn.Find(PawnClass))
 	{
-		SetupInputOverridenForPawn(*ContextsInfoForOverriden, Subsystem);
+		SetupInputOverridenForPawn(*ContextsInfoForOverriden, *Subsystem);
 	}
 	else
 	{
-		SetupInputWithoutOverridenForPawn(PawnClass, Subsystem);
+		SetupInputWithoutOverridenForPawn(PawnClass, *Subsystem);
 	}
 }
 
-void AG2IPlayerController::SetupInputOverridenForPawn(const FG2IInputMappingContexts& ContextsInfoForOverriden,
-	UEnhancedInputLocalPlayerSubsystem* Subsystem)
+void AG2IPlayerController::SetupInputIfPawnClassIsCurrent(const TSubclassOf<APawn>& PawnClass)
 {
-	for (const UInputMappingContext *Context : ContextsInfoForOverriden.Contexts)
+	if (!ensure(PawnClass))
 	{
-		Subsystem->AddMappingContext(Context, 0);
+		UE_LOG(LogG2I, Warning, TEXT("%s: PawnClass is null"), *GetActorNameOrLabel());
+		return;
 	}
-	if (FG2IInputMappingContexts *ContextsInfo =
+	if (IsCurrentPawnClass(PawnClass))
+	{
+		SetupInputForPawn(GetPawn());
+	}
+}
+
+void AG2IPlayerController::SetupInputOverridenForPawn(
+	const FG2IInputMappingContexts& ContextsInfoForOverriden, UEnhancedInputLocalPlayerSubsystem& Subsystem)
+{
+	ContextsInfoForOverriden.AddAllContextsToMapping(Subsystem);
+	if (const FG2IInputMappingContexts *ContextsInfo =
 		CommonInputMappingContexts.Find(EG2IInputMappingContextType::Changeable))
 	{
-		for (const UInputMappingContext *Context : ContextsInfo->Contexts)
-		{
-			Subsystem->RemoveMappingContext(Context);
-		}
+		ContextsInfo->RemoveAllContextsToMapping(Subsystem);
 	}
 #if WITH_EDITOR
-	if (FG2IInputMappingContexts *ContextsInfo =
+	if (const FG2IInputMappingContexts *DebugContextsInfo =
 		DebugCommonInputMappingContexts.Find(EG2IInputMappingContextType::Changeable))
 	{
-		for (const UInputMappingContext *Context : ContextsInfo->Contexts)
-		{
-			Subsystem->RemoveMappingContext(Context);
-		}
+		DebugContextsInfo->RemoveAllContextsToMapping(Subsystem);
 	}
 #endif
 }
 
-void AG2IPlayerController::SetupInputWithoutOverridenForPawn(const TSubclassOf<APawn>& PawnClass,
-	UEnhancedInputLocalPlayerSubsystem* Subsystem)
+void AG2IPlayerController::SetupInputWithoutOverridenForPawn(
+	const TSubclassOf<APawn>& PawnClass, UEnhancedInputLocalPlayerSubsystem& Subsystem)
 {
-	if (FG2IInputMappingContexts *ContextsInfo = InputMappingContextsByPawn.Find(PawnClass))
+	if (const FG2IInputMappingContexts *ContextsInfo = InputMappingContextsByPawn.Find(PawnClass))
 	{
-		for (const UInputMappingContext *Context : ContextsInfo->Contexts)
-		{
-			Subsystem->AddMappingContext(Context, 0);
-		}
+		ContextsInfo->AddAllContextsToMapping(Subsystem);
 	}
 #if WITH_EDITOR
-	if (FG2IInputMappingContexts *ContextsInfo = DebugInputMappingContextsByPawn.Find(PawnClass))
+	if (const FG2IInputMappingContexts *DebugContextsInfo = DebugInputMappingContextsByPawn.Find(PawnClass))
 	{
-		for (const UInputMappingContext *Context : ContextsInfo->Contexts)
-		{
-			Subsystem->AddMappingContext(Context, 0);
-		}
+		DebugContextsInfo->AddAllContextsToMapping(Subsystem);
 	}
 #endif
 }
 
 void AG2IPlayerController::RemovedInputForPawn(const APawn* NewPawn)
 {
-	if (!NewPawn)
-	{
-		UE_LOG(LogG2I, Warning, TEXT("%s: Attempt to remove input for null pawn"), *GetName());
-		return;
-	}
-	const ULocalPlayer *LocalPlayer = GetLocalPlayer();
-	if (!ensure(LocalPlayer))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Local character is null"), *GetName());
-		return;
-	}
-
-	UEnhancedInputLocalPlayerSubsystem* Subsystem =
-		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer);
-	if (!ensure(Subsystem))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't used Enhanced Input System"), *GetName());
-		return;
-	}
+	const TSubclassOf<APawn>& PawnClass = GetPawnClass(NewPawn);
+	UEnhancedInputLocalPlayerSubsystem *Subsystem = GetSubsystem();
 	
-	const TSubclassOf<APawn> PawnClass = NewPawn->GetClass();
-	if (!ensure(PawnClass))
+	if (!Subsystem || !PawnClass)
 	{
-		UE_LOG(LogG2I, Warning, TEXT("%s: Pawn %s - Class is not ACharacter Class"), *GetName(),
-			*NewPawn->GetActorNameOrLabel());
 		return;
 	}
 
 	if (const FG2IInputMappingContexts *ContextsInfoForOverriden =
 		InputMappingContextsForOverridingByPawn.Find(PawnClass))
 	{
-		RemovedInputOverridenForPawn(*ContextsInfoForOverriden, Subsystem);
+		RemovedInputOverridenForPawn(*ContextsInfoForOverriden, *Subsystem);
 	}
 	else
 	{
-		RemovedInputWithoutOverridenForPawn(PawnClass, Subsystem);
+		RemovedInputWithoutOverridenForPawn(PawnClass, *Subsystem);
 	}
 }
 
-void AG2IPlayerController::RemovedInputOverridenForPawn(const FG2IInputMappingContexts& ContextsInfoForOverriden,
-	UEnhancedInputLocalPlayerSubsystem* Subsystem)
+void AG2IPlayerController::RemovedInputIfPawnClassIsCurrent(const TSubclassOf<APawn>& PawnClass)
 {
-	for (const UInputMappingContext *Context : ContextsInfoForOverriden.Contexts)
+	if (!ensure(PawnClass))
 	{
-		Subsystem->RemoveMappingContext(Context);
+		UE_LOG(LogG2I, Warning, TEXT("%s: PawnClass is null"), *GetActorNameOrLabel());
+		return;
 	}
-	if (FG2IInputMappingContexts *ContextsInfo =
+	if (IsCurrentPawnClass(PawnClass))
+	{
+		RemovedInputForPawn(GetPawn());
+	}
+}
+
+void AG2IPlayerController::RemovedInputOverridenForPawn(
+	const FG2IInputMappingContexts& ContextsInfoForOverriden, UEnhancedInputLocalPlayerSubsystem& Subsystem)
+{
+	ContextsInfoForOverriden.RemoveAllContextsToMapping(Subsystem);
+	if (const FG2IInputMappingContexts *ContextsInfo =
 		CommonInputMappingContexts.Find(EG2IInputMappingContextType::Changeable))
 	{
-		for (const UInputMappingContext *Context : ContextsInfo->Contexts)
-		{
-			Subsystem->AddMappingContext(Context, 0);
-		}
+		ContextsInfo->AddAllContextsToMapping(Subsystem);
 	}
 #if WITH_EDITOR
-	if (FG2IInputMappingContexts *ContextsInfo =
+	if (const FG2IInputMappingContexts *DebugContextsInfo =
 		DebugCommonInputMappingContexts.Find(EG2IInputMappingContextType::Changeable))
 	{
-		for (const UInputMappingContext *Context : ContextsInfo->Contexts)
-		{
-			Subsystem->AddMappingContext(Context, 0);
-		}
+		DebugContextsInfo->AddAllContextsToMapping(Subsystem);
 	}
 #endif
 }
 
-void AG2IPlayerController::RemovedInputWithoutOverridenForPawn(const TSubclassOf<APawn>& PawnClass,
-	UEnhancedInputLocalPlayerSubsystem* Subsystem)
+void AG2IPlayerController::RemovedInputWithoutOverridenForPawn(
+	const TSubclassOf<APawn>& PawnClass, UEnhancedInputLocalPlayerSubsystem& Subsystem)
 {
-	if (FG2IInputMappingContexts *ContextsInfo = InputMappingContextsByPawn.Find(PawnClass))
+	if (const FG2IInputMappingContexts *ContextsInfo = InputMappingContextsByPawn.Find(PawnClass))
 	{
-		for (const UInputMappingContext *Context : ContextsInfo->Contexts)
-		{
-			Subsystem->RemoveMappingContext(Context);
-		}
+		ContextsInfo->RemoveAllContextsToMapping(Subsystem);
 	}
 #if WITH_EDITOR
-	if (FG2IInputMappingContexts *ContextsInfo = DebugInputMappingContextsByPawn.Find(PawnClass))
+	if (const FG2IInputMappingContexts *DebugContextsInfo = DebugInputMappingContextsByPawn.Find(PawnClass))
 	{
-		for (const UInputMappingContext *Context : ContextsInfo->Contexts)
-		{
-			Subsystem->RemoveMappingContext(Context);
-		}
+		DebugContextsInfo->RemoveAllContextsToMapping(Subsystem);
 	}
 #endif
 }
@@ -471,13 +488,13 @@ FName AG2IPlayerController::GetKeyName(UInputAction* InputAction, const TSubclas
 {
 	if (!ensure(PawnClass))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Attempt to find mapping for null class"), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("%s: Attempt to find mapping for null class"), *GetActorNameOrLabel());
 		return NAME_None;;
 	}
 	FG2IInputKeyMapping *Mappings = InputKeyMappings.Find(PawnClass);
 	if (!ensure(Mappings))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't find input key mappings for character %s"), *GetName(),
+		UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't find input key mappings for character %s"), *GetActorNameOrLabel(),
 			*PawnClass->GetName());
 		return NAME_None;
 	}
@@ -497,62 +514,30 @@ TMap<TObjectPtr<UInputAction>, FName>& AG2IPlayerController::GetActionToTagMap()
 	return ActionToTagMap;
 }
 
-void AG2IPlayerController::OverrideInputMappingContext(const TSubclassOf<APawn>& ForPawn,
-	const TArray<TObjectPtr<UInputMappingContext>>& ContextsForOverride)
+void AG2IPlayerController::OverrideInputMappingContext(
+	const TSubclassOf<APawn>& PawnClass, const TArray<TObjectPtr<UInputMappingContext>>& ContextsForOverride)
 {
-	const APawn* CurrentPawn = GetPawn();
-	if (!ensure(CurrentPawn))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find pawn"), *GetName());
-		return;
-	}
-	const TSubclassOf<APawn> PawnClass = CurrentPawn->GetClass();
 	if (!ensure(PawnClass))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("%s: Pawn %s - Class is not ACharacter Class"), *GetName(),
-			*CurrentPawn->GetActorNameOrLabel());
+		UE_LOG(LogG2I, Warning, TEXT("%s: PawnClass is null"), *GetActorNameOrLabel());
 		return;
 	}
-	if (PawnClass == ForPawn)
-	{
-		RemovedInputForPawn(GetPawn());
-	}
-
+	RemovedInputIfPawnClassIsCurrent(PawnClass);
 	const FG2IInputMappingContexts MappingContextForOverride = {ContextsForOverride};
-	InputMappingContextsForOverridingByPawn.Add(ForPawn, MappingContextForOverride);
-	
-	if (PawnClass == ForPawn)
-	{
-		SetupInputForPawn(GetPawn());
-	}
+	InputMappingContextsForOverridingByPawn.Add(PawnClass, MappingContextForOverride);
+	SetupInputIfPawnClassIsCurrent(PawnClass);
 }
 
-void AG2IPlayerController::StopOverrideInputMappingContext(const TSubclassOf<APawn>& ForPawn)
+void AG2IPlayerController::StopOverrideInputMappingContext(const TSubclassOf<APawn>& PawnClass)
 {
-	const APawn* CurrentPawn = GetPawn();
-	if (!ensure(CurrentPawn))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find pawn"), *GetName());
-		return;
-	}
-	const TSubclassOf<APawn> PawnClass = CurrentPawn->GetClass();
 	if (!ensure(PawnClass))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("%s: Pawn %s - Class is not ACharacter Class"), *GetName(),
-			*CurrentPawn->GetActorNameOrLabel());
+		UE_LOG(LogG2I, Warning, TEXT("%s: PawnClass is null"), *GetActorNameOrLabel());
 		return;
 	}
-	if (PawnClass == ForPawn)
-	{
-		RemovedInputForPawn(GetPawn());
-	}
-	
-	InputMappingContextsForOverridingByPawn.Remove(ForPawn);
-
-	if (PawnClass == ForPawn)
-	{
-		SetupInputForPawn(GetPawn());
-	}
+	RemovedInputIfPawnClassIsCurrent(PawnClass);
+	InputMappingContextsForOverridingByPawn.Remove(PawnClass);
+	SetupInputIfPawnClassIsCurrent(PawnClass);
 }
 
 void AG2IPlayerController::SetupCharacterActorComponents()
@@ -740,7 +725,7 @@ void AG2IPlayerController::Fly(const int Direction) const
 {
 	if (!ensure(FlightComponent))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("%s: Pawn doesn't have flight component"), *GetName());
+		UE_LOG(LogG2I, Warning, TEXT("%s: Pawn doesn't have flight component"), *GetActorNameOrLabel());
 		return;
 	}
 	if (!ensure(FlightComponent->Implements<UG2IFlightInterface>()))
@@ -757,7 +742,7 @@ void AG2IPlayerController::StopFlight(const FInputActionValue& Value)
 {
 	if (!ensure(FlightComponent))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("%s: Pawn doesn't have flight component"), *GetName());
+		UE_LOG(LogG2I, Warning, TEXT("%s: Pawn doesn't have flight component"), *GetActorNameOrLabel());
 		return;
 	}
 	if (!ensure(FlightComponent->Implements<UG2IFlightInterface>()))

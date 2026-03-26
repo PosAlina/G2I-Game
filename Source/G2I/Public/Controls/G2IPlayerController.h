@@ -28,6 +28,9 @@ struct FG2IInputMappingContexts
 
 	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
 	TArray<TObjectPtr<UInputMappingContext>> Contexts;
+
+	void AddAllContextsToMapping(UEnhancedInputLocalPlayerSubsystem& Subsystem) const;
+	void RemoveAllContextsToMapping(UEnhancedInputLocalPlayerSubsystem& Subsystem) const;
 };
 
 USTRUCT(BlueprintType)
@@ -106,10 +109,15 @@ public:
 
 	TMap<TObjectPtr<UInputAction>, FName>& GetActionToTagMap();
 
-	void OverrideInputMappingContext(const TSubclassOf<APawn>& ForPawn,
-		const TArray<TObjectPtr<UInputMappingContext>>& ContextsForOverride);
-	void StopOverrideInputMappingContext(const TSubclassOf<APawn>& ForPawn);
+	void OverrideInputMappingContext(
+		const TSubclassOf<APawn>& PawnClass, const TArray<TObjectPtr<UInputMappingContext>>& ContextsForOverride);
+	void StopOverrideInputMappingContext(const TSubclassOf<APawn>& PawnClass);
 
+	UEnhancedInputLocalPlayerSubsystem *GetSubsystem() const;
+	TSubclassOf<APawn> GetPawnClass(const APawn* NewPawn) const;
+
+	bool IsCurrentPawnClass(const TSubclassOf<APawn>& PawnClass) const;
+	
 protected:
 
 	void SetupDefaults();
@@ -118,16 +126,18 @@ protected:
 	void BindEnhancedDelegates();
 	
 	void SetupInputForPawn(const APawn *NewPawn);
+	void SetupInputIfPawnClassIsCurrent(const TSubclassOf<APawn>& PawnClass);
 	void SetupInputOverridenForPawn(
-		const FG2IInputMappingContexts& ContextsInfoForOverriden, UEnhancedInputLocalPlayerSubsystem* Subsystem);
+		const FG2IInputMappingContexts& ContextsInfoForOverriden, UEnhancedInputLocalPlayerSubsystem& Subsystem);
 	void SetupInputWithoutOverridenForPawn(
-		const TSubclassOf<APawn>& PawnClass, UEnhancedInputLocalPlayerSubsystem* Subsystem);
+		const TSubclassOf<APawn>& PawnClass, UEnhancedInputLocalPlayerSubsystem& Subsystem);
 	
 	void RemovedInputForPawn(const APawn *NewPawn);
+	void RemovedInputIfPawnClassIsCurrent(const TSubclassOf<APawn>& PawnClass);
 	void RemovedInputOverridenForPawn(
-		const FG2IInputMappingContexts& ContextsInfoForOverriden, UEnhancedInputLocalPlayerSubsystem* Subsystem);
+		const FG2IInputMappingContexts& ContextsInfoForOverriden, UEnhancedInputLocalPlayerSubsystem& Subsystem);
 	void RemovedInputWithoutOverridenForPawn(
-		const TSubclassOf<APawn>& PawnClass, UEnhancedInputLocalPlayerSubsystem* Subsystem);
+		const TSubclassOf<APawn>& PawnClass, UEnhancedInputLocalPlayerSubsystem& Subsystem);
 
 	/** Setup Input */
 	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
