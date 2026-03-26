@@ -39,6 +39,9 @@ protected:
 	UPROPERTY()
 	TObjectPtr<APawn> PlayerPawn;
 
+	UPROPERTY()
+	TSubclassOf<APawn> PlayerPawnClass;
+
 public:
 
 	void SetWidgetSize(FVector2D InWidgetSize);
