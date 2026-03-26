@@ -1,11 +1,75 @@
 #include "Gameplay/G2IPressureGauge.h"
 #include "Components/SceneComponent.h"
 #include "G2I.h"
+#include "G2IAnswerInterface.h"
+#include "LaunchingIndication/G2ILauncherComponent.h"
 
 AG2IPressureGauge::AG2IPressureGauge()
 {
     PrimaryActorTick.bCanEverTick = true;
-    SetActorTickEnabled(false);
+    PrimaryActorTick.bStartWithTickEnabled = false;
+
+    LauncherComp = CreateDefaultSubobject<UG2ILauncherComponent>(TEXT("LauncherComp"));
+    if (!ensure(LauncherComp))
+    {
+        UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+            *UG2ILauncherComponent::StaticClass()->GetName());
+    }
+}
+
+void AG2IPressureGauge::BeginPlay()
+{
+    Super::BeginPlay();
+
+    SetupDefaults();
+    BindDelegates();
+}
+
+void AG2IPressureGauge::SetupDefaults()
+{
+    if (!ensure(LauncherComp))
+    {
+        UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+            *UG2ILauncherComponent::StaticClass()->GetName());
+        return;
+    }
+    SetIsLockedPuzzleActors(LauncherComp->IsLocked_Implementation());
+}
+
+void AG2IPressureGauge::BindDelegates()
+{
+    if (!ensure(LauncherComp))
+    {
+        UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+            *UG2ILauncherComponent::StaticClass()->GetName());
+    }
+    LauncherComp->GetOnLockedDelegate().AddDynamic(this, &ThisClass::LockedPuzzleActors);
+}
+
+void AG2IPressureGauge::SetIsLockedPuzzleActors(const bool bIsNewLocked)
+{
+    for (AActor *Actor : PuzzleActors)
+    {
+        if (Actor && Actor->Implements<UG2ILockingInterface>())
+        {
+            IG2ILockingInterface::Execute_SetIsLocked(Actor, bIsNewLocked);
+        }
+    }
+    FString DebugMessage = GetActorNameOrLabel() + " ";
+    DebugMessage += bIsNewLocked ? TEXT("locked") : TEXT("un locked");
+    UE_LOG(LogG2I, Log, TEXT("%s"), *DebugMessage);
+#if WITH_EDITOR
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, DebugMessage);
+    }
+#endif
+}
+
+void AG2IPressureGauge::LockedPuzzleActors(UG2ILauncherComponent* LauncherComponent, AActor* ComponentOwner,
+                                           const bool bIsLocked)
+{
+    SetIsLockedPuzzleActors(bIsLocked);
 }
 
 void AG2IPressureGauge::InitializeArrowsComponent(TArray<USceneComponent*> InArrows)
@@ -18,6 +82,41 @@ void AG2IPressureGauge::InitializeArrowsComponent(TArray<USceneComponent*> InArr
     for (int32 i = 0; i < Arrows.Num(); i++)
     {
         Arrows[i].ArrowComponent = InArrows[i];
+    }
+}
+
+void AG2IPressureGauge::ChangeAngles_Implementation(const TArray<float>& AngleDeltas, const bool bIsOn)
+{
+    ArrowsAngle(bIsOn, AngleDeltas);
+
+    const bool bIsCorrect = CheckTargetAngles();
+    for (AActor *Actor : PuzzleActors)
+    {
+        if (Actor && Actor->Implements<UG2IAnswerInterface>())
+        {
+            IG2IAnswerInterface::Execute_Answer(Actor, bIsCorrect);
+        }
+    }
+    if (bIsCorrect)
+    {
+        const FString DebugMessage = "Pressure Gauge completed successfully";
+#if WITH_EDITOR
+        if (GEngine)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, DebugMessage);
+        }
+#endif
+        UE_LOG(LogG2I, Log, TEXT("%s"), *DebugMessage);
+        
+        if (!ensure(LauncherComp))
+        {
+            UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+                *UG2ILauncherComponent::StaticClass()->GetName());
+        }
+        else
+        {
+            LauncherComp->SetIsLaunched(true);
+        }
     }
 }
 
@@ -42,9 +141,9 @@ void AG2IPressureGauge::Tick(float DeltaTime)
 
         float Alpha = FMath::Clamp(Movement.ElapsedTime / Movement.MoveTime, 0.0f, 1.0f);
 
-        float CurrentPitch = FMath::Lerp(Movement.StartPitch, Movement.TargetPitch, Alpha);
+        const float CurrentPitch = FMath::Lerp(Movement.StartPitch, Movement.TargetPitch, Alpha);
 
-        float NormalizedPitch = FRotator::NormalizeAxis(CurrentPitch);
+        const float NormalizedPitch = FRotator::NormalizeAxis(CurrentPitch);
         Comp->SetRelativeRotation(FRotator(NormalizedPitch, 0.0f, 0.0f));
 
         if (Alpha >= 1.0f)
@@ -59,7 +158,8 @@ void AG2IPressureGauge::Tick(float DeltaTime)
     }
 }
 
-void AG2IPressureGauge::SmoothMoveComponent(USceneComponent* Component, float StartPitch, float TargetPitch, float MoveTime)
+void AG2IPressureGauge::SmoothMoveComponent(USceneComponent* Component, const float StartPitch, const float TargetPitch,
+    const float MoveTime)
 {
     if (!Component)
     {
@@ -69,7 +169,7 @@ void AG2IPressureGauge::SmoothMoveComponent(USceneComponent* Component, float St
 
     if (MoveTime <= 0.0f)
     {
-        float NormalizedPitch = FRotator::NormalizeAxis(TargetPitch);
+        const float NormalizedPitch = FRotator::NormalizeAxis(TargetPitch);
         Component->SetRelativeRotation(FRotator(NormalizedPitch, 0.0f, 0.0f));
         return;
     }
@@ -86,7 +186,7 @@ void AG2IPressureGauge::SmoothMoveComponent(USceneComponent* Component, float St
     SetActorTickEnabled(true);
 }
 
-void AG2IPressureGauge::ArrowsAngle(bool bIsOn, const TArray<float>& AngleDeltas)
+void AG2IPressureGauge::ArrowsAngle(const bool bIsOn, const TArray<float>& AngleDeltas)
 {
     const float Direction = bIsOn ? 1.0f : -1.0f;
 
@@ -107,7 +207,7 @@ void AG2IPressureGauge::ArrowsAngle(bool bIsOn, const TArray<float>& AngleDeltas
     }
 }
 
-bool AG2IPressureGauge::CheckTargetAngles(float Tolerance) const
+bool AG2IPressureGauge::CheckTargetAngles(const float Tolerance) const
 {
     for (const FArrowInfo& Info : Arrows)
     {
@@ -118,7 +218,7 @@ bool AG2IPressureGauge::CheckTargetAngles(float Tolerance) const
         if (Current < 0.0f)
             Current += 360.0f;
 
-        float Target = Info.TargetPitch;
+        const float Target = Info.TargetPitch;
 
         float Diff = FMath::Abs(Current - Target);
         if (Diff > 180.0f)

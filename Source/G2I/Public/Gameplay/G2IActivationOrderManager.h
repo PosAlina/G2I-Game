@@ -5,7 +5,9 @@
 #include "Components/G2IActivationWithOrderComponent.h"
 #include "G2IActivationOrderManager.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActivationWithOrderEndedDelegate, AActor*, ManagerActor, bool, bSuccess);
+class UG2ILauncherComponent;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActivationWithOrderEndedDelegate, AActor*, ManagerActor, bool, bSuccess)
+;
 
 // Manager for the actors with ActivationWithOrder component.
 // One for the puzzle
@@ -23,6 +25,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnActivationWithOrderEndedDelegate OnActivationWithOrderEndedDelegate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TObjectPtr<UG2ILauncherComponent> LauncherComp;
 
 protected:
 	// Array that holds already activated actors
@@ -67,4 +72,10 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Activation with order")
 	void CheckIfOrderCompleted();
+
+	UFUNCTION()
+	void LockedCorrectOrderActors(UG2ILauncherComponent* LauncherComponent, AActor* ComponentOwner, bool bIsLocked);
+
+private:
+	void SetupDefaults();
 };

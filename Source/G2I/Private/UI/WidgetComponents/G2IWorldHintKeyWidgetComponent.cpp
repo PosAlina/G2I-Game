@@ -38,6 +38,7 @@ void UG2IWorldHintKeyWidgetComponent::BeginPlay()
 	}
 }
 
+// TODO: Add crossed key hint if actor is locked
 void UG2IWorldHintKeyWidgetComponent::OpenKeyHint(UInputAction *KeyInput)
 {
 	if (!ensure(UIManager))

@@ -1,14 +1,14 @@
-
 #pragma once
 
 #include "CoreMinimal.h"
+#include "G2ILockingInterface.h"
 #include "GameFramework/Actor.h"
 #include "Components/StaticMeshComponent.h"
 #include "Interfaces/G2IInteractiveObjectInterface.h"
 #include "G2IValve.generated.h"
 
 UCLASS()
-class G2I_API AG2IValve : public AActor, public IG2IInteractiveObjectInterface
+class G2I_API AG2IValve : public AActor, public IG2IInteractiveObjectInterface, public IG2ILockingInterface
 {
 	GENERATED_BODY()
 	
@@ -18,11 +18,16 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	// Only characters with UG2IValveInteractionComponent can interact
-	bool CanInteract_Implementation(const ACharacter* Interactor) override;
+	virtual bool CanInteract_Implementation(const ACharacter* Interactor) override;
 
 	// Basic implementation works only for pipes,
 	// override it if you want to extend the execution
-	void Interact_Implementation(const ACharacter* Interactor) override;
+	virtual void Interact_Implementation(const ACharacter* Interactor) override;
+
+	virtual UG2IWorldHintKeyWidgetComponent *GetInteractionKeyHintComponent_Implementation() override;
+
+	virtual void SetIsLocked_Implementation(bool bIsNewLocked) override;
+	virtual bool IsLocked_Implementation() override;
 
 	UFUNCTION()
 	void PassActivationToPipe();
@@ -59,6 +64,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Valve|Animation")
 	FRotator MinRotation = FRotator::ZeroRotator;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UG2IWorldHintKeyWidgetComponent> HintKeyWidgetComp;
+
 protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Valve|Animation")
@@ -66,4 +74,7 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<USceneComponent> SceneRootComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsLocked = false;
 };
