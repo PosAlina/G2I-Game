@@ -66,19 +66,24 @@ bool UG2INumericalPropertySelector::SelectValue(const float InValue)
 
 void UG2INumericalPropertySelector::SetButtonsIsEnabledByValue() const
 {
+	const float Value = GetCurrentValue();
 	if (!ensure(PreviousButton))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find PreviousButton"), *GetName());
+	}
+	else
+	{
+		const bool bIsValueEqualMin = FMath::IsNearlyEqual(Value, GetMinValue(), GetStepValue() / 2);
+		PreviousButton->SetIsEnabled(Value > GetMinValue() && !bIsValueEqualMin);
+
 	}
 	if (!ensure(NextButton))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find NextButton"), *GetName());
 	}
-	
-	const float Value = GetCurrentValue();
-	const bool bIsValueEqualMin = FMath::IsNearlyEqual(Value, GetMinValue(), GetStepValue() / 2);
-	PreviousButton->SetIsEnabled(Value > GetMinValue() && !bIsValueEqualMin);
-
-	const bool bIsValueEqualMax = FMath::IsNearlyEqual(Value, GetMaxValue(), GetStepValue() / 2);
-	NextButton->SetIsEnabled(Value < GetMaxValue() && !bIsValueEqualMax);
+	else
+	{
+		const bool bIsValueEqualMax = FMath::IsNearlyEqual(Value, GetMaxValue(), GetStepValue() / 2);
+		NextButton->SetIsEnabled(Value < GetMaxValue() && !bIsValueEqualMax);
+	}
 }

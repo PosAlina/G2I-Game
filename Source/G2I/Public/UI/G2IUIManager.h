@@ -69,6 +69,7 @@ public:
 	void HideWidget(EG2IWidgetNames WidgetName) const;
 
 	void CloseAllWidgets() const;
+	void CloseUI() const;
 
 	// ==================== WORLD WIDGETS ====================
 	void OpenWorldWidget(UG2IWorldHintWidgetComponent *WidgetComponent) const;
@@ -79,13 +80,18 @@ public:
 	void ChangeAimingType(EG2IAimType NewAimType) const;
 	
 	// ====================KEY HINT WIDGET ====================
-	void SetKeyByInputAction(UG2IWorldHintWidgetComponent *WidgetComponent, UInputAction* InputAction) const;
+	void SetKeyByInputAction(UG2IWorldHintWidgetComponent *WidgetComponent, UInputAction* InputAction, const TSubclassOf<APawn>& PawnClass) const;
 	void SetKeyWidgetSize(UG2IWorldHintKeyWidgetComponent *WidgetComponent) const;
 
 private:
 	
 	FString GetWidgetNameString(EG2IWidgetNames WidgetName) const;
 	
+	// ==================== CONFIRMATION WIDGET ====================
+	void SetupConfirmationWidget(const TFunction<void()>& NewConfirmAction, const TFunction<void()>& NewCancelAction,
+		const FString& NewQuestionStringID = {},const FString& NewConfirmStringID = {},
+		const FString& NewCancelStringID = {}) const;
+
 	// ==================== OPTIONS PROPERTIES ====================
 	void SetPropertyRow(UG2ITextMultiValuePropertyRow* PropertySelector, const FString& PropertyNameStringID,
 					TArray<FString>& ValuesNamesStringID, int32 DefaultValueIndex = 0) const;

@@ -10,6 +10,7 @@ class UG2IWidgetsCatalog;
 
 /**
  * Base game instance for G2I game
+ * saves and loads gameplay & settings data
  */
 UCLASS()
 class G2I_API UG2IGameInstance : public UGameInstance
@@ -28,11 +29,10 @@ protected:
 	TObjectPtr<UG2IWidgetComponentParameters> WidgetComponentsParameters;
 
 public:
-	
-	UG2IWidgetsCatalog *GetWidgetsCatalog();
 
-	UG2IStringTablesCatalog *GetStringTablesCatalog();
+	UG2IWidgetsCatalog* GetWidgetsCatalog();
 
-	UG2IWidgetComponentParameters *GetWidgetComponentParameters();
-	
+	UG2IStringTablesCatalog* GetStringTablesCatalog();
+
+	UG2IWidgetComponentParameters* GetWidgetComponentParameters();
 };

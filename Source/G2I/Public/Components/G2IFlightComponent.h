@@ -1,12 +1,9 @@
-
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "G2IFlightInterface.h"
 #include "Components/ActorComponent.h"
 #include "G2IFlightComponent.generated.h"
-
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class G2I_API UG2IFlightComponent : public UActorComponent, public IG2IFlightInterface
@@ -24,9 +21,25 @@ public:
 	float FlightMaxVelocity = 200.0f;
 	
 	bool bIsOnMaxHeight = false;
-	int VelocityCoef = 100;
+	int32 VelocityCoef = 100;
+
+private:
+
+	UPROPERTY()
+	TObjectPtr<ACharacter> Owner;
+
+	UPROPERTY()
+	TObjectPtr<UCharacterMovementComponent> MovementComponent;
+
+public:
 	
-	virtual void Fly_Implementation(UActorComponent* MovementComponent, int Direction) override;
-	virtual void StopFly_Implementation(UActorComponent* MovementComponent) override;
-		
+	virtual void BeginPlay() override;
+
+	// TODO: MovementComponent should be independent, so these functions should be transferred to it
+	virtual void Fly_Implementation(int Direction) override;
+	virtual void StopFly_Implementation() override;
+
+private:
+
+	void SetupDefaults();
 };

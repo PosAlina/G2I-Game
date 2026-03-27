@@ -1,6 +1,7 @@
 #include "G2IUIManager.h"
 #include "G2I.h"
 #include "G2IAimTypeEnum.h"
+#include "G2IConfirmationWidget.h"
 #include "G2IGameInstance.h"
 #include "G2IPlayerController.h"
 #include "G2IStringTablesTypes.h"
@@ -11,6 +12,7 @@
 #include "Components/RichTextBlock.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
+#include "GameFramework/Character.h"
 #include "Gameplay/G2IKeyHintWidget.h"
 #include "HUD/G2IAimingWidget.h"
 #include "Menu/Elements/NumericalRow/G2INumericalMultiValuePropertyRow.h"
@@ -62,6 +64,9 @@ void UG2IUIManager::InitializeComponents(APlayerController* InPlayerController)
 		return;
 	}
 	OnUIManagerInitialized.Broadcast();
+
+	// TODO: OpenHUD should be moved into level begin
+	OpenHUD();
 }
 
 FString UG2IUIManager::GetWidgetNameString(EG2IWidgetNames WidgetName) const
@@ -270,6 +275,18 @@ void UG2IUIManager::CloseAllWidgets() const
 	DisplayManager->CloseAllActiveWidgets();
 }
 
+void UG2IUIManager::CloseUI() const
+{
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
+		return;
+	}
+
+	DisplayManager->CloseActiveWidgetsByType(EG2IWidgetTypes::UI);
+}
+
 void UG2IUIManager::ChangeAimingType(const EG2IAimType NewAimType) const
 {
 	if (!ensure(DisplayManager))
@@ -289,7 +306,8 @@ void UG2IUIManager::ChangeAimingType(const EG2IAimType NewAimType) const
 	Widget->SetAimingViewType(NewAimType);
 }
 
-void UG2IUIManager::SetKeyByInputAction(UG2IWorldHintWidgetComponent* WidgetComponent, UInputAction* InputAction) const
+void UG2IUIManager::SetKeyByInputAction(UG2IWorldHintWidgetComponent* WidgetComponent, UInputAction* InputAction,
+                                        const TSubclassOf<APawn>& PawnClass) const
 {
 	if (!ensure(InputAction))
 	{
@@ -308,6 +326,11 @@ void UG2IUIManager::SetKeyByInputAction(UG2IWorldHintWidgetComponent* WidgetComp
 		UE_LOG(LogG2I, Error, TEXT("PlayerController doesn't exist in %s"), *GetName());
 		return;
 	}
+	if (!ensure(PawnClass))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Attempting to set key of null character in widget in %s"), *GetName());
+		return;
+	}
 
 	if (const UG2IKeyHintWidget *Widget =
 		Cast<UG2IKeyHintWidget>(WidgetComponent->FindOrAddWidgetByName(EG2IWidgetNames::KeyHint)))
@@ -318,7 +341,7 @@ void UG2IUIManager::SetKeyByInputAction(UG2IWorldHintWidgetComponent* WidgetComp
 				*Widget->GetName(), *GetName());
 			return;
 		}
-		const FName Key = PlayerController->GetKeyName(InputAction);
+		const FName Key = PlayerController->GetKeyName(InputAction, PawnClass);
 		Widget->KeyTextBlock->SetText(FText::FromName(Key));
 	}
 }
@@ -338,6 +361,31 @@ void UG2IUIManager::SetKeyWidgetSize(UG2IWorldHintKeyWidgetComponent* WidgetComp
 	}
 
 	WidgetComponent->SetWidgetSize(WidgetComponentParameters->KeyWidgetDefaultSize);
+}
+
+void UG2IUIManager::SetupConfirmationWidget(const TFunction<void()>& NewConfirmAction,
+	const TFunction<void()>& NewCancelAction, const FString& NewQuestionStringID,
+                                            const FString& NewConfirmStringID, const FString& NewCancelStringID) const
+{
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
+		return;
+	}
+	if (UG2IConfirmationWidget *Widget = Cast<UG2IConfirmationWidget>(
+		DisplayManager->GetWidget(EG2IWidgetNames::Confirmation)))
+	{
+		Widget->OnConfirm = NewConfirmAction;
+		Widget->OnCancel = NewCancelAction;
+		
+		DisplayManager->SetText<URichTextBlock>(Widget->QuestionTextBlock, EG2IStringTablesTypes::Confirmations,
+			NewQuestionStringID, "Confirmation.Question");
+		DisplayManager->SetText<URichTextBlock>(Widget->ConfirmTextBlock, EG2IStringTablesTypes::Confirmations,
+			NewConfirmStringID, "Confirmation.Confirm");
+		DisplayManager->SetText<URichTextBlock>(Widget->CancelTextBlock, EG2IStringTablesTypes::Confirmations,
+			NewCancelStringID, "Confirmation.Cancel");
+	}
 }
 
 void UG2IUIManager::SetPropertyRow(UG2ITextMultiValuePropertyRow* PropertySelector, const FString& PropertyNameStringID,
