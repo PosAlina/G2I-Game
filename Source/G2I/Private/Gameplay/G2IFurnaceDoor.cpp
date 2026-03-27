@@ -10,13 +10,13 @@ void AG2IFurnaceDoor::StartTick()
 		return;
 	}
 
-	UWorld* World = GetWorld();
+	const UWorld* World = GetWorld();
 	if (!ensure(World)) {
 		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
 		return;
 	}
 
-	float Interval = TotalTime / MaxTicks;
+	const float Interval = TotalTime / MaxTicks;
 
 	World->GetTimerManager().SetTimer(
 		PushTimerHandle,
@@ -38,7 +38,7 @@ void AG2IFurnaceDoor::PerformTick()
 		return;
 	}
 
-	UWorld* World = GetWorld();
+	const UWorld* World = GetWorld();
 	if (!ensure(World)) {
 		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
 		return;
