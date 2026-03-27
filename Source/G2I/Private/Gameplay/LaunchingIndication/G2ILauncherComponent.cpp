@@ -91,15 +91,8 @@ void UG2ILauncherComponent::DebugLockedMessage() const
 	
 	FString DebugMessage = Owner->GetActorNameOrLabel() + " ";
 	DebugMessage += bIsLocked ? TEXT("locked") : TEXT("un locked");
-	
-	UE_LOG(LogG2I, Log, TEXT("%s"), *DebugMessage);
-#if WITH_EDITOR
-	const FColor& DebugColor = bIsLocked ? FColor::Red : FColor::Green;
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 4.f, DebugColor, DebugMessage);
-	}
-#endif
+	const FColor& DebugColor = bIsLocked ? FColor::Purple : FColor::Green;
+	G2I::DebugLogMessage(DebugMessage, DebugColor);
 }
 
 void UG2ILauncherComponent::DebugLaunchedMessage() const
@@ -112,14 +105,6 @@ void UG2ILauncherComponent::DebugLaunchedMessage() const
 	
 	FString DebugMessage = Owner->GetActorNameOrLabel() + " ";
 	DebugMessage += bIsLaunched ? TEXT("launched") : TEXT("un launched");
-	
-	UE_LOG(LogG2I, Log, TEXT("%s"), *DebugMessage);
-#if WITH_EDITOR
-	const FColor& DebugColor = bIsLaunched ? FColor::Green : FColor::Red;
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 4.f, DebugColor, DebugMessage);
-	}
-#endif
+	const FColor& DebugColor = bIsLaunched ? FColor::Green : FColor::Purple;
+	G2I::DebugLogMessage(DebugMessage, DebugColor);
 }
-

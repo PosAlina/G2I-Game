@@ -272,7 +272,7 @@ void AG2ISlider::OnSliderEndOverlap(UPrimitiveComponent* OverlappedComp, AActor*
 		return;
 	}
 
-	const auto* TempColorZone = Cast<UG2IColorZoneComponent>(OtherComp->GetAttachParent());
+	const UG2IColorZoneComponent* TempColorZone = Cast<UG2IColorZoneComponent>(OtherComp->GetAttachParent());
 
 	if (!TempColorZone)
 	{
@@ -307,24 +307,14 @@ void AG2ISlider::CompareZoneColorToColorInSequence()
 	{
 		if (CorrectSequence[IndexInCorrectSequence] == CurrentActivationColorZone->Color)
 		{
-#if WITH_EDITOR
-				if (GEngine)
-				{
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green,FString::Printf(TEXT("Correct lamp, %i out of %i"), IndexInCorrectSequence+1, CorrectSequence.Num()));
-				}
-#endif
-			UE_LOG(LogG2I, Log, TEXT("Correct lamp, %i out of %i"), IndexInCorrectSequence+1, CorrectSequence.Num());
+			G2I::DebugLogMessage(GetActorNameOrLabel() +
+				"Correct lamp, " + FString::FromInt(IndexInCorrectSequence + 1) +
+				" out of " + FString::FromInt(CorrectSequence.Num()));
 			
 			IndexInCorrectSequence++;
 			if (IndexInCorrectSequence == CorrectSequence.Num())
 			{
-#if WITH_EDITOR
-				if (GEngine)
-				{
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, "Sequence is correct");
-				}
-#endif
-				UE_LOG(LogG2I, Log, TEXT("Sequence is correct"));
+				G2I::DebugLogMessage(GetActorNameOrLabel() + "Sequence is correct");
 				bIsPuzzleComplete = true;
 				
 				if (!ensure(LauncherComp))
@@ -365,13 +355,7 @@ void AG2ISlider::CompareZoneColorToColorInSequence()
 		}
 		else
 		{
-#if WITH_EDITOR
-			if (GEngine)
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, "Wrong lamp, start over");
-			}
-#endif
-			UE_LOG(LogG2I, Log, TEXT("Wrong lamp, start over"));
+			G2I::DebugLogMessage(GetActorNameOrLabel() + "Wrong lamp, start over", FColor::Purple);
 			CurrentLamp->SetTimerToFlashing(LampErrorTime, 2);
 			IndexInCorrectSequence = 0;
 		}
@@ -453,13 +437,7 @@ void AG2ISlider::SliderExit()
 	
 	if (!bIsPuzzleComplete)
 	{
-#if WITH_EDITOR
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, "Clear sequence");
-		}
-#endif
-		UE_LOG(LogG2I, Log, TEXT("%s: Clear sequence"), *GetActorNameOrLabel());
+		G2I::DebugLogMessage(GetActorNameOrLabel() + "Clear sequence", FColor::Purple);
 		IndexInCorrectSequence = 0;
 		
 		if (!ensure(SliderSM))

@@ -1,7 +1,5 @@
 #include "Gameplay/G2IActivationOrderManager.h"
 #include "G2I.h"
-#include "G2IInteractiveObjectInterface.h"
-#include "G2IWorldHintKeyWidgetComponent.h"
 #include "LaunchingIndication/G2ILauncherComponent.h"
 
 AG2IActivationOrderManager::AG2IActivationOrderManager()

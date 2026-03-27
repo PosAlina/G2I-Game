@@ -150,13 +150,8 @@ void AG2IPressureGaugeValve::OpenValve()
     bIsRotating = true;
     bIsValveOpen = true;
     ValveTimeline->PlayFromStart();
-    
-#if WITH_EDITOR
-    if (GEngine)
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, "Valve is open");
-    }
-#endif
+
+    G2I::DebugLogMessage(GetActorNameOrLabel() + "Valve is open");
 }
 
 void AG2IPressureGaugeValve::CloseValve()
@@ -170,12 +165,8 @@ void AG2IPressureGaugeValve::CloseValve()
     bIsRotating = true;
     bIsValveOpen = false;
     ValveTimeline->ReverseFromEnd();
-#if WITH_EDITOR
-    if (GEngine)
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, "Valve is close");
-    }
-#endif
+
+    G2I::DebugLogMessage(GetActorNameOrLabel() + "Valve is close");
 }
 
 void AG2IPressureGaugeValve::OnTimelineUpdate(const float Value)

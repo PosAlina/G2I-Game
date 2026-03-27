@@ -1,5 +1,6 @@
 ﻿#include "LaunchingIndication/G2IControlPanelIndicator.h"
 #include "FG2IControlPanelState.h"
+#include "G2I.h"
 
 void AG2IControlPanelIndicator::UpdateState_Implementation()
 {
@@ -17,21 +18,21 @@ void AG2IControlPanelIndicator::InitializeLamps(const TArray<UG2ISliderLampCompo
 
 void AG2IControlPanelIndicator::SetLampsForCurrentState()
 {
-	FG2IControlPanelState *SateInfo = GetControlPanelState(GetCurrentState());
-	if (!SateInfo)
+	FG2IControlPanelState *StateInfo = GetControlPanelState(GetCurrentState());
+	if (!StateInfo)
 	{
 		// If the indicator state doesn't affect the lamps
 		return;
 	}
 
-	for (int32 Index = 0; Index < SateInfo->Lamps.Num(); ++Index)
+	for (int32 Index = 0; Index < StateInfo->Lamps.Num(); ++Index)
 	{
 		if (!Lamps.IsValidIndex(Index))
 		{
-			DebugWarningMessage(GetActorNameOrLabel() + ": Couldn't find " + FString::FromInt(Index) + " lamp");
+			G2I::DebugWarningMessage(GetActorNameOrLabel() + ": Couldn't find " + FString::FromInt(Index) + " lamp");
 			break;
 		}
-		const FG2IControlPanelLampInfo& LampInfo = SateInfo->Lamps[Index];
+		const FG2IControlPanelLampInfo& LampInfo = StateInfo->Lamps[Index];
 		if (!LampInfo.bIsChanged)
 		{
 			continue;
@@ -68,7 +69,7 @@ FG2IControlPanelState* AG2IControlPanelIndicator::GetControlPanelState(const FNa
 TEXT("Loading state info for control panel"));
 	if (!ensure(StateInfo))
 	{
-		DebugWarningMessage(GetActorNameOrLabel() + "couldn't find state info for current state with name "
+		G2I::DebugWarningMessage(GetActorNameOrLabel() + "couldn't find state info for current state with name "
 			+ GetCurrentState().ToString());
 		return nullptr;
 	}
