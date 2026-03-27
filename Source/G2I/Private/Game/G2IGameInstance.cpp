@@ -1,13 +1,17 @@
 ﻿#include "G2IGameInstance.h"
 #include "G2I.h"
-#include "G2IPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 
 void UG2IGameInstance::Init()
 {
 	Super::Init();
-
-	OnPlayerControllerInitDelegate.AddDynamic(this, &ThisClass::StartLevelInitialize);
+	
+	MainMenuLevelName = MainMenuLevel.GetAssetName();
+	if (!ensure(!MainMenuLevelName.IsEmpty()))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Main Menu Level isn't set"), *GetName());
+	}
+	OnPlayerControllerInitDelegate.AddUObject(this, &ThisClass::StartLevelInitialize);
 }
 
 void UG2IGameInstance::StartLevelInitialize()
@@ -19,7 +23,7 @@ void UG2IGameInstance::StartLevelInitialize()
 	}
 	else
 	{
-		UE_LOG(LogG2I, Log, TEXT("Open level %s (%d index)"), *CurrentLevelName.ToString(), CurrentLevelIndex);
+		UE_LOG(LogG2I, Log, TEXT("Open level %s (%d index)"), *CurrentLevelName, CurrentLevelIndex);
 	}
 	OnStartLevelInitDelegate.Broadcast();
 }
@@ -31,7 +35,7 @@ void UG2IGameInstance::SetCurrentLevelName()
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: World is null"), *GetName());
 	}
-	CurrentLevelName = FName(World->GetMapName().Mid(World->StreamingLevelsPrefix.Len()));
+	CurrentLevelName = World->GetMapName().Mid(World->StreamingLevelsPrefix.Len());
 }
 
 UG2IWidgetsCatalog* UG2IGameInstance::GetWidgetsCatalog()
@@ -49,12 +53,12 @@ UG2IWidgetComponentParameters* UG2IGameInstance::GetWidgetComponentParameters()
 	return WidgetComponentsParameters;
 }
 
-FName UG2IGameInstance::GetMainMenuLevelName() const
+FString UG2IGameInstance::GetMainMenuLevelName() const
 {
 	return MainMenuLevelName;
 }
 
-FName UG2IGameInstance::GetCurrentLevelName() const
+FString UG2IGameInstance::GetCurrentLevelName() const
 {
 	return CurrentLevelName;
 }
@@ -97,26 +101,7 @@ void UG2IGameInstance::LoadNextLevel()
 {
 	if (!LoadLevelByIndex(CurrentLevelIndex + 1))
 	{
-		const UWorld *World = GetWorld();
-		if (!ensure(World))
-		{
-			UE_LOG(LogG2I, Error, TEXT("%s: World is null"), *GetName());
-			return;
-		}
-		APlayerController *LocalPlayerController = World->GetFirstPlayerController();
-		if (!ensure(LocalPlayerController))
-		{
-			UE_LOG(LogG2I, Error, TEXT("%s: Local player controller is null"), *GetName());
-			return;
-		}
-		AG2IPlayerController *PlayerController = Cast<AG2IPlayerController>(LocalPlayerController);
-		if (!ensure(PlayerController))
-		{
-			UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
-				*AG2IPlayerController::StaticClass()->GetName());
-			return;
-		}
-		PlayerController->QuitGame();
+		LoadMainMenuLevel();
 	}
 }
 
@@ -125,7 +110,7 @@ void UG2IGameInstance::LoadMainMenuLevel()
 	const int32 OldLevelIndex = CurrentLevelIndex;
 	SetMainMenuLevelIndex();
 	
-	if (!OpenLevel(MainMenuLevelName))
+	if (!OpenLevel(MainMenuLevel))
 	{
 		CurrentLevelIndex = OldLevelIndex;
 	}
@@ -136,17 +121,19 @@ void UG2IGameInstance::SetMainMenuLevelIndex()
 	CurrentLevelIndex = -1;
 }
 
-bool UG2IGameInstance::OpenLevel(const FName LevelName) const
+bool UG2IGameInstance::OpenLevel(const TSoftObjectPtr<UWorld>& Level) const
 {
+	if (!ensure(!Level.GetAssetName().IsEmpty()))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Attempt to open null level"), *GetName());
+	}
 	const UWorld *World = GetWorld();
 	if (!ensure(World))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: World is null"), *GetName());
 		return false;
 	}
-
 	OnCloseLevelDelegate.Broadcast();
-	UGameplayStatics::OpenLevel(World, LevelName);
-
+	UGameplayStatics::OpenLevel(World, FName(Level.GetAssetName()));
 	return true;
 }

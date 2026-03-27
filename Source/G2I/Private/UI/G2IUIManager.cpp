@@ -27,8 +27,9 @@ void UG2IUIManager::Initialize(FSubsystemCollectionBase& Collection)
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
 			*UG2IGameInstance::StaticClass()->GetName());
+		return;
 	}
-	GameInstance->OnStartLevelInitDelegate.AddDynamic(this, &ThisClass::InitializeInStartGame);
+	StartGameDelegateHandle = GameInstance->OnStartLevelInitDelegate.AddUObject(this, &ThisClass::InitializeInStartGame);
 }
 
 void UG2IUIManager::InitializeInStartGame()
@@ -39,15 +40,15 @@ void UG2IUIManager::InitializeInStartGame()
 			*UG2IGameInstance::StaticClass()->GetName());
 		return;
 	}
-	GameInstance->OnStartLevelInitDelegate.RemoveDynamic(this, &ThisClass::InitializeInStartGame);
+	GameInstance->OnStartLevelInitDelegate.Remove(StartGameDelegateHandle);
 	
 	InitializeDefaultsInStartGame();
 	InitializeDefaultsInStartLevel();
 	PostInitializeDefaultsInStartGame();
 	PostInitializeDefaultsInStartLevel();
 
-	GameInstance->OnCloseLevelDelegate.AddDynamic(this, &ThisClass::CloseLevelUI);
-	GameInstance->OnStartLevelInitDelegate.AddDynamic(this, &ThisClass::InitializeInStartLevel);
+	GameInstance->OnCloseLevelDelegate.AddUObject(this, &ThisClass::CloseLevelUI);
+	GameInstance->OnStartLevelInitDelegate.AddUObject(this, &ThisClass::InitializeInStartLevel);
 	
 	OnUIManagerInitialized.Broadcast();
 }
@@ -124,6 +125,7 @@ void UG2IUIManager::InitializeNewLevelUI() const
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
 			*UG2IGameInstance::StaticClass()->GetName());
+		return;
 	}
 	
 	if (GameInstance->IsMainMenuLevel())

@@ -47,6 +47,8 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UG2IWidgetComponentParameters> WidgetComponentParameters;
+
+	FDelegateHandle StartGameDelegateHandle;
 	
 public:
 	// ==================== INITIALIZE ====================
