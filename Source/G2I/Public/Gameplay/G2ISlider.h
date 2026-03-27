@@ -1,5 +1,3 @@
-
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -7,6 +5,8 @@
 #include "GameFramework/Actor.h"
 #include "G2ISlider.generated.h"
 
+class AG2IPlayerController;
+class UG2ILauncherComponent;
 struct FInputActionValue;
 class UInputAction;
 class UInputMappingContext;
@@ -17,8 +17,6 @@ enum class EZoneColor : uint8;
 class UBoxComponent;
 class FTimerManager;
 
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPuzzleCompleteDelegate);
 UCLASS()
 class G2I_API AG2ISlider : public AActor, public IG2IInteractiveObjectInterface
 {
@@ -28,6 +26,7 @@ public:
 	AG2ISlider();
 	virtual void Interact_Implementation(const ACharacter* Interactor) override;
 	virtual bool CanInteract_Implementation(const ACharacter* Interactor) override;
+	virtual UG2IWorldHintKeyWidgetComponent *GetInteractionKeyHintComponent_Implementation() override;
 
 protected:
 	virtual void BeginPlay() override;
@@ -46,29 +45,34 @@ private:
 	AActor* OtherActor,
 	UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex);
-
+	
 	void CompareZoneColorToColorInSequence();
 	void MoveSlider(const FInputActionValue& Value);
 	void MoveSliderImpulse(const FInputActionValue& Value);
-	void SliderExit(const FInputActionValue& Value);
+
+	void Exit();
+	void SliderExit();
+	
 	void CheckErrors();
 	void FindAndSwitchLamp();
 	void FindLamps();
 	void SetImpulse();
 
-	void SetInputMappingContext();
-	void RevertInputMappingContext() const;
+	void SetupDefaults();
+	void BindDelegates();
 	
 public:
-	UPROPERTY(BlueprintAssignable)
-	FPuzzleCompleteDelegate OnPuzzleComplete;
-	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UStaticMeshComponent> SliderBaseSM;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UStaticMeshComponent> SliderSM;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UBoxComponent> SliderCol;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<UG2ILauncherComponent> LauncherComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (MakeEditWidget = true))
 	FVector SliderStartLocation = {0.0f, 0.0f, 0.0f};
@@ -95,7 +99,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float LampActivationTime = 1.5f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int LampFlashCount = 3;
+	int32 LampFlashCount = 3;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float LampFlashFrequency = 0.3f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -111,20 +115,24 @@ public:
 protected:
 	UPROPERTY(EditAnywhere)
 	TSet<TObjectPtr<ACharacter>> PossibleInteractors;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UG2IWorldHintKeyWidgetComponent> HintKeyWidgetComp;
 	
 private:
 	bool bIsSliderActive = false;
 	bool bIsPuzzleComplete = false;
-	int IndexInCorrectSequence = 0;
+	int32 IndexInCorrectSequence = 0;
 	float CurrenImpulse = 0.0f;
 	float MoveDir = 0.0f;
 	float CurrentImpulseLenght = 0.0f;
 	bool bIsLampWithoutZone = false;
 	bool bIsSequenceEmpty = false;
+	int32 StopTimerLampsIndex = -1;
 	UPROPERTY()
 	TObjectPtr<AActor> OriginalViewTarget;
 	UPROPERTY()
-	TObjectPtr<APlayerController> PC;
+	TObjectPtr<AG2IPlayerController> PlayerController;
 	UPROPERTY()
 	TObjectPtr<UWorld> World;
 	UPROPERTY()

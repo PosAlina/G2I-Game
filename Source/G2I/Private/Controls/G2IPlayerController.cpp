@@ -244,9 +244,14 @@ TSubclassOf<APawn> AG2IPlayerController::GetPawnClass(const APawn* NewPawn) cons
 	return PawnClass;
 }
 
+TSubclassOf<APawn> AG2IPlayerController::GetCurrentPawnClass() const
+{
+	return GetPawnClass(GetPawn());
+}
+
 bool AG2IPlayerController::IsCurrentPawnClass(const TSubclassOf<APawn>& PawnClass) const
 {
-	return PawnClass == GetPawnClass(GetPawn());
+	return PawnClass == GetCurrentPawnClass();
 }
 
 void AG2IPlayerController::SetupInputForPawn(const APawn* NewPawn)
@@ -515,8 +520,9 @@ TMap<TObjectPtr<UInputAction>, FName>& AG2IPlayerController::GetActionToTagMap()
 }
 
 void AG2IPlayerController::OverrideInputMappingContext(
-	const TSubclassOf<APawn>& PawnClass, const TArray<TObjectPtr<UInputMappingContext>>& ContextsForOverride)
+	const TArray<TObjectPtr<UInputMappingContext>>& ContextsForOverride)
 {
+	const TSubclassOf<APawn>& PawnClass = GetCurrentPawnClass();
 	if (!ensure(PawnClass))
 	{
 		UE_LOG(LogG2I, Warning, TEXT("%s: PawnClass is null"), *GetActorNameOrLabel());
@@ -528,8 +534,9 @@ void AG2IPlayerController::OverrideInputMappingContext(
 	SetupInputIfPawnClassIsCurrent(PawnClass);
 }
 
-void AG2IPlayerController::StopOverrideInputMappingContext(const TSubclassOf<APawn>& PawnClass)
+void AG2IPlayerController::StopOverrideInputMappingContext()
 {
+	const TSubclassOf<APawn>& PawnClass = GetCurrentPawnClass();
 	if (!ensure(PawnClass))
 	{
 		UE_LOG(LogG2I, Warning, TEXT("%s: PawnClass is null"), *GetActorNameOrLabel());
