@@ -72,5 +72,5 @@ void UG2IUserWidget::InitializeGameInstance()
 		UE_LOG(LogG2I, Error, TEXT("Game Instance isn't %s in %s"),
 			*UG2IGameInstance::StaticClass()->GetName(), *GetName());
 	}
-	GameInstance->OnStartLevelInitDelegate.AddDynamic(this, &ThisClass::StartLevelInitialize);
+	GameInstance->OnStartLevelInitDelegate.AddUObject(this, &ThisClass::StartLevelInitialize);
 }

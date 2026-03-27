@@ -8,9 +8,9 @@ class UG2IWidgetComponentParameters;
 class UG2IStringTablesCatalog;
 class UG2IWidgetsCatalog;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPlayerControllerInitDelegate);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FStartLevelInitDelegate);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCloseLevelDelegate);
+DECLARE_MULTICAST_DELEGATE(FPlayerControllerInitDelegate);
+DECLARE_MULTICAST_DELEGATE(FStartLevelInitDelegate);
+DECLARE_MULTICAST_DELEGATE(FCloseLevelDelegate);
 
 /**
  * Base game instance for G2I game
@@ -23,13 +23,10 @@ class G2I_API UG2IGameInstance : public UGameInstance
 
 public:
 
-	UPROPERTY(BlueprintAssignable)
 	FPlayerControllerInitDelegate OnPlayerControllerInitDelegate;
 
-	UPROPERTY(BlueprintAssignable)
 	FStartLevelInitDelegate OnStartLevelInitDelegate;
 
-	UPROPERTY(BlueprintAssignable)
 	FCloseLevelDelegate OnCloseLevelDelegate;
 
 protected:
@@ -44,13 +41,13 @@ protected:
 	TObjectPtr<UG2IWidgetComponentParameters> WidgetComponentsParameters;
 
 	UPROPERTY(EditAnywhere)
-	FName MainMenuLevelName = "MainMenuLevel";
+	TSoftObjectPtr<UWorld> MainMenuLevel;
 	
 	UPROPERTY(EditAnywhere, meta=(ToolTip="List of levels in the editor in order without the main menu"))
-	TArray<FName> LevelsNameInOrderInEditor;
+	TArray<TSoftObjectPtr<UWorld>> LevelsNameInOrderInEditor;
 	
 	UPROPERTY(EditAnywhere, meta=(ToolTip="List of levels in the game in order without the main menu."))
-	TArray<FName> LevelsNameInOrderInGame;
+	TArray<TSoftObjectPtr<UWorld>> LevelsNameInOrderInGame;
 
 private:
 
@@ -62,7 +59,8 @@ private:
 	
 	int32 CurrentLevelIndex = StartLevel;
 
-	FName CurrentLevelName = NAME_None;
+	FString CurrentLevelName = "";
+	FString MainMenuLevelName = "";
 
 public:
 
@@ -71,8 +69,8 @@ public:
 	UG2IWidgetsCatalog *GetWidgetsCatalog();
 	UG2IStringTablesCatalog *GetStringTablesCatalog();
 	UG2IWidgetComponentParameters *GetWidgetComponentParameters();
-	FName GetMainMenuLevelName() const;
-	FName GetCurrentLevelName() const;
+	FString GetMainMenuLevelName() const;
+	FString GetCurrentLevelName() const;
 
 	bool IsMainMenuLevel() const;
 
@@ -84,11 +82,10 @@ public:
 
 protected:
 
-	UFUNCTION()
 	void StartLevelInitialize();
 
 	void SetCurrentLevelName();
 	
-	bool OpenLevel(FName LevelName) const;
+	bool OpenLevel(const TSoftObjectPtr<UWorld>& Level) const;
 
 };
