@@ -28,14 +28,14 @@ void AG2IMovingByGearWithSplineActor::SetLocationAndRotationWithSpline(float Spl
 
 	FRotator NewRotation;
 	if (bChangeRotationThroughSpline) {
-		float InputKey = SplineComponent->GetInputKeyAtDistanceAlongSpline(SplineDistance);
+		const float InputKey = SplineComponent->GetInputKeyAtDistanceAlongSpline(SplineDistance);
 
-		int32 CurrentPointIndex = FMath::TruncToInt(InputKey);
-		int32 NextPointIndex = FMath::Clamp(CurrentPointIndex + 1, 0, SplineComponent->GetNumberOfSplinePoints() - 1);
+		const int32 CurrentPointIndex = FMath::TruncToInt(InputKey);
+		const int32 NextPointIndex = FMath::Clamp(CurrentPointIndex + 1, 0, SplineComponent->GetNumberOfSplinePoints() - 1);
 
-		float Alpha = InputKey - CurrentPointIndex;
-		FRotator StartRot = SplineComponent->GetRotationAtSplinePoint(CurrentPointIndex, ESplineCoordinateSpace::World);
-		FRotator EndRot = SplineComponent->GetRotationAtSplinePoint(NextPointIndex, ESplineCoordinateSpace::World);
+		const float Alpha = InputKey - CurrentPointIndex;
+		const FRotator StartRot = SplineComponent->GetRotationAtSplinePoint(CurrentPointIndex, ESplineCoordinateSpace::World);
+		const FRotator EndRot = SplineComponent->GetRotationAtSplinePoint(NextPointIndex, ESplineCoordinateSpace::World);
 
 		NewRotation = FMath::Lerp(StartRot, EndRot, Alpha);
 	} 
