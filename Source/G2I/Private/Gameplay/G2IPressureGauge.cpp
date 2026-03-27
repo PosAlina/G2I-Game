@@ -57,13 +57,7 @@ void AG2IPressureGauge::SetIsLockedPuzzleActors(const bool bIsNewLocked)
     }
     FString DebugMessage = GetActorNameOrLabel() + " ";
     DebugMessage += bIsNewLocked ? TEXT("locked") : TEXT("un locked");
-    UE_LOG(LogG2I, Log, TEXT("%s"), *DebugMessage);
-#if WITH_EDITOR
-    if (GEngine)
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, DebugMessage);
-    }
-#endif
+    G2I::DebugLogMessage(DebugMessage);
 }
 
 void AG2IPressureGauge::LockedPuzzleActors(UG2ILauncherComponent* LauncherComponent, AActor* ComponentOwner,
@@ -99,14 +93,7 @@ void AG2IPressureGauge::ChangeAngles_Implementation(const TArray<float>& AngleDe
     }
     if (bIsCorrect)
     {
-        const FString DebugMessage = "Pressure Gauge completed successfully";
-#if WITH_EDITOR
-        if (GEngine)
-        {
-            GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, DebugMessage);
-        }
-#endif
-        UE_LOG(LogG2I, Log, TEXT("%s"), *DebugMessage);
+        G2I::DebugLogMessage(GetActorNameOrLabel() + "Pressure Gauge completed successfully");
         
         if (!ensure(LauncherComp))
         {

@@ -77,9 +77,6 @@ private:
 	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	TMap<TObjectPtr<AActor>, FG2ITriggeringByIndicatorActorInfo> TriggeringActorsInfo;
 
-	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	TSet<FName> StatesNames;
-
 protected:
 
 	virtual void BeginPlay() override;
@@ -98,12 +95,6 @@ protected:
 	FName GetCurrentState() const;
 	FName GetDefaultState() const;
 
-	UFUNCTION(BlueprintCallable)
-	static void DebugWarningMessage(const FString &DebugMessage);
-
-	UFUNCTION(BlueprintCallable)
-	static void DebugLogMessage(const FString &DebugMessage);
-
 private:
 	
 	void SetupTriggeringActorsInfo();
@@ -118,6 +109,7 @@ private:
 
 	void LockOrUnlockActors(TSet<TObjectPtr<AActor>> Actors, bool bIsLocked);
 	void SetStartState();
+	bool SetCurrentStateWithDefaultState();
 	
 	void SetState(const FName& NewState);
 

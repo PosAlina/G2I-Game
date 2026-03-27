@@ -13,7 +13,6 @@ void AG2ILaunchingActorsIndicator::BeginPlay()
 
 void AG2ILaunchingActorsIndicator::SetupTriggeringActorsInfo()
 {
-	BaseStatesInfo.GetKeys(StatesNames);
 	for (const auto& [StateName, StateInfo] : BaseStatesInfo)
 	{
 		SetupLaunchingActorsInfo(StateName, true,StateInfo.RequiredLaunchedActors);
@@ -34,7 +33,6 @@ void AG2ILaunchingActorsIndicator::SetupLaunchingActorsInfo(
 	for (AActor *Actor : ChangedActors)
 	{
 		FG2ITriggeringByIndicatorActorInfo& ActorInfo = SetupActorInfo(Actor);
-		
 		TSet<FName>& TargetStates = bIsLaunched ? ActorInfo.LaunchForStates : ActorInfo.UnLaunchForStates;
 		TSet<FName>& ExcludingStates = bIsLaunched ? ActorInfo.UnLaunchForStates : ActorInfo.LaunchForStates;
 		if (!ensure(!ExcludingStates.Contains(StateName)))
@@ -67,6 +65,11 @@ FG2ITriggeringByIndicatorActorInfo& AG2ILaunchingActorsIndicator::SetupActorInfo
 {
 	FG2ITriggeringByIndicatorActorInfo& ActorInfo = TriggeringActorsInfo.FindOrAdd(Actor);
 
+	if (!ensure(Actor))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: Attempt to setup actor info for null actor"), *GetActorNameOrLabel());
+		return ActorInfo;
+	}
 	ActorInfo.LauncherComponent = Actor->FindComponentByClass<UG2ILauncherComponent>();
 	if (!ensure(ActorInfo.LauncherComponent))
 	{
@@ -103,33 +106,43 @@ void AG2ILaunchingActorsIndicator::BindDelegates()
 
 void AG2ILaunchingActorsIndicator::SetStartState()
 {
-	if (DefaultState != NAME_None)
+	if (SetCurrentStateWithDefaultState())
 	{
-		if (ensure(BaseStatesInfo.Contains(DefaultState)))
-		{
-			if (CheckState(DefaultState))
-			{
-				SetState(DefaultState);
-				return;
-			}
-			DebugWarningMessage(GetActorNameOrLabel() + "couldn't set state with name " + DefaultState.ToString());
-		}
-		else
-		{
-			DebugWarningMessage(GetActorNameOrLabel() + "couldn't find state with name " + DefaultState.ToString());
-		}
+		return;
 	}
 
+	TSet<FName> StatesNames;
+	BaseStatesInfo.GetKeys(StatesNames);
 	if (!ensure(CheckPotentialNewStatesAndSet(StatesNames)))
 	{
-		DebugWarningMessage(GetActorNameOrLabel() + "couldn't find any correct state");
+		G2I::DebugWarningMessage(GetActorNameOrLabel() + "couldn't find any correct state");
 	}
 }
 
+bool AG2ILaunchingActorsIndicator::SetCurrentStateWithDefaultState()
+{
+	if (DefaultState == NAME_None)
+	{
+		return false;
+	}
+	if (!ensure(BaseStatesInfo.Contains(DefaultState)))
+	{
+		G2I::DebugWarningMessage(GetActorNameOrLabel() + "couldn't find state with name " + DefaultState.ToString());
+		return false;
+	}
+	
+	if (CheckState(DefaultState))
+	{
+		SetState(DefaultState);
+		return true;
+	}
+	G2I::DebugWarningMessage(GetActorNameOrLabel() + "couldn't set state with name " + DefaultState.ToString());
+	return false;
+}
 
 bool AG2ILaunchingActorsIndicator::CheckPotentialNewStatesAndSet(TSet<FName>& States)
 {
-	for (auto StateName : States)
+	for (const FName& StateName : States)
 	{
 		if (CheckState(StateName))
 		{
@@ -145,7 +158,7 @@ bool AG2ILaunchingActorsIndicator::CheckState(const FName& StateName)
 	const FG2ILaunchingActorsIndicatorState* StateInfo = BaseStatesInfo.Find(StateName);
 	if (!StateInfo)
 	{
-		DebugWarningMessage(GetActorNameOrLabel() + "couldn't find state with name " + StateName.ToString());
+		G2I::DebugWarningMessage(GetActorNameOrLabel() + "couldn't find state with name " + StateName.ToString());
 	}
 
 	for (AActor *Actor : StateInfo->RequiredLaunchedActors)
@@ -172,7 +185,7 @@ bool AG2ILaunchingActorsIndicator::CheckState(const FName& StateName)
 void AG2ILaunchingActorsIndicator::SetState(const FName& NewState)
 {
 	CurrentState = NewState;
-	DebugLogMessage(GetActorNameOrLabel() + "set state " + DefaultState.ToString());
+	G2I::DebugLogMessage(GetActorNameOrLabel() + "set state " + DefaultState.ToString());
 	UpdateState();
 }
 
@@ -252,26 +265,4 @@ FName AG2ILaunchingActorsIndicator::GetCurrentState() const
 FName AG2ILaunchingActorsIndicator::GetDefaultState() const
 {
 	return DefaultState;
-}
-
-void AG2ILaunchingActorsIndicator::DebugWarningMessage(const FString& DebugMessage)
-{
-	UE_LOG(LogG2I, Warning, TEXT("%s"), *DebugMessage);
-#if WITH_EDITOR
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, DebugMessage);
-	}
-#endif
-}
-
-void AG2ILaunchingActorsIndicator::DebugLogMessage(const FString& DebugMessage)
-{
-	UE_LOG(LogG2I, Log, TEXT("%s"), *DebugMessage);
-#if WITH_EDITOR
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, DebugMessage);
-	}
-#endif
 }
