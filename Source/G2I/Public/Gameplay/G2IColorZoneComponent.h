@@ -24,7 +24,6 @@ class G2I_API UG2IColorZoneComponent : public USceneComponent
 
 public:	
 	UG2IColorZoneComponent();
-	virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EZoneColor Color = EZoneColor::None;
