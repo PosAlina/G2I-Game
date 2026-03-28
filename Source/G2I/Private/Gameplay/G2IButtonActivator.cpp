@@ -80,7 +80,7 @@ void AG2IButtonActivator::Interact_Implementation(const ACharacter* Interactor)
 	{
 		if (!ensure(Actor))
 		{
-			UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find Actor in ActorsToActivate"), *GetActorNameOrLabel(),
+			UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find Actor in ActorsToActivate"), *GetActorNameOrLabel());
 			continue;
 		}
 
@@ -102,7 +102,7 @@ void AG2IButtonActivator::Interact_Implementation(const ACharacter* Interactor)
 	}
 }
 
-UG2IWorldHintKeyWidgetComponent* AG2ITransitBetweenLevelThroughInteraction::GetInteractionKeyHintComponent_Implementation()
+UG2IWorldHintKeyWidgetComponent* AG2IButtonActivator::GetInteractionKeyHintComponent_Implementation()
 {
 	return HintKeyWidgetComp;
 }
