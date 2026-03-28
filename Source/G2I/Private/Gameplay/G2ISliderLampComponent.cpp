@@ -84,39 +84,30 @@ void UG2ISliderLampComponent::SetDefaultValues()
 	}
 }
 
-void UG2ISliderLampComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
-{
-	Super::OnComponentDestroyed(bDestroyingHierarchy);
-	if (LampMesh)
-	{
-		LampMesh->DestroyComponent();
-		LampMesh = nullptr;
-	}
-}
-
 void UG2ISliderLampComponent::ChangeIntensity(const int32 IntensityChangeDir, const float TargetLightIntensity)
 {
-	if (DynamicMaterial)
+	if (!IsValid(DynamicMaterial))
 	{
-		const float OldEmissiveIntensity = CurrentEmissiveIntensity;
-		if (IntensityChangeDir == 1)
-		{
-			SetCurrentEmissiveIntensity(FMath::Min(TargetLightIntensity, OldEmissiveIntensity + EmissiveInfo.IntensityRate));
-		}
-		else
-		{
-			SetCurrentEmissiveIntensity(FMath::Max(TargetLightIntensity, OldEmissiveIntensity - EmissiveInfo.IntensityRate));
-		}
+		return;
+	}
+	const float OldEmissiveIntensity = CurrentEmissiveIntensity;
+	if (IntensityChangeDir == 1)
+	{
+		SetCurrentEmissiveIntensity(FMath::Min(TargetLightIntensity, OldEmissiveIntensity + EmissiveInfo.IntensityRate));
+	}
+	else
+	{
+		SetCurrentEmissiveIntensity(FMath::Max(TargetLightIntensity, OldEmissiveIntensity - EmissiveInfo.IntensityRate));
+	}
 
-		if (OldEmissiveIntensity == TargetLightIntensity)
+	if (OldEmissiveIntensity == TargetLightIntensity)
+	{
+		StopTimerToIntensity();
+		if (FMath::IsNearlyEqual(OldEmissiveIntensity, 0.f))
 		{
-			StopTimerToIntensity();
-			if (FMath::IsNearlyEqual(OldEmissiveIntensity, 0.f))
-			{
-				OffLamp();
-			}
+			OffLamp();
 		}
-	}	
+	}
 }
 
 void UG2ISliderLampComponent::SetTimerToIntensity(const int32 IntensityChangeDir)
@@ -128,22 +119,9 @@ void UG2ISliderLampComponent::SetTimerToIntensity(const int32 IntensityChangeDir
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(), *UWorld::StaticClass()->GetName());
 		return;
 	}
-	
-	World->GetTimerManager().SetTimer(IntensityColorTimer, [this, IntensityChangeDir]()
-	{
-		if (LampMode == 2)
-		{
-			ChangeIntensity(IntensityChangeDir, MaxLightIntensityInActivationColorZone);
-		}
-		else if (LampMode == 1)
-		{
-			ChangeIntensity(IntensityChangeDir, MaxLightIntensityInCommonColorZone);
-		}
-		else
-		{
-			ChangeIntensity(IntensityChangeDir, 0);
-		}
-	}, IntensityIncreaseFrequency, true);
+
+	const FTimerDelegate Delegate = FTimerDelegate::CreateUObject( this, &ThisClass::ChangeIntensity, IntensityChangeDir);
+	World->GetTimerManager().SetTimer(FlashingTimer, Delegate, IntensityIncreaseFrequency, true);
 }
 
 void UG2ISliderLampComponent::StopTimerToIntensity()
@@ -170,11 +148,9 @@ void UG2ISliderLampComponent::SetTimerToFlashing(const float FlashTime, uint32 F
 		return;
 	}
 	bIsLampFlashing = true;
-	
-	World->GetTimerManager().SetTimer(FlashingTimer, [this, FlashCount]()
-	{
-		LampFlashing(FlashCount);
-	}, FlashTime, true, 0.0f);
+
+	const FTimerDelegate Delegate = FTimerDelegate::CreateUObject( this, &ThisClass::LampFlashing, FlashCount);
+	World->GetTimerManager().SetTimer(FlashingTimer, Delegate, FlashTime, true);
 }
 
 void UG2ISliderLampComponent::SetTimerToFlashing(const float FlashTime)
@@ -190,12 +166,8 @@ void UG2ISliderLampComponent::SetTimerToFlashing(const float FlashTime)
 		return;
 	}
 	bIsLampFlashing = true;
-	
-	World->GetTimerManager().SetTimer(FlashingTimer, [this]()
-	{
-		LampFlashing();
-	}, FlashTime, true, 0.0f);
-	return;
+
+	World->GetTimerManager().SetTimer(FlashingTimer, this, &ThisClass::LampFlashing, FlashTime, true);
 }
 
 void UG2ISliderLampComponent::StopTimerToFlashing()
@@ -217,8 +189,14 @@ void UG2ISliderLampComponent::SetBaseColor(const FLinearColor& NewBaseColor)
 {
 	BaseColor = NewBaseColor;
 
-	if (!ensure(DynamicMaterial))
+	if (!IsValid(DynamicMaterial))
 	{
+		return;
+	}
+	float OutValue;
+	if (!ensure(DynamicMaterial->GetScalarParameterValue(FName("Base Color"), OutValue)))
+	{
+		G2I::DebugWarningMessage("Material of " + GetName() + " has no Base Color" );
 		return;
 	}
 	DynamicMaterial->SetVectorParameterValue("Base Color", NewBaseColor);
@@ -228,7 +206,16 @@ void UG2ISliderLampComponent::SetEmissiveColor(const FLinearColor& NewEmissiveCo
 {
 	EmissiveInfo.Color = NewEmissiveColor;
 
-	if (DynamicMaterial)
+	if (!IsValid(DynamicMaterial))
+	{
+		return;
+	}
+	FLinearColor OutValue;
+	if (!ensure(DynamicMaterial->GetVectorParameterValue(FName("Emissive Color"), OutValue)))
+	{
+		G2I::DebugWarningMessage("Material of " + GetName() + " has no Emissive Color" );
+	}
+	else
 	{
 		DynamicMaterial->SetVectorParameterValue("Emissive Color", NewEmissiveColor);
 	}
@@ -242,7 +229,16 @@ void UG2ISliderLampComponent::SetCurrentEmissiveIntensity(const float NewEmissiv
 {
 	CurrentEmissiveIntensity = NewEmissiveIntensity;
 
-	if (DynamicMaterial)
+	if (!IsValid(DynamicMaterial))
+	{
+		return;
+	}
+	float OutValue;
+	if (!ensure(DynamicMaterial->GetScalarParameterValue(FName("Emissive Intensity"), OutValue)))
+	{
+		G2I::DebugWarningMessage("Material of " + GetName() + " has no Emissive Intensity" );
+	}
+	else
 	{
 		DynamicMaterial->SetScalarParameterValue("Emissive Intensity", NewEmissiveIntensity);
 	}
@@ -294,20 +290,22 @@ void UG2ISliderLampComponent::LampFlashing(const uint32 FlashCount)
 	{
 		StopTimerToFlashing();
 		FlashCounter = 0;
-		if (LampMode == 0)
+		switch(LampMode)
 		{
+		case 0:
 			SetTimerToIntensity(-1);
-		}
-		if (LampMode == 1)
-		{
+			break;
+		case 1:
 			SetTimerToIntensity(-1);
+			break;
+		default: ;
 		}
 	}
 }
 
 void UG2ISliderLampComponent::LampFlashing()
 {
-	if (!ensure(DynamicMaterial))
+	if (!IsValid(DynamicMaterial))
 	{
 		return;
 	}
@@ -321,4 +319,19 @@ void UG2ISliderLampComponent::LampFlashing()
 		SetCurrentEmissiveIntensity(EmissiveInfo.MaxIntensity);
 	}
 	bLampFlashState = !bLampFlashState;
+}
+
+void UG2ISliderLampComponent::ChangeIntensity(const int32 IntensityChangeDir)
+{
+	switch (LampMode)
+	{
+	case 2:
+		ChangeIntensity(IntensityChangeDir, MaxLightIntensityInActivationColorZone);
+		break;
+	case 1:
+		ChangeIntensity(IntensityChangeDir, MaxLightIntensityInCommonColorZone);
+		break;
+	default:
+		ChangeIntensity(IntensityChangeDir, 0);
+	}
 }

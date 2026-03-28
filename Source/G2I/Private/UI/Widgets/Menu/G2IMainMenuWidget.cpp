@@ -74,7 +74,7 @@ void UG2IMainMenuWidget::LoadNewGame() const
 			*UG2IGameInstance::StaticClass()->GetName());
 		return;
 	}
-	GameInstance->LoadLevelByIndex(0);
+	GameInstance->LoadLevel(0);
 }
 
 void UG2IMainMenuWidget::NewGameWithSaveExists() const
