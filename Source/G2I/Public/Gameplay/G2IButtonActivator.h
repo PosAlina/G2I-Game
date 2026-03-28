@@ -25,7 +25,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UG2IWorldHintKeyWidgetComponent> HintKeyWidgetComp;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UG2ILauncherComponent> LauncherComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
