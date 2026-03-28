@@ -8,6 +8,15 @@ class UG2IWidgetComponentParameters;
 class UG2IStringTablesCatalog;
 class UG2IWidgetsCatalog;
 
+UENUM(BlueprintType)
+enum class EG2ILevelName : uint8
+{
+	None,
+	TestLevel,
+	BoilerRoom,
+	ChildrenRoom
+};
+
 DECLARE_MULTICAST_DELEGATE(FPlayerControllerInitDelegate);
 DECLARE_MULTICAST_DELEGATE(FStartLevelInitDelegate);
 DECLARE_MULTICAST_DELEGATE(FCloseLevelDelegate);
@@ -43,22 +52,19 @@ protected:
 	UPROPERTY(EditAnywhere)
 	TSoftObjectPtr<UWorld> MainMenuLevel;
 	
+	UPROPERTY(EditAnywhere)
+	TMap<EG2ILevelName, TSoftObjectPtr<UWorld>> Levels;
+
 	UPROPERTY(EditAnywhere, meta=(ToolTip="List of levels in the editor in order without the main menu"))
-	TArray<TSoftObjectPtr<UWorld>> LevelsNameInOrderInEditor;
+	TArray<EG2ILevelName> LevelsNameInOrderInEditor;
 	
 	UPROPERTY(EditAnywhere, meta=(ToolTip="List of levels in the game in order without the main menu."))
-	TArray<TSoftObjectPtr<UWorld>> LevelsNameInOrderInGame;
+	TArray<EG2ILevelName> LevelsNameInOrderInGame;
 
 private:
 
-#if WITH_EDITORONLY_DATA
-	static constexpr int32 StartLevel = -1;
-#else
-	static constexpr int32 StartLevel = 0;
-#endif
-	
-	int32 CurrentLevelIndex = StartLevel;
-
+	int32 CurrentLevelIndex = -1;
+	EG2ILevelName CurrentLevelEnum = EG2ILevelName::None;
 	FString CurrentLevelName = "";
 	FString MainMenuLevelName = "";
 
@@ -71,12 +77,15 @@ public:
 	UG2IWidgetComponentParameters *GetWidgetComponentParameters();
 	FString GetMainMenuLevelName() const;
 	FString GetCurrentLevelName() const;
+	int32 GetIndex(const EG2ILevelName& LevelName) const;
+	EG2ILevelName GetLevelEnum(const FString& LevelName) const;
 
 	bool IsMainMenuLevel() const;
 
-	bool LoadLevelByIndex(uint32 Index);
-	void LoadNextLevel();
-	void LoadMainMenuLevel();
+	bool LoadLevel(const EG2ILevelName& LevelName);
+	bool LoadLevel(uint32 Index);
+	bool LoadNextLevel();
+	bool LoadMainMenuLevel();
 
 	void SetMainMenuLevelIndex();
 
@@ -84,8 +93,8 @@ protected:
 
 	void StartLevelInitialize();
 
-	void SetCurrentLevelName();
+	void SetCurrentLevelInfo();
 	
-	bool OpenLevel(const TSoftObjectPtr<UWorld>& Level) const;
-
+	bool OpenLevel(const TSoftObjectPtr<UWorld>& Level);
+	bool LoadLevel(const TSoftObjectPtr<UWorld>& Level, uint32 Index);
 };

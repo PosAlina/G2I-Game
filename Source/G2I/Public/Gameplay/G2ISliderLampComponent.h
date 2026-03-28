@@ -52,7 +52,7 @@ class G2I_API UG2ISliderLampComponent : public UPrimitiveComponent
 
 public:
 	UG2ISliderLampComponent();
-	virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
+	//virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
 
 	void SetTimerToIntensity(int32 IntensityChangeDir);
 	void StopTimerToIntensity();
@@ -71,15 +71,17 @@ public:
 	void OffLamp();
 
 	FLinearColor GetBaseColor() const;
+	void LampFlashing(uint32 FlashCount);
+	void LampFlashing();
+
+	void ChangeIntensity(int32 IntensityChangeDir);
 
 protected:
 	virtual void BeginPlay() override;
 	
 private:
 	void ChangeIntensity(int32 IntensityChangeDir, float TargetLightIntensity);
-	void LampFlashing(uint32 FlashCount);
-	void LampFlashing();
-
+	
 	void SetupDefaults();
 
 public:

@@ -1,5 +1,4 @@
 #include "Gameplay/G2IColorZoneComponent.h"
-
 #include "G2I.h"
 #include "Components/BoxComponent.h"
 
@@ -15,15 +14,3 @@ UG2IColorZoneComponent::UG2IColorZoneComponent()
 	
 	ZoneCol->SetupAttachment(this);
 }
-
-void UG2IColorZoneComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
-{
-	Super::OnComponentDestroyed(bDestroyingHierarchy);
-
-	if (ZoneCol)
-	{
-		ZoneCol->DestroyComponent();
-		ZoneCol = nullptr;
-	}
-}
-
