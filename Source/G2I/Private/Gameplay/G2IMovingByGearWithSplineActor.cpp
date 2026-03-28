@@ -15,25 +15,43 @@ void AG2IMovingByGearWithSplineActor::SetLocationAndRotationWithSpline(float Spl
 		return;
 	}
 
-	FVector NewLocation = SplineComponent->GetLocationAtDistanceAlongSpline(
-		SplineDistance,
-		ESplineCoordinateSpace::World
-	);
+	FVector NewLocation;
+	if (bChangeLocationThroughSpline) {
+		NewLocation = SplineComponent->GetLocationAtDistanceAlongSpline(
+			SplineDistance,
+			ESplineCoordinateSpace::World
+		);
+	} 
+	else {
+		NewLocation = MainBoxComponent->GetComponentLocation();
+	}
 
-	FRotator NewRotation = SplineComponent->GetRotationAtDistanceAlongSpline(
-		SplineDistance,
-		ESplineCoordinateSpace::World
-	);
+	FRotator NewRotation;
+	if (bChangeRotationThroughSpline) {
+		const float InputKey = SplineComponent->GetInputKeyAtDistanceAlongSpline(SplineDistance);
+
+		const int32 CurrentPointIndex = FMath::TruncToInt(InputKey);
+		const int32 NextPointIndex = FMath::Clamp(CurrentPointIndex + 1, 0, SplineComponent->GetNumberOfSplinePoints() - 1);
+
+		const float Alpha = InputKey - CurrentPointIndex;
+		const FRotator StartRot = SplineComponent->GetRotationAtSplinePoint(CurrentPointIndex, ESplineCoordinateSpace::World);
+		const FRotator EndRot = SplineComponent->GetRotationAtSplinePoint(NextPointIndex, ESplineCoordinateSpace::World);
+
+		NewRotation = FMath::Lerp(StartRot, EndRot, Alpha);
+	} 
+	else {
+		NewRotation = MainBoxComponent->GetComponentRotation();
+	}
 
 	FHitResult Hit;
-	MainBoxComponent->SetWorldLocationAndRotation(NewLocation, NewRotation, true, &Hit);
+	MainBoxComponent->SetWorldLocationAndRotation(NewLocation, NewRotation, bCheckHit, &Hit);
 
-	if (Hit.bBlockingHit)
+	if (bCheckHit && Hit.bBlockingHit)
 	{
 		CurrentSplineDistance = SplineComponent->GetDistanceAlongSplineAtLocation(
-			MainBoxComponent->GetComponentLocation(),
-			ESplineCoordinateSpace::World);
-	}
+				MainBoxComponent->GetComponentLocation(),
+				ESplineCoordinateSpace::World);
+	}	
 }
 
 
