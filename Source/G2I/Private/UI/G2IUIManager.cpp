@@ -12,6 +12,7 @@
 #include "Components/RichTextBlock.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
+#include "GameFramework/Character.h"
 #include "Gameplay/G2IKeyHintWidget.h"
 #include "HUD/G2IAimingWidget.h"
 #include "Menu/Elements/NumericalRow/G2INumericalMultiValuePropertyRow.h"
@@ -20,26 +21,46 @@
 void UG2IUIManager::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-	OnPlayerControllerInitDelegate.AddDynamic(this, &ThisClass::InitializeComponents);
-}
 
-void UG2IUIManager::InitializeComponents(APlayerController* InPlayerController)
-{
-	PlayerController = Cast<AG2IPlayerController>(InPlayerController);
-	if (!ensure(PlayerController))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
-			*AG2IPlayerController::StaticClass()->GetName());
-		return;
-	}
-	
-	UG2IGameInstance *GameInstance = Cast<UG2IGameInstance>(GetGameInstance());
+	GameInstance = Cast<UG2IGameInstance>(GetGameInstance());
 	if (!ensure(GameInstance))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
 			*UG2IGameInstance::StaticClass()->GetName());
 		return;
 	}
+	StartGameDelegateHandle = GameInstance->OnStartLevelInitDelegate.AddUObject(this, &ThisClass::InitializeInStartGame);
+}
+
+void UG2IUIManager::InitializeInStartGame()
+{
+	if (!ensure(GameInstance))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IGameInstance::StaticClass()->GetName());
+		return;
+	}
+	GameInstance->OnStartLevelInitDelegate.Remove(StartGameDelegateHandle);
+	
+	InitializeDefaultsInStartGame();
+	InitializeDefaultsInStartLevel();
+	PostInitializeDefaultsInStartGame();
+	PostInitializeDefaultsInStartLevel();
+
+	GameInstance->OnCloseLevelDelegate.AddUObject(this, &ThisClass::CloseLevelUI);
+	GameInstance->OnStartLevelInitDelegate.AddUObject(this, &ThisClass::InitializeInStartLevel);
+	
+	OnUIManagerInitialized.Broadcast();
+}
+
+void UG2IUIManager::InitializeInStartLevel()
+{
+	InitializeDefaultsInStartLevel();
+	PostInitializeDefaultsInStartLevel();
+}
+
+void UG2IUIManager::InitializeDefaultsInStartGame()
+{
 	WidgetComponentParameters = GameInstance->GetWidgetComponentParameters();
 	if (!ensure(WidgetComponentParameters))
 	{
@@ -54,18 +75,73 @@ void UG2IUIManager::InitializeComponents(APlayerController* InPlayerController)
 			*UG2IUIDisplayManager::StaticClass()->GetName());
 		return;
 	}
-	DisplayManager->Initialize();
+}
 
+void UG2IUIManager::InitializeDefaultsInStartLevel()
+{
 	const UWorld *World = GetWorld();
 	if (!ensure(World))
 	{
-		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("World is null in %s"), *GetName());
 		return;
 	}
-	OnUIManagerInitialized.Broadcast();
+	
+	PlayerController = Cast<AG2IPlayerController>(World->GetFirstPlayerController());
+	if (!ensure(PlayerController))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*AG2IPlayerController::StaticClass()->GetName());
+		return;
+	}
+	
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
+		return;
+	}
+	DisplayManager->InitializeInStartLevel();
+}
 
-	// TODO: OpenHUD should be moved into level begin
-	OpenHUD();
+void UG2IUIManager::PostInitializeDefaultsInStartGame() const
+{
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
+		return;
+	}
+	DisplayManager->PostInitializeInStartGame();
+}
+
+void UG2IUIManager::PostInitializeDefaultsInStartLevel() const
+{
+	InitializeNewLevelUI();
+}
+
+void UG2IUIManager::InitializeNewLevelUI() const
+{
+	if (!ensure(GameInstance))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IGameInstance::StaticClass()->GetName());
+		return;
+	}
+	
+	if (GameInstance->IsMainMenuLevel())
+	{
+		OpenWidget(EG2IWidgetNames::MainMenu);
+	}
+	else
+	{
+		OpenHUD();
+	}
+}
+
+void UG2IUIManager::CloseLevelUI()
+{
+	CloseAllWidgets();
+	ShowAllWidgets(); // For visibility widgets in next level
 }
 
 FString UG2IUIManager::GetWidgetNameString(EG2IWidgetNames WidgetName) const
@@ -82,6 +158,10 @@ FString UG2IUIManager::GetWidgetNameString(EG2IWidgetNames WidgetName) const
 
 void UG2IUIManager::OpenHUD() const
 {
+	PlayerController->SetInputMode(FInputModeGameOnly());
+	PlayerController->bShowMouseCursor = false;
+	PlayerController->SetPause(false);
+	
 	OpenWidget(EG2IWidgetNames::TrainingScreen);
 }
 
@@ -232,15 +312,7 @@ void UG2IUIManager::ShowWidget(const EG2IWidgetNames WidgetName) const
 			*UG2IUIDisplayManager::StaticClass()->GetName());
 		return;
 	}
-	UG2IUserWidget *Widget = DisplayManager->GetWidget(WidgetName);
-	if (!ensure(Widget))
-	{
-		UE_LOG(LogG2I, Warning, TEXT("Widget %s doesn't exist in %s"), *GetWidgetNameString(WidgetName),
-			*GetName());
-		return;
-	}
-
-	Widget->SetVisibility(ESlateVisibility::Visible);
+	DisplayManager->ShowWidget(WidgetName);
 }
 
 void UG2IUIManager::HideWidget(const EG2IWidgetNames WidgetName) const
@@ -251,15 +323,19 @@ void UG2IUIManager::HideWidget(const EG2IWidgetNames WidgetName) const
 			*UG2IUIDisplayManager::StaticClass()->GetName());
 		return;
 	}
-	UG2IUserWidget *Widget = DisplayManager->GetWidget(WidgetName);
-	if (!ensure(Widget))
+	DisplayManager->HideWidget(WidgetName);
+}
+
+void UG2IUIManager::ShowAllWidgets() const
+{
+	if (!ensure(DisplayManager))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("Widget %s doesn't exist in %s"), *GetWidgetNameString(WidgetName),
-			*GetName());
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
 		return;
 	}
-	
-	Widget->SetVisibility(ESlateVisibility::Hidden);
+
+	DisplayManager->ShowAllHiddenWidgets();
 }
 
 void UG2IUIManager::CloseAllWidgets() const
@@ -305,7 +381,8 @@ void UG2IUIManager::ChangeAimingType(const EG2IAimType NewAimType) const
 	Widget->SetAimingViewType(NewAimType);
 }
 
-void UG2IUIManager::SetKeyByInputAction(UG2IWorldHintWidgetComponent* WidgetComponent, UInputAction* InputAction) const
+void UG2IUIManager::SetKeyByInputAction(UG2IWorldHintWidgetComponent* WidgetComponent, UInputAction* InputAction,
+                                        const TSubclassOf<APawn>& PawnClass) const
 {
 	if (!ensure(InputAction))
 	{
@@ -324,6 +401,11 @@ void UG2IUIManager::SetKeyByInputAction(UG2IWorldHintWidgetComponent* WidgetComp
 		UE_LOG(LogG2I, Error, TEXT("PlayerController doesn't exist in %s"), *GetName());
 		return;
 	}
+	if (!ensure(PawnClass))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Attempting to set key of null character in widget in %s"), *GetName());
+		return;
+	}
 
 	if (const UG2IKeyHintWidget *Widget =
 		Cast<UG2IKeyHintWidget>(WidgetComponent->FindOrAddWidgetByName(EG2IWidgetNames::KeyHint)))
@@ -334,7 +416,7 @@ void UG2IUIManager::SetKeyByInputAction(UG2IWorldHintWidgetComponent* WidgetComp
 				*Widget->GetName(), *GetName());
 			return;
 		}
-		const FName Key = PlayerController->GetKeyName(InputAction);
+		const FName Key = PlayerController->GetKeyName(InputAction, PawnClass);
 		Widget->KeyTextBlock->SetText(FText::FromName(Key));
 	}
 }

@@ -9,11 +9,15 @@
 #include "Blueprint/UserWidget.h"
 #include "Internationalization/StringTable.h"
 
-void UG2IUIDisplayManager::Initialize()
+void UG2IUIDisplayManager::PostInitializeInStartGame()
 {
-	SetupDefaults();
 	InitializeGameInstanceDefaults();
-	BindDelegates();
+}
+
+void UG2IUIDisplayManager::InitializeInStartLevel()
+{
+	InitializeDefaults();
+	BindDelegatesForLevel();
 }
 
 void UG2IUIDisplayManager::RegisterWorldWidgetComponent(UG2IWorldHintWidgetComponent& WidgetComponent)
@@ -51,7 +55,7 @@ void UG2IUIDisplayManager::RegisterWidget(const EG2IWidgetNames WidgetName,
 	}
 }
 
-void UG2IUIDisplayManager::SetupDefaults()
+void UG2IUIDisplayManager::InitializeDefaults()
 {
 	World = GetWorld();
 	if (!ensure(World))
@@ -115,7 +119,7 @@ void UG2IUIDisplayManager::InitializeGameInstanceDefaults()
 	}
 }
 
-void UG2IUIDisplayManager::BindDelegates()
+void UG2IUIDisplayManager::BindDelegatesForLevel()
 {
 	PlayerController->OnPossessPawnDelegate.AddDynamic(this, &ThisClass::UpdateBindingDelegatesForChangedPawn);
 	const TObjectPtr<AG2IPlayerCameraManager> CameraManager =
@@ -221,6 +225,45 @@ void UG2IUIDisplayManager::CloseWidget(const EG2IWidgetNames WidgetName)
 			if (TSet<EG2IWidgetNames> *ActiveWidgetsNamesByType = AllActiveWidgetsNames.Find(WidgetInfo->Type))
 			{
 				ActiveWidgetsNamesByType->Remove(WidgetName);
+			}
+		}
+	}
+}
+
+void UG2IUIDisplayManager::ShowWidget(const EG2IWidgetNames WidgetName)
+{
+	if (const auto WidgetInfo = AllWidgets.Find(WidgetName))
+	{
+		if (UG2IUserWidget *Widget = WidgetInfo->Widget)
+		{
+			Widget->SetVisibility(ESlateVisibility::Visible);
+			AllHiddenWidgets.Remove(WidgetName);
+		}
+	}
+}
+
+void UG2IUIDisplayManager::HideWidget(const EG2IWidgetNames WidgetName)
+{
+	if (const auto WidgetInfo = AllWidgets.Find(WidgetName))
+	{
+		if (UG2IUserWidget *Widget = WidgetInfo->Widget)
+		{
+			Widget->SetVisibility(ESlateVisibility::Hidden);
+			AllHiddenWidgets.Add(WidgetName);
+		}
+	}
+}
+
+void UG2IUIDisplayManager::ShowAllHiddenWidgets()
+{
+	for (auto Iterator = AllHiddenWidgets.CreateIterator(); Iterator; ++Iterator)
+	{
+		if (const auto WidgetInfo = AllWidgets.Find(*Iterator))
+		{
+			if (UG2IUserWidget *Widget = WidgetInfo->Widget)
+			{
+				Widget->SetVisibility(ESlateVisibility::Visible);
+				Iterator.RemoveCurrent();
 			}
 		}
 	}

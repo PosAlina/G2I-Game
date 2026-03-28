@@ -51,6 +51,9 @@ protected:
 
 	TMap<EG2IWidgetTypes, TSet<EG2IWidgetNames>> AllActiveWidgetsNames;
 
+	UPROPERTY()
+	TSet<EG2IWidgetNames> AllHiddenWidgets;
+
 private:
 
 	UPROPERTY()
@@ -65,6 +68,24 @@ private:
 	FText OverrideMissingStringInStringTable = FText::GetEmpty();
 
 	TMap<EG2IStringTablesTypes, FName> StringTablesNames;
+
+	// ==================== INITIALIZE ====================
+public:
+
+	void InitializeInStartLevel();
+	void PostInitializeInStartGame();
+
+private:
+
+	void RegisterWidget(const EG2IWidgetNames WidgetName, const FG2IWidgetClassesInfo& WidgetClassInfo);
+
+	void InitializeGameInstanceDefaults();
+	
+	void InitializeDefaults();
+	void BindDelegatesForLevel();
+
+	UFUNCTION()
+	void UpdateBindingDelegatesForChangedPawn(APawn *Pawn);
 	
 	// ==================== UI ELEMENTS ====================
 public:
@@ -82,8 +103,6 @@ private:
 	
 	// ==================== BASE WIDGET FUNCTIONS ====================
 public:
-	void Initialize();
-	void InitializeGameInstanceDefaults();
 
 	UG2IUserWidget *GetWidget(const EG2IWidgetNames WidgetName);
 
@@ -92,18 +111,13 @@ public:
 	void OpenWidget(const EG2IWidgetNames WidgetName);
 	void CloseWidget(const EG2IWidgetNames WidgetName);
 
+	void ShowWidget(const EG2IWidgetNames WidgetName);
+	void HideWidget(const EG2IWidgetNames WidgetName);
+
+	void ShowAllHiddenWidgets();
+	
 	void CloseAllActiveWidgets();
 	void CloseActiveWidgetsByType(const EG2IWidgetTypes WidgetsType);
-
-private:
-
-	void RegisterWidget(const EG2IWidgetNames WidgetName, const FG2IWidgetClassesInfo& WidgetClassInfo);
-	
-	void SetupDefaults();
-	void BindDelegates();
-
-	UFUNCTION()
-	void UpdateBindingDelegatesForChangedPawn(APawn *Pawn);
 	
 	// ==================== BASE WIDGET COMPONENTS FUNCTIONS ====================
 public:

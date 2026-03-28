@@ -139,6 +139,7 @@ void UG2IWorldHintWidgetComponent::SetPlayerPawn(APawn* Pawn)
 	if (Pawn)
 	{
 		PlayerPawn = Pawn;
+		PlayerPawnClass = Pawn->GetClass();
 		ReactWidgetOnOverlappingActors();
 	}
 }
@@ -211,8 +212,40 @@ void UG2IWorldHintWidgetComponent::OnVisibilityZoneEndOverlap(UPrimitiveComponen
 	}
 }
 
+void UG2IWorldHintWidgetComponent::SetIsLocked_Implementation(const bool bIsNewLocked)
+{
+	if (bIsLocked == bIsNewLocked)
+	{
+		return;
+	}
+	
+	bIsLocked = bIsNewLocked;
+	
+	if (!VisibilityZone->IsOverlappingActor(PlayerPawn))
+	{
+		return;
+	}
+	if (bIsLocked)
+	{
+		CloseWidget();
+	}
+	else
+	{
+		OpenWidget();
+	}
+}
+
+bool UG2IWorldHintWidgetComponent::IsLocked_Implementation()
+{
+	return bIsLocked;
+}
+
 void UG2IWorldHintWidgetComponent::OpenWidget()
 {
+	if (bIsLocked)
+	{
+		return;
+	}
 	if (!ensure(UIManager))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),

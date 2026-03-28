@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "G2IUIManager.generated.h"
 
+class UG2IGameInstance;
 enum class EG2IAimType : uint8;
 class UG2IWidgetComponentParameters;
 class UWidgetSwitcher;
@@ -18,7 +19,6 @@ class UG2IUIDisplayManager;
 class AG2IPlayerController;
 class UG2IWorldHintWidgetComponent;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerControllerInitDelegate, APlayerController*, PlayerController);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FUIManagerInitialized);
 
 /**
@@ -32,12 +32,12 @@ class G2I_API UG2IUIManager : public UGameInstanceSubsystem
 public:
 
 	UPROPERTY(BlueprintAssignable)
-	FPlayerControllerInitDelegate OnPlayerControllerInitDelegate;
-
-	UPROPERTY(BlueprintAssignable)
 	FUIManagerInitialized OnUIManagerInitialized;
 	
 private:
+
+	UPROPERTY()
+	TObjectPtr<UG2IGameInstance> GameInstance;
 
 	UPROPERTY()
 	TObjectPtr<AG2IPlayerController> PlayerController;
@@ -47,15 +47,31 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UG2IWidgetComponentParameters> WidgetComponentParameters;
+
+	FDelegateHandle StartGameDelegateHandle;
 	
 public:
 	// ==================== INITIALIZE ====================
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+
+protected:
+
+	UFUNCTION()
+	void InitializeInStartGame();
+	void InitializeDefaultsInStartGame();
 	
 	UFUNCTION()
-	void InitializeComponents(APlayerController* InPlayerController);
+	void InitializeInStartLevel();
+	void InitializeDefaultsInStartLevel();
 
-	void OpenHUD() const;
+	void PostInitializeDefaultsInStartGame() const;
+	void PostInitializeDefaultsInStartLevel() const;
+	void InitializeNewLevelUI() const;
+	
+	UFUNCTION()
+	void CloseLevelUI();
+
+public:
 
 	// ==================== WIDGETS ====================
 	UG2IUserWidget *CreateWidgetByName(EG2IWidgetNames WidgetName) const;
@@ -68,8 +84,14 @@ public:
 	void ShowWidget(EG2IWidgetNames WidgetName) const;
 	void HideWidget(EG2IWidgetNames WidgetName) const;
 
+	void OpenHUD() const;
+
+	void ShowAllWidgets() const;
+
 	void CloseAllWidgets() const;
 	void CloseUI() const;
+
+	FString GetWidgetNameString(EG2IWidgetNames WidgetName) const;
 
 	// ==================== WORLD WIDGETS ====================
 	void OpenWorldWidget(UG2IWorldHintWidgetComponent *WidgetComponent) const;
@@ -80,12 +102,8 @@ public:
 	void ChangeAimingType(EG2IAimType NewAimType) const;
 	
 	// ====================KEY HINT WIDGET ====================
-	void SetKeyByInputAction(UG2IWorldHintWidgetComponent *WidgetComponent, UInputAction* InputAction) const;
+	void SetKeyByInputAction(UG2IWorldHintWidgetComponent *WidgetComponent, UInputAction* InputAction, const TSubclassOf<APawn>& PawnClass) const;
 	void SetKeyWidgetSize(UG2IWorldHintKeyWidgetComponent *WidgetComponent) const;
-
-private:
-	
-	FString GetWidgetNameString(EG2IWidgetNames WidgetName) const;
 	
 	// ==================== CONFIRMATION WIDGET ====================
 	void SetupConfirmationWidget(const TFunction<void()>& NewConfirmAction, const TFunction<void()>& NewCancelAction,
