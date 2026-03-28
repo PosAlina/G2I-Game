@@ -1,58 +1,87 @@
-
-
-
 #include "Components/G2IFlightComponent.h"
+#include "G2I.h"
+#include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-void UG2IFlightComponent::Fly_Implementation(UActorComponent* MovementComponent, int Direction)
+void UG2IFlightComponent::BeginPlay()
 {
-	AActor* Owner = GetOwner();
-	if (Owner)
+	Super::BeginPlay();
+
+	SetupDefaults();
+}
+
+void UG2IFlightComponent::SetupDefaults()
+{
+	Owner = Cast<ACharacter>(GetOwner());
+	if (!ensure(Owner))
 	{
-		FVector ActorLocation = Owner->GetActorLocation();
-		UCharacterMovementComponent* CharMovementComp = StaticCast<UCharacterMovementComponent*>(MovementComponent);
-		if (CharMovementComp)
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find character owner"), *GetName());
+		return;
+	}
+	MovementComponent = Owner->GetCharacterMovement();
+	if (!ensure(MovementComponent))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find movement component in %s"), *GetName(),
+			*Owner->GetActorNameOrLabel());
+		return;
+	}
+}
+
+void UG2IFlightComponent::Fly_Implementation(const int Direction)
+{
+	if (!ensure(Owner))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find character owner"), *GetName());
+		return;
+	}
+	if (!ensure(MovementComponent))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find movement component in %s"), *GetName(),
+			*Owner->GetActorNameOrLabel());
+		return;
+	}
+
+	const FVector ActorLocation = Owner->GetActorLocation();
+	const int32 CurrentVelocity = MovementComponent->Velocity.Z;
+	MovementComponent->GravityScale = 0.0f;
+	
+	if (Direction > 0 && ActorLocation.Z < FlightHeight && !bIsOnMaxHeight)
+	{
+		if (FMath::Abs(CurrentVelocity) < FlightMaxVelocity)
 		{
-			int CurrentVelocity = CharMovementComp->Velocity.Z;
-			CharMovementComp->GravityScale = 0.0f;
-			
-			if (Direction > 0 && ActorLocation.Z < FlightHeight && !bIsOnMaxHeight)
-			{
-				if (FMath::Abs(CurrentVelocity) < FlightMaxVelocity)
-				{
-					CharMovementComp->AddForce(FVector(0, 0, Direction * FlightVelocity * VelocityCoef));
-				}
-			}
-			else if (Direction > 0 && !bIsOnMaxHeight)
-			{
-				CharMovementComp->ClearAccumulatedForces();
-				CharMovementComp->Velocity.Z = 0.0f;
-				bIsOnMaxHeight = true;
-			}
-			
-			if (Direction < 0)
-			{
-				bIsOnMaxHeight = false;
-				if (FMath::Abs(CurrentVelocity) < FlightMaxVelocity)
-				{
-					CharMovementComp->AddForce(FVector(0, 0, Direction * FlightVelocity * VelocityCoef));
-				}
-			}
+			MovementComponent->AddForce(FVector(0, 0, Direction * FlightVelocity * VelocityCoef));
+		}
+	}
+	else if (Direction > 0 && !bIsOnMaxHeight)
+	{
+		MovementComponent->ClearAccumulatedForces();
+		MovementComponent->Velocity.Z = 0.0f;
+		bIsOnMaxHeight = true;
+	}
+	
+	if (Direction < 0)
+	{
+		bIsOnMaxHeight = false;
+		if (FMath::Abs(CurrentVelocity) < FlightMaxVelocity)
+		{
+			MovementComponent->AddForce(FVector(0, 0, Direction * FlightVelocity * VelocityCoef));
 		}
 	}
 }
 
-void UG2IFlightComponent::StopFly_Implementation(UActorComponent* MovementComponent)
+void UG2IFlightComponent::StopFly_Implementation()
 {
-	UCharacterMovementComponent* CharMovementComp = StaticCast<UCharacterMovementComponent*>(MovementComponent);
-	if (CharMovementComp)
+	if (!ensure(MovementComponent))
 	{
-		CharMovementComp->ClearAccumulatedForces();
-		CharMovementComp->Velocity.Z = 0.0f;
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find movement component"), *GetName());
+		return;
 	}
-	if (CharMovementComp->IsMovingOnGround())
+	
+	MovementComponent->ClearAccumulatedForces();
+	MovementComponent->Velocity.Z = 0.0f;
+	if (MovementComponent->IsMovingOnGround())
 	{
-		CharMovementComp->GravityScale = 1.0f;
+		MovementComponent->GravityScale = 1.0f;
 	}
 }
 

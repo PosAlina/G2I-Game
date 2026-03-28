@@ -29,8 +29,13 @@ protected:
 	UFUNCTION()
 	void OnContinueButtonClicked();
 
+	UFUNCTION()
+	void OnMainMenuButtonClicked();
+
 private:
 	
 	void BindDelegates();
+	
+	TFunction<void()> GetShowCurrentWidgetFunction() const;
 	
 };
