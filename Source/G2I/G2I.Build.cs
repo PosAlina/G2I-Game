@@ -23,7 +23,8 @@ public class G2I : ModuleRules
       		"GameplayTags",
 			"CinematicCamera",
 			"NavigationSystem",
-			"SlateCore"
+			"SlateCore",
+			"EditorInteractiveToolsFramework"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
