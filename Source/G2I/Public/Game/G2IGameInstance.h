@@ -54,9 +54,6 @@ protected:
 	TSoftObjectPtr<UWorld> MainMenuLevel;
 	
 	UPROPERTY(EditAnywhere)
-	TSoftObjectPtr<UWorld> ScreenLoadingLevel;
-	
-	UPROPERTY(EditAnywhere)
 	TMap<EG2ILevelName, TSoftObjectPtr<UWorld>> Levels;
 
 	UPROPERTY(EditAnywhere, meta=(ToolTip="List of levels in the editor in order without the main menu"))
@@ -74,6 +71,10 @@ private:
 	EG2ILevelName CurrentLevelEnum = EG2ILevelName::None;
 	FString CurrentLevelName = "";
 	FString MainMenuLevelName = "";
+
+	// TODO: Tremp before screen loading
+	float TimeCount = 0.f;
+	const float MaxTimeCount = 5.f;
 
 public:
 
@@ -106,6 +107,7 @@ protected:
 	bool LoadLevel(const TSoftObjectPtr<UWorld>& Level, uint32 Index);
 
 	bool LoadScreenLoading() const;
+	void UpdateLoadingProgressFixTime(const FName LevelName); //TODO: Change when set LoadingScreen By Time
 	void UpdateLoadingProgress(const FName LevelName);
 	void FinishLoading(FName LevelName);
 };

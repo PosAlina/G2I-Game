@@ -110,6 +110,9 @@ public:
 		const FString& NewQuestionStringID = {},const FString& NewConfirmStringID = {},
 		const FString& NewCancelStringID = {}) const;
 
+	// ==================== LOADING WIDGET ====================
+	void SetLoadingProgressPercent(float Percent) const;
+
 	// ==================== OPTIONS PROPERTIES ====================
 	void SetPropertyRow(UG2ITextMultiValuePropertyRow* PropertySelector, const FString& PropertyNameStringID,
 					TArray<FString>& ValuesNamesStringID, int32 DefaultValueIndex = 0) const;
