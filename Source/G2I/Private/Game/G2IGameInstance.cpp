@@ -206,7 +206,9 @@ bool UG2IGameInstance::OpenLevel(const TSoftObjectPtr<UWorld>& Level)
 		return false;
 	}
 	OnCloseLevelDelegate.Broadcast();
-	
+
+	//TODO: Loading Screen By Time
+	/*
 	if (LoadScreenLoading())
 	{
 		UE_LOG(LogG2I, Log, TEXT("%s: Create Loading Screen"), *GetName());
@@ -216,21 +218,18 @@ bool UG2IGameInstance::OpenLevel(const TSoftObjectPtr<UWorld>& Level)
 		UE_LOG(LogG2I, Error, TEXT("%s: Can't create Loading Screen"), *GetName());
 	}
 
-	//TODO: Loading Screen By Time
-	/*
 	LoadingLevelStreamingHandle =
 		UAssetManager::GetStreamableManager().RequestAsyncLoad(
 		Level.GetLongPackageName(), FStreamableDelegate());
-	
+
 	const FTimerDelegate Delegate =
 		FTimerDelegate::CreateUObject(
 			this, &ThisClass::UpdateLoadingProgress, FName(Level.GetAssetName()));
 	World->GetTimerManager().SetTimer(LoadingTimerHandle, Delegate, .1f, true);
 	*/
-	const FTimerDelegate Delegate =
-	FTimerDelegate::CreateUObject(
-		this, &ThisClass::UpdateLoadingProgressFixTime, FName(Level.GetAssetName()));
-	World->GetTimerManager().SetTimer(LoadingTimerHandle, Delegate, 1.f, true);
+
+	UGameplayStatics::OpenLevel(World, FName(LevelName));
+	SetCurrentLevelInfo();
 	return true;
 }
 
