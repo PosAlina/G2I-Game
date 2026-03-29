@@ -4,6 +4,7 @@
 #include "Engine/GameInstance.h"
 #include "G2IGameInstance.generated.h"
 
+struct FStreamableHandle;
 class UG2IWidgetComponentParameters;
 class UG2IStringTablesCatalog;
 class UG2IWidgetsCatalog;
@@ -53,6 +54,9 @@ protected:
 	TSoftObjectPtr<UWorld> MainMenuLevel;
 	
 	UPROPERTY(EditAnywhere)
+	TSoftObjectPtr<UWorld> ScreenLoadingLevel;
+	
+	UPROPERTY(EditAnywhere)
 	TMap<EG2ILevelName, TSoftObjectPtr<UWorld>> Levels;
 
 	UPROPERTY(EditAnywhere, meta=(ToolTip="List of levels in the editor in order without the main menu"))
@@ -61,6 +65,9 @@ protected:
 	UPROPERTY(EditAnywhere, meta=(ToolTip="List of levels in the game in order without the main menu."))
 	TArray<EG2ILevelName> LevelsNameInOrderInGame;
 
+	FTimerHandle LoadingTimerHandle;
+	TSharedPtr<FStreamableHandle> LoadingLevelStreamingHandle;
+	
 private:
 
 	int32 CurrentLevelIndex = -1;
@@ -97,4 +104,8 @@ protected:
 	
 	bool OpenLevel(const TSoftObjectPtr<UWorld>& Level);
 	bool LoadLevel(const TSoftObjectPtr<UWorld>& Level, uint32 Index);
+
+	bool LoadScreenLoading() const;
+	void UpdateLoadingProgress(const FName LevelName);
+	void FinishLoading(FName LevelName);
 };

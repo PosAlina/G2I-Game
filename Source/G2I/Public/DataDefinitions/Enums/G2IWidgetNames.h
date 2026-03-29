@@ -20,5 +20,6 @@ enum class EG2IWidgetNames : uint8
 	OptionsPropertySelector UMETA(DisplayName = "Property values selector widget"),
 	EngineerControlsOptions UMETA(DisplayName = "Controls options of engineer widget"),
 	DaughterControlsOptions UMETA(DisplayName = "Controls options of daughter widget"),
-	ControlRow UMETA(DisplayName = "Row of control's option")
+	ControlRow UMETA(DisplayName = "Row of control's option"),
+	LevelLoadingScreen UMETA(DisplayName = "Loading screen widget for levels loading")
 };
