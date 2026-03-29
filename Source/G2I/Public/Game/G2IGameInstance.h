@@ -54,9 +54,6 @@ protected:
 	TSoftObjectPtr<UWorld> MainMenuLevel;
 	
 	UPROPERTY(EditAnywhere)
-	TSoftObjectPtr<UWorld> ScreenLoadingLevel;
-	
-	UPROPERTY(EditAnywhere)
 	TMap<EG2ILevelName, TSoftObjectPtr<UWorld>> Levels;
 
 	UPROPERTY(EditAnywhere, meta=(ToolTip="List of levels in the editor in order without the main menu"))

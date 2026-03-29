@@ -84,7 +84,7 @@ int32 UG2IGameInstance::GetIndex(const EG2ILevelName& LevelName) const
 #if WITH_EDITOR
 	return LevelsNameInOrderInEditor.Find(LevelName);
 #else
-	return NewLevelIndex = LevelsNameInOrderInGame.Find(LevelName);
+	return LevelsNameInOrderInGame.Find(LevelName);
 #endif
 }
 
@@ -248,7 +248,19 @@ void UG2IGameInstance::UpdateLoadingProgress(const FName LevelName)
 		return;
 	}
 	const float LoadingProgress = LoadingLevelStreamingHandle->GetProgress();
-	if (LoadingProgress >= 1.0f)
+	// TODO: Move UIManager initialization in start game
+	const UG2IUIManager *UIManager = GetSubsystem<UG2IUIManager>();
+	if (!ensure(UIManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIManager::StaticClass()->GetName());
+	}
+	else
+	{
+		UIManager->SetLoadingProgressPercent(LoadingProgress);
+	}
+	
+	if (LoadingProgress >= 1.f)
 	{
 		FinishLoading(LevelName);
 		return;
