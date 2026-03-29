@@ -159,7 +159,7 @@ void UG2IGrabberComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 void UG2IGrabberComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (ensure(GrabbedActor)) {
+	if (!GrabbedActor) {
 		UE_LOG(LogG2I, Verbose, TEXT("Overlap ignored - already have grabbed actor: %s"), *GrabbedActor->GetName());
 		return;
 	}
