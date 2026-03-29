@@ -72,6 +72,10 @@ private:
 	FString CurrentLevelName = "";
 	FString MainMenuLevelName = "";
 
+	// TODO: Tremp before screen loading
+	float TimeCount = 0.f;
+	const float MaxTimeCount = 5.f;
+
 public:
 
 	virtual void Init() override;
@@ -103,6 +107,7 @@ protected:
 	bool LoadLevel(const TSoftObjectPtr<UWorld>& Level, uint32 Index);
 
 	bool LoadScreenLoading() const;
+	void UpdateLoadingProgressFixTime(const FName LevelName); //TODO: Change when set LoadingScreen By Time
 	void UpdateLoadingProgress(const FName LevelName);
 	void FinishLoading(FName LevelName);
 };
