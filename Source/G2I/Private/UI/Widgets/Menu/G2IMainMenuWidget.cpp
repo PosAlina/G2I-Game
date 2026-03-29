@@ -74,7 +74,10 @@ void UG2IMainMenuWidget::LoadNewGame() const
 			*UG2IGameInstance::StaticClass()->GetName());
 		return;
 	}
-	GameInstance->LoadLevel(0);
+	if (!GameInstance->LoadLevel(0))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Failed to start new game"), *GetName());
+	}
 }
 
 void UG2IMainMenuWidget::NewGameWithSaveExists() const

@@ -112,7 +112,7 @@ void UG2ICameraControllerComponent::BroadcastCameraTypeAtBlendStart()
 
 bool UG2ICameraControllerComponent::IsOwnerControllable() const
 {
-	if (!ensure(Owner))
+	if (!Owner)
 	{
 		UE_LOG(LogG2I, Error, TEXT("Owner doesn't exist in %s"), *GetName());
 		return false;
