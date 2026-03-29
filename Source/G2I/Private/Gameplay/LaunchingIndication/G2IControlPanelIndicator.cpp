@@ -67,11 +67,5 @@ FG2IControlPanelState* AG2IControlPanelIndicator::GetControlPanelState(const FNa
 	}
 	FG2IControlPanelState *StateInfo = StatesDataTable->FindRow<FG2IControlPanelState>(StateName,
 TEXT("Loading state info for control panel"));
-	if (!ensure(StateInfo))
-	{
-		G2I::DebugWarningMessage(GetActorNameOrLabel() + "couldn't find state info for current state with name "
-			+ GetCurrentState().ToString());
-		return nullptr;
-	}
 	return StateInfo;
 }
