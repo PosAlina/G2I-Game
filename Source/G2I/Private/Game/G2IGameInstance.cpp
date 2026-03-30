@@ -42,14 +42,12 @@ void UG2IGameInstance::SetCurrentLevelInfo()
 	else
 	{
 		CurrentLevelEnum = GetLevelEnum(CurrentLevelName);
-		if (!ensure(CurrentLevelEnum != EG2ILevelName::None))
+		CurrentLevelIndex = GetIndex(CurrentLevelEnum);
+		if (CurrentLevelIndex == INDEX_NONE)
 		{
-			UE_LOG(LogG2I, Warning,
-				TEXT("Attempted to open unregistered Level %s. Opening main menu instead."), *CurrentLevelName);
-			LoadMainMenuLevel();
+			UE_LOG(LogG2I, Log, TEXT("Open unregistered Level %s"), *CurrentLevelName);
 			return;
 		}
-		CurrentLevelIndex = GetIndex(CurrentLevelEnum);
 		UE_LOG(LogG2I, Log, TEXT("Open level %s (%d index)"), *CurrentLevelName, CurrentLevelIndex);
 	}
 }
