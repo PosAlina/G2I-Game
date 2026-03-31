@@ -1,14 +1,14 @@
 #include "Gameplay/G2ISlider.h"
-
 #include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
 #include "G2I.h"
 #include "G2ICharacterEngineer.h"
 #include "G2IColorZoneComponent.h"
+#include "G2IPlayerController.h"
 #include "G2ISliderLampComponent.h"
+#include "G2IWorldHintKeyWidgetComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
-#include "Components/PointLightComponent.h"
+#include "LaunchingIndication/G2ILauncherComponent.h"
 
 AG2ISlider::AG2ISlider()
 {
@@ -16,43 +16,81 @@ AG2ISlider::AG2ISlider()
 	SliderSM = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Slider"));
 	SliderCol = CreateDefaultSubobject<UBoxComponent>(TEXT("SliderCol"));
 	ViewCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ViewCamera"));
+	LauncherComp = CreateDefaultSubobject<UG2ILauncherComponent>(TEXT("LauncherComp"));
+	HintKeyWidgetComp = CreateDefaultSubobject<UG2IWorldHintKeyWidgetComponent>(TEXT("HintKeyWidget"));
+	if (!ensure(HintKeyWidgetComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't create %s"), *GetActorNameOrLabel(),
+			*UG2IWorldHintKeyWidgetComponent::StaticClass()->GetName());
+	}
+	else
+	{
+		HintKeyWidgetComp->SetupAttachment(RootComponent);
+	}
+	if (!ensure(LauncherComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+			*UG2ILauncherComponent::StaticClass()->GetName());
+	}
 	
 	if (!ensure(SliderBaseSM))
 	{
 		UE_LOG(LogG2I, Error, TEXT("SliderBaseSM was not created in %s"), *GetActorNameOrLabel());
 		return;
 	}
+	SliderBaseSM->SetupAttachment(RootComponent);
 	
 	if (!ensure(SliderSM))
 	{
 		UE_LOG(LogG2I, Error, TEXT("SliderSM was not created in %s"), *GetActorNameOrLabel());
 		return;
 	}
+	SliderSM->SetupAttachment(SliderBaseSM);
 	
 	if (!ensure(SliderCol))
 	{
 		UE_LOG(LogG2I, Error, TEXT("LampMesh was not created in %s"), *GetActorNameOrLabel());
 		return;
 	}
+	SliderCol->SetupAttachment(SliderSM);
+	SliderCol->OnComponentBeginOverlap.AddDynamic(this, &AG2ISlider::OnSliderBeginOverlap);
+	SliderCol->OnComponentEndOverlap.AddDynamic(this, &AG2ISlider::OnSliderEndOverlap);
 	
 	if (!ensure(ViewCamera))
 	{
 		UE_LOG(LogG2I, Error, TEXT("ViewCamera was not created in %s"), *GetActorNameOrLabel());
 		return;
 	}
-	
-	SliderBaseSM->SetupAttachment(RootComponent);
-	SliderSM->SetupAttachment(SliderBaseSM);
-	SliderCol->SetupAttachment(SliderSM);
 	ViewCamera->SetupAttachment(SliderBaseSM);
-
-	SliderCol->OnComponentBeginOverlap.AddDynamic(this, &AG2ISlider::OnSliderBeginOverlap);
-	SliderCol->OnComponentEndOverlap.AddDynamic(this, &AG2ISlider::OnSliderEndOverlap);
 }
 
 void AG2ISlider::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	SetupDefaults();
+	BindDelegates();
+}
+
+void AG2ISlider::SetupDefaults()
+{
+	if (!ensure(HintKeyWidgetComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't create %s"), *GetActorNameOrLabel(),
+			*UG2IWorldHintKeyWidgetComponent::StaticClass()->GetName());
+	}
+	else
+	{
+		if (!ensure(LauncherComp))
+		{
+			UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+				*UG2ILauncherComponent::StaticClass()->GetName());
+		}
+		else
+		{
+			LauncherComp->SetHintKeyWidget(HintKeyWidgetComp);
+		}
+	}
 	
 	World = GetWorld();
 	if (!ensure(World))
@@ -61,59 +99,84 @@ void AG2ISlider::BeginPlay()
 		return;
 	}
 
-	PC = World->GetFirstPlayerController();
-
-	if (!ensure(PC))
+	PlayerController = Cast<AG2IPlayerController>(World->GetFirstPlayerController());
+	if (!ensure(PlayerController))
 	{
-		UE_LOG(LogG2I, Error, TEXT("PC is null in %s"), *GetActorNameOrLabel());
+		UE_LOG(LogG2I, Error, TEXT("PlayerController is null in %s"), *GetActorNameOrLabel());
 		return;
 	}
 
-	if (SliderSM)
+	if (!ensure(SliderSM))
 	{
-		SliderSM->SetRelativeLocation(SliderStartLocation);
+		UE_LOG(LogG2I, Error, TEXT("Couldn't find SliderSM in %s"), *GetActorNameOrLabel());
+		return;
 	}
-
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PC->InputComponent))
-	{
-		EnhancedInputComponent->BindAction(MoveSliderAction, ETriggerEvent::Triggered, this, &ThisClass::MoveSlider);
-		EnhancedInputComponent->BindAction(MoveSliderAction, ETriggerEvent::Completed, this, &ThisClass::MoveSliderImpulse);
-		EnhancedInputComponent->BindAction(SliderExitAction, ETriggerEvent::Started, this, &ThisClass::SliderExit);
-	}
+	SliderSM->SetRelativeLocation(SliderStartLocation);
 
 	FindLamps();
 	CheckErrors();
 	CurrenImpulse = ImpulsePower;
 }
 
+void AG2ISlider::BindDelegates()
+{
+	UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent);
+	if (!ensure(EnhancedInputComponent))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find Enhanced Input Component"), *GetActorNameOrLabel());
+		return;
+	}
+	EnhancedInputComponent->BindAction(MoveSliderAction, ETriggerEvent::Triggered, this, &ThisClass::MoveSlider);
+	EnhancedInputComponent->BindAction(MoveSliderAction, ETriggerEvent::Completed, this, &ThisClass::MoveSliderImpulse);
+	EnhancedInputComponent->BindAction(SliderExitAction, ETriggerEvent::Started, this, &ThisClass::SliderExit);
+}
+
 void AG2ISlider::Interact_Implementation(const ACharacter* Interactor)
 {
-	if (ensure(PC) && !bIsSliderActive)
+	if (bIsSliderActive)
 	{
-		auto* LocalPlayer = PC->GetLocalPlayer();
-		if (!LocalPlayer)
-		{
-			UE_LOG(LogG2I, Error, TEXT("LocalPlayer is null in %s"), *GetActorNameOrLabel());
-			return;
-		}
-		
-		auto* Subsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
-		if (!Subsystem)
-		{
-			UE_LOG(LogG2I, Error, TEXT("Sybsystem is null in %s"), *GetActorNameOrLabel());
-			return;
-		}
-		
-		OriginalViewTarget = PC->GetViewTarget();
-		PC->SetViewTargetWithBlend(this, BlendTime);
-		bIsSliderActive = true;
-		Subsystem->AddMappingContext(SliderIMC, 0);
-		Subsystem->RemoveMappingContext(DefaultIMC);
+		return;
+	}
+	
+	if (!ensure(PlayerController))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+			*AG2IPlayerController::StaticClass()->GetName());
+		return;
+	}
+	
+	// TODO: Rewrite to use Camera Controller
+	OriginalViewTarget = PlayerController->GetViewTarget();
+	PlayerController->SetViewTargetWithBlend(this, BlendTime);
+	bIsSliderActive = true;
+	PlayerController->OverrideInputMappingContext({SliderIMC});
+
+	if (!ensure(HintKeyWidgetComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+			*UG2IWorldHintKeyWidgetComponent::StaticClass()->GetName());
+	}
+	else
+	{
+		HintKeyWidgetComp->SetIsLocked_Implementation(true);
 	}
 }
 
 bool AG2ISlider::CanInteract_Implementation(const ACharacter* Interactor)
 {
+	if (!ensure(LauncherComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+			*UG2ILauncherComponent::StaticClass()->GetName());
+	}
+	else
+	{
+		if (LauncherComp->IsLocked_Implementation())
+		{
+			return false;
+		}
+	}
+	
 	if (bIsLampWithoutZone)
 	{
 		UE_LOG(LogG2I, Warning, TEXT("There is lamp without color zone in %s"), *GetActorNameOrLabel());
@@ -131,12 +194,17 @@ bool AG2ISlider::CanInteract_Implementation(const ACharacter* Interactor)
 	return false;
 }
 
+UG2IWorldHintKeyWidgetComponent* AG2ISlider::GetInteractionKeyHintComponent_Implementation()
+{
+	return HintKeyWidgetComp;
+}
+
 void AG2ISlider::CheckErrors()
 {
 	TArray<TObjectPtr<UG2IColorZoneComponent>> ColorZones;
 	GetComponents(ColorZones);
 
-	for (auto Comp : ColorZones)
+	for (const auto Comp : ColorZones)
 	{
 		if (Comp && !Lamps.Contains(Comp->Color))
 		{
@@ -160,21 +228,21 @@ void AG2ISlider::OnSliderBeginOverlap(UPrimitiveComponent* OverlappedComponent,A
 		return;
 	}
 	
-	auto* tempColorZone = Cast<UG2IColorZoneComponent>(OtherComp->GetAttachParent());
+	auto* TempColorZone = Cast<UG2IColorZoneComponent>(OtherComp->GetAttachParent());
 
-	if (!tempColorZone)
+	if (!TempColorZone)
 	{
 		UE_LOG(LogG2I, Log, TEXT("OtherComp is not ColorZoneComponent in %s"), *GetActorNameOrLabel());
 		return;
 	}
 	
-	if (tempColorZone->bIsActivationZone)
+	if (TempColorZone->bIsActivationZone)
 	{
-		CurrentActivationColorZone = tempColorZone;
+		CurrentActivationColorZone = TempColorZone;
 	}
 	else
 	{
-		CurrentCommonColorZone = tempColorZone;
+		CurrentCommonColorZone = TempColorZone;
 	}
 
 	FindAndSwitchLamp();
@@ -203,10 +271,10 @@ void AG2ISlider::OnSliderEndOverlap(UPrimitiveComponent* OverlappedComp, AActor*
 		UE_LOG(LogG2I, Log, TEXT("%s has not components"), *OtherActor->GetName());
 		return;
 	}
-	
-	auto* tempColorZone = Cast<UG2IColorZoneComponent>(OtherComp->GetAttachParent());
 
-	if (!tempColorZone)
+	const UG2IColorZoneComponent* TempColorZone = Cast<UG2IColorZoneComponent>(OtherComp->GetAttachParent());
+
+	if (!TempColorZone)
 	{
 		UE_LOG(LogG2I, Log, TEXT("OtherComp is not ColorZoneComponent in %s"), *GetActorNameOrLabel());
 		return;
@@ -234,38 +302,64 @@ void AG2ISlider::OnSliderEndOverlap(UPrimitiveComponent* OverlappedComp, AActor*
 
 void AG2ISlider::CompareZoneColorToColorInSequence()
 {
+	GetWorldTimerManager().ClearTimer(ActivationZoneTimer);
 	if (!bIsPuzzleComplete && CurrentActivationColorZone && CurrentLamp)
 	{
 		if (CorrectSequence[IndexInCorrectSequence] == CurrentActivationColorZone->Color)
 		{
-			#if WITH_EDITOR
-				GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange,FString::Printf(TEXT("Correct lamp, %i out of %i"), IndexInCorrectSequence+1, CorrectSequence.Num()));
-			#endif
-			UE_LOG(LogG2I, Log, TEXT("Correct lamp, %i out of %i"), IndexInCorrectSequence+1, CorrectSequence.Num());
+			G2I::DebugLogMessage(GetActorNameOrLabel() +
+				"Correct lamp, " + FString::FromInt(IndexInCorrectSequence + 1) +
+				" out of " + FString::FromInt(CorrectSequence.Num()));
 			
 			IndexInCorrectSequence++;
 			if (IndexInCorrectSequence == CorrectSequence.Num())
 			{
-				#if WITH_EDITOR
-					GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, "Sequence is correct");
-				#endif
-				UE_LOG(LogG2I, Log, TEXT("Sequence is correct"));
+				G2I::DebugLogMessage(GetActorNameOrLabel() + "Sequence is correct");
 				bIsPuzzleComplete = true;
-				OnPuzzleComplete.Broadcast();
+				
+				if (!ensure(LauncherComp))
+				{
+					UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+						*UG2ILauncherComponent::StaticClass()->GetName());
+				}
+				else
+				{
+					LauncherComp->SetIsLaunched(true);
+				}
+				if (!ensure(SliderCol))
+				{
+					UE_LOG(LogG2I, Error, TEXT("LampMesh was not created in %s"), *GetActorNameOrLabel());
+				}
+				else
+				{
+					SliderCol->OnComponentBeginOverlap.RemoveDynamic(this, &AG2ISlider::OnSliderBeginOverlap);
+					SliderCol->OnComponentEndOverlap.RemoveDynamic(this, &AG2ISlider::OnSliderEndOverlap);
+				}
+				for (const auto& [_,Lamp] : Lamps)
+				{
+					if (!Lamp)
+					{
+						Exit();
+						continue;
+					}
+					Lamp->OnStopFlashingTimer.Unbind();
+					Lamp->OnStopFlashingTimer.BindUObject(this, &ThisClass::Exit);
+					Lamp->SetTimerToFlashing(LampFlashFrequency, LampFlashCount);
+				}
+				Exit();
 			}
-			CurrentLamp->SetTimerToFlashing(LampFlashCount, LampFlashFrequency);
+			else
+			{
+				CurrentLamp->SetTimerToFlashing(LampFlashFrequency, LampFlashCount);
+			}
 		}
 		else
 		{
-			#if WITH_EDITOR
-				GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, "Wrong lamp, start over");
-			#endif
-			UE_LOG(LogG2I, Log, TEXT("Wrong lamp, start over"));
-			CurrentLamp->SetTimerToFlashing(1, LampErrorTime);
+			G2I::DebugLogMessage(GetActorNameOrLabel() + "Wrong lamp, start over", FColor::Purple);
+			CurrentLamp->SetTimerToFlashing(LampErrorTime, 2);
 			IndexInCorrectSequence = 0;
 		}
 	}
-	GetWorldTimerManager().ClearTimer(ActivationZoneTimer);
 }
 
 void AG2ISlider::MoveSlider(const FInputActionValue& Value)
@@ -275,8 +369,8 @@ void AG2ISlider::MoveSlider(const FInputActionValue& Value)
 		GetWorldTimerManager().ClearTimer(ImpulseTimer);
 		CurrenImpulse = ImpulsePower;
 		MoveDir = Value.Get<float>();
-		FVector SliderLocation = SliderSM->GetRelativeLocation();
-		FVector OffsetVector = {0.0f, SliderMoveSpeed*World->DeltaTimeSeconds, 0.0f};
+		const FVector SliderLocation = SliderSM->GetRelativeLocation();
+		const FVector OffsetVector = {0.0f, SliderMoveSpeed*World->DeltaTimeSeconds, 0.0f};
 
 		if (MoveDir > 0.0f)
 		{
@@ -306,28 +400,63 @@ void AG2ISlider::MoveSliderImpulse(const FInputActionValue& Value)
 	}
 }
 
-void AG2ISlider::SliderExit(const FInputActionValue& Value)
+void AG2ISlider::Exit()
 {
-	if (ensure(PC) && bIsSliderActive)
+	++StopTimerLampsIndex;
+	if (StopTimerLampsIndex == Lamps.Num())
 	{
-		auto* LocalPlayer = PC->GetLocalPlayer();
-		if (!LocalPlayer)
+		for (const auto& [_,Lamp] : Lamps)
 		{
-			UE_LOG(LogG2I, Error, TEXT("LocalPlayer is null in %s"), *GetActorNameOrLabel());
-			return;
+			if (Lamp)
+			{
+				Lamp->OnStopFlashingTimer.Unbind();
+				Lamp->OnLamp();
+			}
 		}
+		SliderExit();
+	}
+}
+
+void AG2ISlider::SliderExit()
+{
+	if (!bIsSliderActive)
+	{
+		return;
+	}
+
+	if (!ensure(PlayerController))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+			*AG2IPlayerController::StaticClass()->GetName());
+		return;
+	}
+	
+	PlayerController->SetViewTargetWithBlend(OriginalViewTarget, BlendTime);
+	bIsSliderActive = false;
+	PlayerController->StopOverrideInputMappingContext();
+	
+	if (!bIsPuzzleComplete)
+	{
+		G2I::DebugLogMessage(GetActorNameOrLabel() + "Clear sequence", FColor::Purple);
+		IndexInCorrectSequence = 0;
 		
-		auto* Subsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
-		if (!Subsystem)
+		if (!ensure(SliderSM))
 		{
-			UE_LOG(LogG2I, Error, TEXT("Sybsystem is null in %s"), *GetActorNameOrLabel());
-			return;
+			UE_LOG(LogG2I, Error, TEXT("Couldn't find SliderSM in %s"), *GetActorNameOrLabel());
 		}
-		
-		PC->SetViewTargetWithBlend(OriginalViewTarget, BlendTime);
-		bIsSliderActive = false;
-		Subsystem->RemoveMappingContext(SliderIMC);
-		Subsystem->AddMappingContext(DefaultIMC, 0);
+		else
+		{
+			SliderSM->SetRelativeLocation(SliderStartLocation);
+		}
+	}
+	if (!ensure(HintKeyWidgetComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+			*UG2IWorldHintKeyWidgetComponent::StaticClass()->GetName());
+	}
+	else
+	{
+		HintKeyWidgetComp->SetIsLocked_Implementation(LauncherComp->IsLocked_Implementation());
 	}
 }
 
@@ -338,7 +467,10 @@ void AG2ISlider::FindAndSwitchLamp()
 		CurrentLamp = Lamps.FindRef(CurrentCommonColorZone->Color);
 		if (CurrentLamp && CurrentLamp->DynamicMaterial)
 		{
-			CurrentLamp->DynamicMaterial->SetVectorParameterValue("EmissiveColor", CurrentLamp->LampColor);
+			if (CurrentLamp->GetBaseColor() != FColor::Transparent)
+			{
+				CurrentLamp->SetEmissiveColor(CurrentLamp->GetBaseColor());
+			}
 		}
 	}
 }
@@ -361,7 +493,7 @@ void AG2ISlider::SetImpulse()
 {
 	if (SliderSM)
 	{
-		float SliderOffset = SliderSM->GetRelativeLocation().Y + MoveDir*CurrenImpulse*World->DeltaTimeSeconds;
+		const float SliderOffset = SliderSM->GetRelativeLocation().Y + MoveDir*CurrenImpulse*World->DeltaTimeSeconds;
 		if (SliderOffset < SliderStartLocation.Y || SliderOffset > SliderEndLocation.Y)
 		{
 			GetWorldTimerManager().ClearTimer(ImpulseTimer);

@@ -14,6 +14,12 @@ void UG2IUserWidget::NativeOnInitialized()
 	InitializeUIManager();
 }
 
+void UG2IUserWidget::StartLevelInitialize()
+{
+	World = GetWorld();
+	InitializePlayerController();
+}
+
 void UG2IUserWidget::InitializeUIManager()
 {
 	if (!ensure(GameInstance))
@@ -24,7 +30,7 @@ void UG2IUserWidget::InitializeUIManager()
 	UIManager = GameInstance->GetSubsystem<UG2IUIManager>();
 	if (!ensure(UIManager))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("Couldn't get %s subsystem from GameInstance in %s"), *UG2IUIManager::StaticClass()->GetName(),
+		UE_LOG(LogG2I, Error, TEXT("Couldn't get %s subsystem from GameInstance in %s"), *UG2IUIManager::StaticClass()->GetName(),
 			*GetName());
 	}
 	UIManager->OnUIManagerInitialized.AddDynamic(this, &ThisClass::InitializeAfterManagerLoading);
@@ -66,4 +72,5 @@ void UG2IUserWidget::InitializeGameInstance()
 		UE_LOG(LogG2I, Error, TEXT("Game Instance isn't %s in %s"),
 			*UG2IGameInstance::StaticClass()->GetName(), *GetName());
 	}
+	GameInstance->OnStartLevelInitDelegate.AddUObject(this, &ThisClass::StartLevelInitialize);
 }

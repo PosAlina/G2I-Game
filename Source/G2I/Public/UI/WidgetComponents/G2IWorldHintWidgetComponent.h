@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "G2ILockingInterface.h"
 #include "G2IWidgetNames.h"
 #include "Components/WidgetComponent.h"
 #include "G2IWorldHintWidgetComponent.generated.h"
@@ -11,7 +12,7 @@ class AG2IPlayerController;
 class USphereComponent;
 
 UCLASS(ClassGroup=(Widgets), meta=(BlueprintSpawnableComponent))
-class G2I_API UG2IWorldHintWidgetComponent : public UWidgetComponent
+class G2I_API UG2IWorldHintWidgetComponent : public UWidgetComponent, public IG2ILockingInterface
 {
 	GENERATED_BODY()
 
@@ -38,12 +39,20 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<APawn> PlayerPawn;
+	
+	bool bIsLocked = false;
+
+	UPROPERTY()
+	TSubclassOf<APawn> PlayerPawnClass;
 
 public:
 
 	void SetWidgetSize(FVector2D InWidgetSize);
 
 	UG2IUserWidget* FindOrAddWidgetByName(EG2IWidgetNames WidgetName);
+
+	virtual void SetIsLocked_Implementation(bool bIsNewLocked) override;
+	virtual bool IsLocked_Implementation() override;
 
 protected:
 

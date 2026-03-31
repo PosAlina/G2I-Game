@@ -6,6 +6,7 @@
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameFramework/Character.h"
 
 void AG2IPlayerState::BeginPlay()
 {
@@ -50,7 +51,7 @@ void AG2IPlayerState::SetupPlayableCharacters()
 	}
 }
 
-AActor *AG2IPlayerState::FindOneActor(const TSubclassOf<AActor> ActorClass) const
+AActor *AG2IPlayerState::FindOneActor(const TSubclassOf<AActor>& ActorClass) const
 {
 	AActor *TargetActor = nullptr;
 	if (const UWorld *World = GetWorld())
@@ -91,7 +92,7 @@ AActor *AG2IPlayerState::FindOneActor(const TSubclassOf<AActor> ActorClass) cons
 	return TargetActor;
 }
 
-AActor *AG2IPlayerState::SpawnActor(const TSubclassOf<AActor> ActorClass) const
+AActor *AG2IPlayerState::SpawnActor(const TSubclassOf<AActor>& ActorClass) const
 {
 	AActor *TargetActor = nullptr;
 	if (UWorld *World = GetWorld())
@@ -157,7 +158,7 @@ bool AG2IPlayerState::SetupControllerForPawn(const uint32 PawnNumber, AAIControl
 	}
 }
 
-bool AG2IPlayerState::SetupControllerForPawn(const uint32 PawnNumber, const TSubclassOf<AActor> AIControllerActorClass,
+bool AG2IPlayerState::SetupControllerForPawn(const uint32 PawnNumber, const TSubclassOf<AActor>& AIControllerActorClass,
 	APawn& CurrentPawn)
 {
 	if (NumberCurrentCharacter != PawnNumber)
@@ -217,43 +218,98 @@ bool AG2IPlayerState::SetupControllerForPawn(const uint32 PawnNumber)
 
 void AG2IPlayerState::SelectNextCharacter()
 {
-	if (!PlayableCharactersRowNames.IsEmpty())
+	if (!ensure(!PlayableCharactersRowNames.IsEmpty()))
 	{
-		for (int32 OffsetRowName = 1; OffsetRowName <= PlayableCharactersRowNames.Num(); ++OffsetRowName)
-		{
-			const int32 NewCharacterIndex = (NumberCurrentCharacter + OffsetRowName) %
-				PlayableCharactersRowNames.Num();
-			if (NewCharacterIndex == NumberCurrentCharacter)
-			{
-				UE_LOG(LogG2I, Log, TEXT("Character doesn't switched"));
-				return;
-			}
+		UE_LOG(LogG2I, Warning, TEXT("An attempt to select next character when array of playable characters is empty."));
+		return;
+	}
 
-			const int32 OldCharacterNumber = NumberCurrentCharacter;
-			NumberCurrentCharacter = NewCharacterIndex;
-			if (SetupControllerForPawn(OldCharacterNumber))
+	for (int32 OffsetRowName = 1; OffsetRowName <= PlayableCharactersRowNames.Num(); ++OffsetRowName)
+	{
+		const int32 NewCharacterIndex = (NumberCurrentCharacter + OffsetRowName) %
+			PlayableCharactersRowNames.Num();
+		if (NewCharacterIndex == NumberCurrentCharacter)
+		{
+			UE_LOG(LogG2I, Log, TEXT("Couldn't switch to the next character."));
+			return;
+		}
+
+		if (SwitchToCharacter(NewCharacterIndex))
+		{
+			break;
+		}
+	}
+}
+
+void AG2IPlayerState::SetCharacterByClass(const TSubclassOf<ACharacter>& TargetClass)
+{
+	if (!ensure(TargetClass))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("An attempt to set character with null class."));
+		return;
+	}
+
+	if (!ensure(!PlayableCharactersRowNames.IsEmpty()))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("An attempt to set character when array of playable characters is empty."));
+		return;
+	}
+
+	for (int32 OffsetRowName = 1; OffsetRowName <= PlayableCharactersRowNames.Num(); ++OffsetRowName)
+	{
+		const int32 NewCharacterIndex = (NumberCurrentCharacter + OffsetRowName) % PlayableCharactersRowNames.Num();
+		
+		if (NewCharacterIndex == NumberCurrentCharacter)
+		{
+			UE_LOG(LogG2I, Log, TEXT("Couldn't switch to %s character."), *TargetClass->GetName());
+			return;
+		}
+
+		const FG2IItemCharacter* Row = PlayableCharactersDataTable->FindRow<FG2IItemCharacter>(
+			PlayableCharactersRowNames[NewCharacterIndex], TEXT("Playable Character Context"));
+		if (!Row)
+		{
+			UE_LOG(LogG2I, Error, TEXT("Array of row names isn't synced with %s in %s."),
+				*PlayableCharactersDataTable.GetName(), *GetName());
+			continue;
+		}
+
+		if (Row->CharacterClass == TargetClass)
+		{
+			if (SwitchToCharacter(NewCharacterIndex))
 			{
-				if (SetupControllerForPawn(NumberCurrentCharacter))
-				{
-					OnNewControllerPossessDelegate.Broadcast(GetPawn(OldCharacterNumber));
-					OnNewControllerPossessDelegate.Broadcast(GetPawn(NumberCurrentCharacter));
-					break;
-				}
-				else
-				{
-					UE_LOG(LogG2I, Warning, TEXT("Character %i doesn't switched on player controller"),
-						NumberCurrentCharacter);
-					NumberCurrentCharacter = OldCharacterNumber;
-					check(!SetupControllerForPawn(NumberCurrentCharacter));
-				}
-			}
-			else
-			{
-				UE_LOG(LogG2I, Warning, TEXT("Character %i doesn't switched on ai controller"),
-					OldCharacterNumber);
-				NumberCurrentCharacter = OldCharacterNumber;
+				break;
 			}
 		}
+	}
+}
+
+bool AG2IPlayerState::SwitchToCharacter(const int32 NewCharacterNumber)
+{
+	const int32 OldCharacterNumber = NumberCurrentCharacter;
+	NumberCurrentCharacter = NewCharacterNumber;
+
+	if (!SetupControllerForPawn(OldCharacterNumber))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Character %i couldn't switch to AI controller."),
+			OldCharacterNumber);
+		NumberCurrentCharacter = OldCharacterNumber;
+		return false;
+	}
+
+	if (SetupControllerForPawn(NumberCurrentCharacter))
+	{
+		OnNewControllerPossessDelegate.Broadcast(GetPawn(OldCharacterNumber));
+		OnNewControllerPossessDelegate.Broadcast(GetPawn(NumberCurrentCharacter));
+		return true;
+	}
+	else
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Character %i couldn't switch to player controller."),
+			NumberCurrentCharacter);
+		NumberCurrentCharacter = OldCharacterNumber;
+		SetupControllerForPawn(NumberCurrentCharacter);
+		return false;
 	}
 }
 

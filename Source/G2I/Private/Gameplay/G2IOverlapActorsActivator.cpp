@@ -1,6 +1,7 @@
 #include "G2IOverlapActorsActivator.h"
 #include "G2I.h"
 #include "G2IActivationInterface.h"
+#include "LaunchingIndication/G2ILauncherComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 void AG2IOverlapActorsActivator::NotifyActorBeginOverlap(AActor* OtherActor)
@@ -19,15 +20,19 @@ void AG2IOverlapActorsActivator::NotifyActorBeginOverlap(AActor* OtherActor)
 		{
 			IG2IActivationInterface::Execute_Activate(OtherActor);
 
-			const FString DebugMessage = OtherActor->GetActorNameOrLabel() + " activated";
-#if WITH_EDITOR
-			if (GEngine)
+			if (!ensure(LauncherComp))
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, DebugMessage);
+				UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+					*UG2ILauncherComponent::StaticClass()->GetName());
 			}
-#endif
-			UE_LOG(LogG2I, Log, TEXT("%s in %s"), *DebugMessage, *GetActorNameOrLabel());
-			
+			else
+			{
+				LauncherComp->SetIsLaunched(true);
+			}
+
+			const FString DebugMessage = GetActorNameOrLabel() + " in " + OtherActor->GetActorNameOrLabel() + " activated";
+			G2I::DebugLogMessage(DebugMessage);
+
 			if (!ensure(World))
 			{
 				UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetActorNameOrLabel());
@@ -57,14 +62,8 @@ void AG2IOverlapActorsActivator::NotifyActorEndOverlap(AActor* OtherActor)
 		{
 			IG2IActivationInterface::Execute_Deactivate(OtherActor);
 
-			const FString DebugMessage = OtherActor->GetActorNameOrLabel() + " deactivated";
-#if WITH_EDITOR
-			if (GEngine)
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, DebugMessage);
-			}
-#endif
-			UE_LOG(LogG2I, Log, TEXT("%s in %s"), *DebugMessage, *GetActorNameOrLabel());
+			const FString DebugMessage = GetActorNameOrLabel() + " in " + OtherActor->GetActorNameOrLabel() + " deactivated";
+			G2I::DebugLogMessage(DebugMessage);
 			
 			if (!ensure(World))
 			{
@@ -105,16 +104,28 @@ void AG2IOverlapActorsActivator::BeginPlay()
 			if (OtherActor->Implements<UG2IActivationInterface>() && OtherActor->ActorHasTag(CheckerTag))
 			{
 				IG2IActivationInterface::Execute_Activate(OtherActor);
-				
-				const FString DebugMessage = OtherActor->GetActorNameOrLabel() + " activated";
-#if WITH_EDITOR
-				if (GEngine)
+				if (!ensure(LauncherComp))
 				{
-					GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, DebugMessage);
+					UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+						*UG2ILauncherComponent::StaticClass()->GetName());
 				}
-#endif
-				UE_LOG(LogG2I, Log, TEXT("%s in %s"), *DebugMessage, *GetActorNameOrLabel());
+				else
+				{
+					LauncherComp->SetIsLaunched(true);
+				}
+
+				const FString DebugMessage = GetActorNameOrLabel() + " in " + OtherActor->GetActorNameOrLabel() + " activated";
+				G2I::DebugLogMessage(DebugMessage);
 			}
 		}
+	}
+}
+
+AG2IOverlapActorsActivator::AG2IOverlapActorsActivator() {
+	LauncherComp = CreateDefaultSubobject<UG2ILauncherComponent>(TEXT("LauncherComp"));
+	if (!ensure(LauncherComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't create %s"), *GetActorNameOrLabel(),
+			*UG2ILauncherComponent::StaticClass()->GetName());
 	}
 }
