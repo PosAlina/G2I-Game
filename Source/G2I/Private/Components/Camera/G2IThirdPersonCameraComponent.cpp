@@ -228,3 +228,30 @@ void UG2IThirdPersonCameraComponent::SetAimCameraLocation()
 	ThirdPersonCameraBoom->TargetArmLength = AimTargetArmLength;
 	ThirdPersonCameraBoom->SocketOffset = AimSocketOffset;
 }
+
+void UG2IThirdPersonCameraComponent::RotateToAction_Implementation(const float Yaw, const float Pitch)
+{
+	if (!ensure(Owner))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find owner"), *GetName());
+		return;
+	}
+
+	if (CameraController && CameraController->Implements<UG2ICameraControllerInputInterface>())
+	{
+		if (IG2ICameraControllerInputInterface::Execute_GetCameraComponent(CameraController) != ThirdPersonFollowCamera)
+		{
+			return;
+		}
+	}
+
+	AController* Controller = Owner->Controller;
+	if (!ensure(Controller))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find controller of %s"), *GetName(), *Owner->GetActorNameOrLabel());
+		return;
+	}
+
+	const float Roll = Controller->GetControlRotation().Roll;
+	Controller->SetControlRotation(FRotator(Pitch, Yaw, Roll));
+}
