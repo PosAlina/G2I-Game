@@ -22,4 +22,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Actions)
 	void LookAction(const float Yaw, const float Pitch);
 
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Actions)
+	void RotateToAction(const float Yaw, const float Pitch);
+
 };
