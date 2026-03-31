@@ -20,9 +20,10 @@ public class G2I : ModuleRules
 			"UMG",
 			"Slate",
 			"AIModule",
-      "GameplayTags",
+      		"GameplayTags",
 			"CinematicCamera",
-			"NavigationSystem"
+			"NavigationSystem",
+			"SlateCore"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
@@ -43,7 +44,10 @@ public class G2I : ModuleRules
 			"G2I/Public/Interfaces",
 			"G2I/Public/Interfaces/Camera",
 			"G2I/Public/Interfaces/SteamGlove",
+			"G2I/Public/SaveSystem",
 			"G2I/Public/UI",
+			"G2I/Public/UI/Widgets",
+			"G2I/Public/UI/WidgetComponents",
 			"G2I/Public/Components",
 			"G2I/Public/Components/Camera",
 			"G2I/Public/Components/SteamGlove"
@@ -56,16 +60,15 @@ public class G2I : ModuleRules
 			"G2I/Private/AI/Navigation",
 			"G2I/Private/Controls",
 			"G2I/Private/Characters",
-			"G2I/Private/DataDefinitions",
-			"G2I/Private/DataDefinitions/DataTables",
-			"G2I/Private/DataDefinitions/Enums",
-			"G2I/Private/DataDefinitions/Structs",
 			"G2I/Private/Game",
 			"G2I/Private/Gameplay",
 			"G2I/Private/Interfaces",
 			"G2I/Private/Interfaces/Camera",
 			"G2I/Private/Interfaces/SteamGlove",
+			"G2I/Private/SaveSystem",
 			"G2I/Private/UI",
+			"G2I/Private/UI/Widgets",
+			"G2I/Private/UI/WidgetComponents",
 			"G2I/Private/Components",
 			"G2I/Private/Components/Camera",
 			"G2I/Private/Components/SteamGlove"

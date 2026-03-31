@@ -37,6 +37,8 @@ public:
 
 	void SelectNextCharacter();
 
+	void SetCharacterByClass(const TSubclassOf<ACharacter>& TargetClass);
+
 protected:
 
 	APawn *GetPawn(const uint32 PawnNumber);
@@ -49,14 +51,15 @@ protected:
 	
 	bool SetupControllerForPawn(const uint32 PawnNumber);
 	
-	bool SetupControllerForPawn(const uint32 PawnNumber, const TSubclassOf<AActor> AIControllerActorClass,
+	bool SetupControllerForPawn(const uint32 PawnNumber, const TSubclassOf<AActor>& AIControllerActorClass,
     	APawn& CurrentPawn);
     	
     bool SetupControllerForPawn(const uint32 PawnNumber, AAIController& CurrentAIController,
         	APawn& CurrentPawn);
 	
-	AActor *FindOneActor(const TSubclassOf<AActor> ActorClass) const;
+	AActor *FindOneActor(const TSubclassOf<AActor>& ActorClass) const;
 	
-	AActor *SpawnActor(const TSubclassOf<AActor> ActorClass) const;
+	AActor *SpawnActor(const TSubclassOf<AActor>& ActorClass) const;
 
+	bool SwitchToCharacter(const int32 NewCharacterNumber);
 };
