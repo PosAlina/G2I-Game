@@ -6,6 +6,8 @@
 #include "Components/AudioComponent.h"
 #include "Components/SceneComponent.h"
 #include "Sound/SoundCue.h"
+#include "Sound/SoundClass.h"
+#include "Sound/SoundMix.h"
 #include "G2IGameSoundManager.generated.h"
 
 USTRUCT(BlueprintType)
@@ -33,8 +35,29 @@ struct FSoundConfig
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play", meta = (ClampMin = "0.1", ClampMax = "2.0"))
 	float PitchMultiplier = 1.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play")
+	bool bIsLooping = false;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Lifetime")
 	bool bAutoDestroy = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Location")
+	bool bIs2D = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play", meta = (ClampMin = "0.0"))
+	float FadeInTime = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play", meta = (ClampMin = "0.0"))
+	float FadeOutTime = 0.0f;
+};
+
+UENUM(BlueprintType)
+enum class EG2IASoundType: uint8
+{
+	SpeechSound UMETA(DisplayName = "Sound for dialogs"),
+	MusicSound UMETA(DisplayName = "Sound for music"),
+	EffectSound UMETA(DisplayName = "Sound for effects"),
+	DefaultSound UMETA(DisplayName = "Default sound")
 };
 
 UCLASS()
@@ -47,6 +70,9 @@ private:
 	UPROPERTY()
 	TArray<int32> IdStack;
 
+	UPROPERTY()
+	TArray<int32> LoopingSoundsId;
+
 	int32 CurrentNumberAvailable;
 
 	UPROPERTY()
@@ -54,9 +80,22 @@ private:
 
 	void UpdateStackSize();
 
+	float GeneralSoundMultiplier = 1.0f;
+	float EffectsSoundMultiplier = 1.0f;
+	float MusicSoundMultiplier = 1.0f;
+	float SpeechSoundMultiplier = 1.0f;
+
+	UPROPERTY()
+	USoundMix* MainSoundMix;
+
+	UPROPERTY()
+	TMap<EG2IASoundType, USoundClass*> SoundClasses;
+
 protected:
 	
 	UAudioComponent* GetAudioById(int32 SoundId);
+
+	void OnSoundFinished(UAudioComponent* AudioComp, int32 SoundId);
 public:
 
 	UFUNCTION(BlueprintPure, Category = "Sound Manager", meta = (WorldContext = "WorldContextObject"))
@@ -69,17 +108,30 @@ public:
 	bool RemoveSound(int32 SoundId);
 	void RemoveAllSounds();
 
-	bool PlaySound(int32 SoundId);
-	bool StopSound(int32 SoundId);
+	bool PlaySound(int32 SoundId, float FadeInTime = 0.0f);
+	bool StopSound(int32 SoundId, float FadeOutTime = 0.0f);
 	void StopAllSounds();
 
-	bool ChangeSoundVolume(int32 SoundId, float NewVolume);
-	bool ChangeSoundPitch(int32 SoundId, float NewPitch);
-	bool ChangeSoundLocation(int32 SoundId, FVector NewLocation);
-	bool ChangeSoundAttachment(int32 SoundId,
+	bool SetSoundVolume(int32 SoundId, float NewVolume);
+	bool SetSoundPitch(int32 SoundId, float NewPitch);
+	bool SetSoundLocation(int32 SoundId, FVector NewLocation);
+	bool SetSoundAttachment(int32 SoundId,
 		USceneComponent* NewAttachementComponent,
 		EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget);
-	bool ChangeSoundAttachment(int32 SoundId,
+	bool SetSoundAttachment(int32 SoundId,
 		AActor* NewAttachementActor,
 		EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget);
+	bool SetSoundLooping(int32 SoundId, bool bNewIsLooping);
+	bool SetSoundAutoDestroy(int32 SoundId, bool bNewAutoDestroy);
+
+	float GetSoundVolume(int32 SoundId);
+	float GetSoundPitch(int32 SoundId);
+	FVector GetSoundLocation(int32 SoundId);
+	USceneComponent* GetSoundAttachment(int32 SoundId);
+	bool GetSoundLooping(int32 SoundId);
+	bool GetSoundAutoDestroy(int32 SoundId);
+
+	void InitGlobalAudio(USoundMix* _MainMix, TMap<EG2IASoundType, USoundClass*> _SoundClasses);
+	void SetGlobalVolume(EG2IASoundType SoundType, float NewVolume);
+	float GetGlobalVolume(EG2IASoundType SoundType) const;
 };

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-//TODO Move FSoundConfig to new .h file to resolve conflict
 #include "Game/G2IGameSoundManager.h"
 #include "G2ISoundComponent.generated.h"
 
@@ -33,24 +32,45 @@ public:
 	bool PlaySound(int32 SoundId);
 
 	UFUNCTION(BlueprintCallable, Category = "Sounds")
-	bool StopSound(int32 SoundId);
+	bool StopSound(int32 SoundId, float FadeOutTime = 0.0f);
 
 	UFUNCTION(BlueprintCallable, Category = "Sounds")
 	void StopAllSounds();
 
 	UFUNCTION(BlueprintCallable, Category = "Sounds")
-	bool ChangeSoundVolume(int32 SoundId, float NewVolume);
+	bool SetSoundVolume(int32 SoundId, float NewVolume);
 
 	UFUNCTION(BlueprintCallable, Category = "Sounds")
-	bool ChangeSoundPitch(int32 SoundId, float NewPitch);
+	bool SetSoundPitch(int32 SoundId, float NewPitch);
 
 	UFUNCTION(BlueprintCallable, Category = "Sounds")
-	bool ChangeSoundLocation(int32 SoundId, FVector NewLocation);
+	bool SetSoundLocation(int32 SoundId, FVector NewLocation);
 
-	bool ChangeSoundAttachment(int32 SoundId,
+	bool SetSoundAttachment(int32 SoundId,
 		USceneComponent* NewAttachementComponent,
 		EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget);
-	bool ChangeSoundAttachment(int32 SoundId,
+	bool SetSoundAttachment(int32 SoundId,
 		AActor* NewAttachementActor,
 		EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget);
+
+	UFUNCTION(BlueprintCallable, Category = "Sounds")
+	bool SetSoundAutoDestroy(int32 SoundId, bool bNewAutoDestroy);
+
+	UFUNCTION(BlueprintCallable, Category = "Sounds")
+	bool SetSoundLooping(int32 SoundId, bool bNewIsLooping);
+
+	UFUNCTION(BlueprintPure, Category = "Sounds")
+	float GetSoundVolume(int32 SoundId);
+
+	UFUNCTION(BlueprintPure, Category = "Sounds")
+	bool GetSoundLooping(int32 SoundId);
+
+	UFUNCTION(BlueprintPure, Category = "Sounds")
+	float GetSoundPitch(int32 SoundId);
+
+	UFUNCTION(BlueprintPure, Category = "Sounds")
+	FVector GetSoundLocation(int32 SoundId);
+
+	UFUNCTION(BlueprintPure, Category = "Sounds")
+	bool GetSoundAutoDestroy(int32 SoundId);
 };
