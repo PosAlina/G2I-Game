@@ -337,11 +337,6 @@ void UG2IGameSoundManager::SetGlobalVolume(EG2IASoundType SoundType, float NewVo
 			SpeechSoundMultiplier = ClampedVolume;
 			break;
 		}
-	case EG2IASoundType::SpeechSound:
-	{
-		SpeechSoundMultiplier = ClampedVolume;
-		break;
-	}
 	}
 
 	if (UWorld* World = GetWorld()) {
@@ -381,11 +376,6 @@ float UG2IGameSoundManager::GetGlobalVolume(EG2IASoundType SoundType) const {
 		default: {
 			return 0.0f;
 		}
-		return SpeechSoundMultiplier;
-	}
-	default: {
-		return 0.0f;
-	}
 	}
 }
 
