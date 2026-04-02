@@ -37,6 +37,9 @@ struct FSoundConfig
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play")
 	bool bIsLooping = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play")
+	bool bIsPlayingOneTime = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Lifetime")
 	bool bAutoDestroy = true;
@@ -123,6 +126,7 @@ public:
 		EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget);
 	bool SetSoundLooping(int32 SoundId, bool bNewIsLooping);
 	bool SetSoundAutoDestroy(int32 SoundId, bool bNewAutoDestroy);
+	bool SetSoundPlayingOneTime(int32 SoundId, bool bNewIsPlayingOneTime);
 
 	float GetSoundVolume(int32 SoundId);
 	float GetSoundPitch(int32 SoundId);
@@ -130,8 +134,14 @@ public:
 	USceneComponent* GetSoundAttachment(int32 SoundId);
 	bool GetSoundLooping(int32 SoundId);
 	bool GetSoundAutoDestroy(int32 SoundId);
+	bool GetSoundPlayingOneTime(int32 SoundId);
 
+	UFUNCTION(BlueprintCallable, Category = "Sound|Global")
 	void InitGlobalAudio(USoundMix* _MainMix, TMap<EG2IASoundType, USoundClass*> _SoundClasses);
+
+	UFUNCTION(BlueprintCallable, Category = "Sound|Global")
 	void SetGlobalVolume(EG2IASoundType SoundType, float NewVolume);
+
+	UFUNCTION(BlueprintPure, Category = "Sound|Global")
 	float GetGlobalVolume(EG2IASoundType SoundType) const;
 };

@@ -7,12 +7,13 @@
 #include "Sound/SoundCue.h"
 
 static const FName LoopingTag("LoopingSound");
+static const FName OneTimeTag("PlayingOneTime");
 
 UAudioComponent* UG2IGameSoundManager::GetAudioById(int32 SoundId)
 {
 	if (SoundId < 0) {
-		UE_LOG(LogG2I, Warning, TEXT("Sound manager got wrong SoundId"));
-		return TObjectPtr<UAudioComponent>();
+		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Wrong SoundId: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
+		return nullptr;
 	}
 
 	TObjectPtr<UAudioComponent>* FoundAudio = ActiveSounds.Find(SoundId);
@@ -20,7 +21,7 @@ UAudioComponent* UG2IGameSoundManager::GetAudioById(int32 SoundId)
 		return *FoundAudio;
 	}
 
-	UE_LOG(LogG2I, Warning, TEXT("Sound manager: SoundId %d not found"), SoundId);
+	UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: SoundId %d not found"), *GetName(), *FString(__FUNCTION__), SoundId);
 	return nullptr;
 }
 
@@ -57,12 +58,12 @@ void UG2IGameSoundManager::Deinitialize()
 int32 UG2IGameSoundManager::AddSound(const FSoundConfig& NewSoundConfig)
 {
 	if (!ensure(NewSoundConfig.Sound)) {
-		UE_LOG(LogG2I, Warning, TEXT("The sound manager didn't get sound"));
+		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: The sound manager didn't get sound"), *GetName(), *FString(__FUNCTION__));
 		return -1;
 	}
 	UAudioComponent* AudioComponent = NewObject<UAudioComponent>(GetWorld()->GetWorldSettings());
 	if (!ensure(AudioComponent)) {
-		UE_LOG(LogG2I, Warning, TEXT("The sound manager can't create an audio component"));
+		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: The sound manager can't create an audio component"), *GetName(), *FString(__FUNCTION__));
 		return -1;
 	}
 
@@ -93,7 +94,7 @@ int32 UG2IGameSoundManager::AddSound(const FSoundConfig& NewSoundConfig)
 		AudioComponent->ComponentTags.Add(LoopingTag);
 	}
 	AudioComponent->bAutoDestroy = NewSoundConfig.bIsLooping ? false : NewSoundConfig.bAutoDestroy;
-	
+
 	AudioComponent->RegisterComponent();
 
 	if (IdStack.IsEmpty()) {
@@ -111,7 +112,7 @@ bool UG2IGameSoundManager::PlaySound(int32 SoundId, float FadeInTime)
 {
 	UAudioComponent* Component = GetAudioById(SoundId);
 	if (!ensure(Component)) {
-		UE_LOG(LogG2I, Warning, TEXT("The sound manager can't get an audio component"));
+		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: The sound manager can't get an audio component for ID: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
 		return false;
 	}
 
@@ -124,7 +125,7 @@ bool UG2IGameSoundManager::StopSound(int32 SoundId, float FadeOutTime)
 {
 	UAudioComponent* Component = GetAudioById(SoundId);
 	if (!ensure(Component)) {
-		UE_LOG(LogG2I, Warning, TEXT("The sound manager can't get an audio component"));
+		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: The sound manager can't get an audio component for ID: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
 		return false;
 	}
 
@@ -148,13 +149,13 @@ bool UG2IGameSoundManager::SetSoundVolume(int32 SoundId, float NewVolume)
 {
 	UAudioComponent* Component = GetAudioById(SoundId);
 	if (!ensure(Component)) {
-		UE_LOG(LogG2I, Warning, TEXT("The sound manager can't get an audio component"));
+		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: The sound manager can't get an audio component for ID: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
 		return false;
 	}
 
 	NewVolume = FMath::Clamp(NewVolume, 0.0f, 1.0f);
 	Component->SetVolumeMultiplier(NewVolume);
-	
+
 	return true;
 }
 
@@ -162,13 +163,13 @@ bool UG2IGameSoundManager::SetSoundPitch(int32 SoundId, float NewPitch)
 {
 	UAudioComponent* Component = GetAudioById(SoundId);
 	if (!ensure(Component)) {
-		UE_LOG(LogG2I, Warning, TEXT("The sound manager can't get an audio component"));
+		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: The sound manager can't get an audio component for ID: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
 		return false;
 	}
 
 	NewPitch = FMath::Clamp(NewPitch, 0.0f, 2.0f);
 	Component->SetPitchMultiplier(NewPitch);
-	
+
 	return true;
 }
 
@@ -176,12 +177,11 @@ bool UG2IGameSoundManager::SetSoundLocation(int32 SoundId, FVector NewLocation)
 {
 	UAudioComponent* Component = GetAudioById(SoundId);
 	if (!ensure(Component)) {
-		UE_LOG(LogG2I, Warning, TEXT("The sound manager can't get an audio component"));
 		return false;
 	}
 
 	Component->SetWorldLocation(NewLocation);
-	
+
 	return true;
 }
 
@@ -190,12 +190,12 @@ bool UG2IGameSoundManager::SetSoundAttachment(int32 SoundId,
 	EAttachmentRule AttachmentRules)
 {
 	if (!ensure(NewAttachmentComponent)) {
-		UE_LOG(LogG2I, Warning, TEXT("The sound manager got wrong component to attach"));
+		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: The sound manager got wrong component to attach"), *GetName(), *FString(__FUNCTION__));
 		return false;
 	}
 	TObjectPtr<UAudioComponent> Component = GetAudioById(SoundId);
 	if (!ensure(Component)) {
-		UE_LOG(LogG2I, Warning, TEXT("The sound manager can't get an audio component"));
+		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: The sound manager can't get an audio component for ID: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
 		return false;
 	}
 
@@ -215,19 +215,19 @@ bool UG2IGameSoundManager::SetSoundAttachment(int32 SoundId,
 	EAttachmentRule AttachmentRules)
 {
 	if (!ensure(NewAttachmentActor)) {
-		UE_LOG(LogG2I, Warning, TEXT("The sound manager got wrong actor to attach"));
+		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: The sound manager got wrong actor to attach"), *GetName(), *FString(__FUNCTION__));
 		return false;
 	}
 	TObjectPtr<USceneComponent> RootComponent = NewAttachmentActor->GetRootComponent();
 	if (!ensure(RootComponent)) {
-		UE_LOG(LogG2I, Warning, TEXT("The sound manager can't get root component from actor to attach"));
+		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: The sound manager can't get root component from actor to attach"), *GetName(), *FString(__FUNCTION__));
 		return false;
 	}
 	TObjectPtr<UAudioComponent> Component = GetAudioById(SoundId);
 	if (!ensure(Component)) {
 		return false;
 	}
-	
+
 	FAttachmentTransformRules Rules(
 		AttachmentRules,
 		AttachmentRules,
@@ -288,28 +288,28 @@ void UG2IGameSoundManager::InitGlobalAudio(USoundMix* _MainMix, TMap<EG2IASoundT
 		UGameplayStatics::PushSoundMixModifier(World, MainSoundMix);
 	}
 	else {
-		UE_LOG(LogG2I, Error, TEXT("%s: Can't get the World"), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Can't get the World or MainSoundMix"), *GetName(), *FString(__FUNCTION__));
 	}
 }
 
 void UG2IGameSoundManager::SetGlobalVolume(EG2IASoundType SoundType, float NewVolume)
-{	
+{
 	if (!MainSoundMix)
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Can't get the MainSoundMix"), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Can't get the MainSoundMix"), *GetName(), *FString(__FUNCTION__));
 		return;
 	}
 
 	if (!SoundClasses.Contains(SoundType))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("%s: SoundClasses map doesn't contain SoundType (ID: %d)"), *GetName(), static_cast<int32>(SoundType));
+		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: SoundClasses map doesn't contain SoundType (ID: %d)"), *GetName(), *FString(__FUNCTION__), static_cast<int32>(SoundType));
 		return;
 	}
 
 	USoundClass* TargetClass = SoundClasses[SoundType];
 	if (!TargetClass)
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Can't get Sound class for the SoundType (ID: %d)"), *GetName(), static_cast<int32>(SoundType));
+		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Can't get Sound class for the SoundType (ID: %d)"), *GetName(), *FString(__FUNCTION__), static_cast<int32>(SoundType));
 		return;
 	}
 
@@ -337,6 +337,11 @@ void UG2IGameSoundManager::SetGlobalVolume(EG2IASoundType SoundType, float NewVo
 			SpeechSoundMultiplier = ClampedVolume;
 			break;
 		}
+	case EG2IASoundType::SpeechSound:
+	{
+		SpeechSoundMultiplier = ClampedVolume;
+		break;
+	}
 	}
 
 	if (UWorld* World = GetWorld()) {
@@ -351,7 +356,7 @@ void UG2IGameSoundManager::SetGlobalVolume(EG2IASoundType SoundType, float NewVo
 		);
 	}
 	else {
-		UE_LOG(LogG2I, Error, TEXT("%s: Can't get the World"), *GetName());
+		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Can't get the World"), *GetName(), *FString(__FUNCTION__));
 	}
 }
 
@@ -376,6 +381,11 @@ float UG2IGameSoundManager::GetGlobalVolume(EG2IASoundType SoundType) const {
 		default: {
 			return 0.0f;
 		}
+		return SpeechSoundMultiplier;
+	}
+	default: {
+		return 0.0f;
+	}
 	}
 }
 
@@ -393,7 +403,7 @@ bool UG2IGameSoundManager::SetSoundLooping(int32 SoundId, bool bNewIsLooping)
 {
 	UAudioComponent* Component = GetAudioById(SoundId);
 	if (!ensure(Component)) {
-		UE_LOG(LogG2I, Warning, TEXT("%s: can't get an audio component (ID: %d)"), *GetName(), SoundId);
+		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Can't get an audio component (ID: %d)"), *GetName(), *FString(__FUNCTION__), SoundId);
 		return false;
 	}
 
@@ -417,7 +427,7 @@ float UG2IGameSoundManager::GetSoundVolume(int32 SoundId)
 		return Component->VolumeMultiplier;
 	}
 
-	UE_LOG(LogG2I, Warning, TEXT("%s: Invalid SoundId %d"), *GetName(), SoundId);
+	UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Invalid SoundId: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
 	return 0.0f;
 }
 
@@ -428,7 +438,7 @@ float UG2IGameSoundManager::GetSoundPitch(int32 SoundId)
 		return Component->PitchMultiplier;
 	}
 
-	UE_LOG(LogG2I, Warning, TEXT("%s: Invalid SoundId %d"), *GetName(), SoundId);
+	UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Invalid SoundId: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
 	return 1.0f;
 }
 
@@ -439,7 +449,7 @@ FVector UG2IGameSoundManager::GetSoundLocation(int32 SoundId)
 		return Component->GetComponentLocation();
 	}
 
-	UE_LOG(LogG2I, Warning, TEXT("%s: Invalid SoundId %d"), *GetName(), SoundId);
+	UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Invalid SoundId: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
 	return FVector::ZeroVector;
 }
 
@@ -450,7 +460,7 @@ USceneComponent* UG2IGameSoundManager::GetSoundAttachment(int32 SoundId)
 		return Component->GetAttachParent();
 	}
 
-	UE_LOG(LogG2I, Warning, TEXT("%s: Invalid SoundId %d"), *GetName(), SoundId);
+	UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Invalid SoundId: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
 	return nullptr;
 }
 
@@ -461,7 +471,7 @@ bool UG2IGameSoundManager::GetSoundLooping(int32 SoundId)
 		return Component->ComponentHasTag(LoopingTag);
 	}
 
-	UE_LOG(LogG2I, Warning, TEXT("%s: Invalid SoundId %d"), *GetName(), SoundId);
+	UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Invalid SoundId: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
 	return false;
 }
 
@@ -470,7 +480,7 @@ bool UG2IGameSoundManager::SetSoundAutoDestroy(int32 SoundId, bool bNewAutoDestr
 	UAudioComponent* Component = GetAudioById(SoundId);
 	if (!Component)
 	{
-		UE_LOG(LogG2I, Warning, TEXT("%s: Invalid SoundId %d"), *GetName(), SoundId);
+		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Invalid SoundId: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
 		return false;
 	}
 
@@ -478,7 +488,7 @@ bool UG2IGameSoundManager::SetSoundAutoDestroy(int32 SoundId, bool bNewAutoDestr
 	{
 		if (bNewAutoDestroy)
 		{
-			UE_LOG(LogG2I, Warning, TEXT("%s: SoundId %d is looping"), *GetName(), SoundId);
+			UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: SoundId %d is looping, AutoDestroy forced to false"), *GetName(), *FString(__FUNCTION__), SoundId);
 		}
 
 		Component->bAutoDestroy = false;
@@ -498,6 +508,39 @@ bool UG2IGameSoundManager::GetSoundAutoDestroy(int32 SoundId)
 		return Component->bAutoDestroy;
 	}
 
-	UE_LOG(LogG2I, Warning, TEXT("%s: Invalid SoundId %d"), *GetName(), SoundId);
+	UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Invalid SoundId: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
 	return false;
+}
+
+bool UG2IGameSoundManager::GetSoundPlayingOneTime(int32 SoundId)
+{
+	if (UAudioComponent* Component = GetAudioById(SoundId))
+	{
+		return Component->ComponentHasTag(OneTimeTag);
+	}
+
+	UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Invalid SoundId: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
+	return false;
+}
+
+bool UG2IGameSoundManager::SetSoundPlayingOneTime(int32 SoundId, bool bNewIsPlayingOneTime)
+{
+	UAudioComponent* Component = GetAudioById(SoundId);
+	if (!Component)
+	{
+		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Invalid SoundId: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
+		return false;
+	}
+
+	if (bNewIsPlayingOneTime)
+	{
+		Component->ComponentTags.AddUnique(OneTimeTag);
+		Component->bAutoDestroy = true;
+	}
+	else
+	{
+		Component->ComponentTags.Remove(OneTimeTag);
+	}
+
+	return true;
 }
