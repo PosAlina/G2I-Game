@@ -34,7 +34,7 @@ void UG2IReloadingComponent::ShowReloadingOnView()
 {
 	if (GEngine)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, ReloadTime, FColor::Red, TEXT("Glove is reloading"));
+		GEngine->AddOnScreenDebugMessage(-1, ReloadTime, FColor::Silver, TEXT("Glove is reloading"));
 	}
 }
 
