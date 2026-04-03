@@ -25,8 +25,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sounds")
 	bool RemoveSound(int32 SoundId);
 
-	UFUNCTION(BlueprintCallable, Category = "Sounds")
-	void RemoveAllSounds();
+
 
 	UFUNCTION(BlueprintCallable, Category = "Sounds")
 	bool PlaySound(int32 SoundId);
@@ -37,6 +36,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sounds")
 	void StopAllSounds();
 
+
+
 	UFUNCTION(BlueprintCallable, Category = "Sounds")
 	bool SetSoundVolume(int32 SoundId, float NewVolume);
 
@@ -46,24 +47,24 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sounds")
 	bool SetSoundLocation(int32 SoundId, FVector NewLocation);
 
-	bool SetSoundAttachment(int32 SoundId,
+	UFUNCTION(BlueprintCallable, Category = "Sounds")
+	bool SetSoundAttachmentComponent(int32 SoundId,
 		USceneComponent* NewAttachementComponent,
 		EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget);
-	bool SetSoundAttachment(int32 SoundId,
+
+	UFUNCTION(BlueprintCallable, Category = "Sounds")
+	bool SetSoundAttachmentActor(int32 SoundId,
 		AActor* NewAttachementActor,
 		EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget);
 
 	UFUNCTION(BlueprintCallable, Category = "Sounds")
 	bool SetSoundAutoDestroy(int32 SoundId, bool bNewAutoDestroy);
 
-	UFUNCTION(BlueprintCallable, Category = "Sounds")
-	bool SetSoundLooping(int32 SoundId, bool bNewIsLooping);
+
+
 
 	UFUNCTION(BlueprintPure, Category = "Sounds")
 	float GetSoundVolume(int32 SoundId);
-
-	UFUNCTION(BlueprintPure, Category = "Sounds")
-	bool GetSoundLooping(int32 SoundId);
 
 	UFUNCTION(BlueprintPure, Category = "Sounds")
 	float GetSoundPitch(int32 SoundId);

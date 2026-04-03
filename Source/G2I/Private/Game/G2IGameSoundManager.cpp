@@ -6,7 +6,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
 
-static const FName LoopingTag("LoopingSound");
 static const FName OneTimeTag("PlayingOneTime");
 
 UAudioComponent* UG2IGameSoundManager::GetAudioById(int32 SoundId)
@@ -90,10 +89,9 @@ int32 UG2IGameSoundManager::AddSound(const FSoundConfig& NewSoundConfig)
 	AudioComponent->SetVolumeMultiplier(NewSoundConfig.VolumeMultiplier);
 	AudioComponent->SetPitchMultiplier(NewSoundConfig.PitchMultiplier);
 
-	if (NewSoundConfig.bIsLooping) {
-		AudioComponent->ComponentTags.Add(LoopingTag);
-	}
-	AudioComponent->bAutoDestroy = NewSoundConfig.bIsLooping ? false : NewSoundConfig.bAutoDestroy;
+	bool bAssetIsLooping = NewSoundConfig.Sound->IsLooping();
+
+	AudioComponent->bAutoDestroy = bAssetIsLooping ? false : NewSoundConfig.bAutoDestroy;
 
 	AudioComponent->RegisterComponent();
 
@@ -243,15 +241,18 @@ bool UG2IGameSoundManager::SetSoundAttachment(int32 SoundId,
 bool UG2IGameSoundManager::RemoveSound(int32 SoundId)
 {
 	TObjectPtr<UAudioComponent> Component = GetAudioById(SoundId);
-	if (!ensure(Component)) {
+	if (!Component) {
 		return false;
 	}
+
+	Component->OnAudioFinishedNative.RemoveAll(this);
 
 	Component->Stop();
 	Component->DestroyComponent();
 	ActiveSounds.Remove(SoundId);
 
 	IdStack.Push(SoundId);
+
 	return true;
 }
 
@@ -261,6 +262,8 @@ void UG2IGameSoundManager::RemoveAllSounds()
 	{
 		if (ensure(Pair.Value()))
 		{
+			Pair.Value()->OnAudioFinishedNative.RemoveAll(this);
+
 			Pair.Value()->Stop();
 			Pair.Value()->DestroyComponent();
 		}
@@ -381,35 +384,19 @@ float UG2IGameSoundManager::GetGlobalVolume(EG2IASoundType SoundType) const {
 
 void UG2IGameSoundManager::OnSoundFinished(UAudioComponent* AudioComponent, int32 SoundId)
 {
-	if (AudioComponent && AudioComponent->ComponentHasTag("LoopingSound")) {
-		AudioComponent->Play();
+	if (!AudioComponent) {
+		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Can't get AudioComponent when sound with ID %d finished"), *GetName(), *FString(__FUNCTION__), SoundId);
+		ActiveSounds.Remove(SoundId);
+		IdStack.Push(SoundId);
+		return;
 	}
-	else {
-		RemoveSound(SoundId);
+
+	if (AudioComponent->bAutoDestroy)
+	{
+		ActiveSounds.Remove(SoundId);
+		IdStack.Push(SoundId);
 	}
 }
-
-bool UG2IGameSoundManager::SetSoundLooping(int32 SoundId, bool bNewIsLooping)
-{
-	UAudioComponent* Component = GetAudioById(SoundId);
-	if (!ensure(Component)) {
-		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Can't get an audio component (ID: %d)"), *GetName(), *FString(__FUNCTION__), SoundId);
-		return false;
-	}
-
-	if (bNewIsLooping)
-	{
-		Component->ComponentTags.AddUnique(LoopingTag);
-		Component->bAutoDestroy = false;
-	}
-	else
-	{
-		Component->ComponentTags.Remove(LoopingTag);
-	}
-
-	return true;
-}
-
 float UG2IGameSoundManager::GetSoundVolume(int32 SoundId)
 {
 	if (UAudioComponent* Component = GetAudioById(SoundId))
@@ -454,17 +441,6 @@ USceneComponent* UG2IGameSoundManager::GetSoundAttachment(int32 SoundId)
 	return nullptr;
 }
 
-bool UG2IGameSoundManager::GetSoundLooping(int32 SoundId)
-{
-	if (UAudioComponent* Component = GetAudioById(SoundId))
-	{
-		return Component->ComponentHasTag(LoopingTag);
-	}
-
-	UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Invalid SoundId: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
-	return false;
-}
-
 bool UG2IGameSoundManager::SetSoundAutoDestroy(int32 SoundId, bool bNewAutoDestroy)
 {
 	UAudioComponent* Component = GetAudioById(SoundId);
@@ -473,20 +449,7 @@ bool UG2IGameSoundManager::SetSoundAutoDestroy(int32 SoundId, bool bNewAutoDestr
 		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Invalid SoundId: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
 		return false;
 	}
-
-	if (Component->ComponentHasTag(LoopingTag))
-	{
-		if (bNewAutoDestroy)
-		{
-			UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: SoundId %d is looping, AutoDestroy forced to false"), *GetName(), *FString(__FUNCTION__), SoundId);
-		}
-
-		Component->bAutoDestroy = false;
-	}
-	else
-	{
-		Component->bAutoDestroy = bNewAutoDestroy;
-	}
+	Component->bAutoDestroy = bNewAutoDestroy;
 
 	return true;
 }

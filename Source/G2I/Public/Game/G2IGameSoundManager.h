@@ -5,7 +5,7 @@
 #include "Engine/EngineTypes.h"
 #include "Components/AudioComponent.h"
 #include "Components/SceneComponent.h"
-#include "Sound/SoundCue.h"
+#include "Sound/SoundBase.h"
 #include "Sound/SoundClass.h"
 #include "Sound/SoundMix.h"
 #include "G2IGameSoundManager.generated.h"
@@ -15,7 +15,7 @@ struct FSoundConfig
 {
 	GENERATED_BODY()
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Sound")
-	TObjectPtr<USoundCue> Sound;
+	TObjectPtr<USoundBase> Sound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Location")
 	FVector WorldLocation = FVector::ZeroVector;
@@ -34,9 +34,6 @@ struct FSoundConfig
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play", meta = (ClampMin = "0.1", ClampMax = "2.0"))
 	float PitchMultiplier = 1.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play")
-	bool bIsLooping = false;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play")
 	bool bIsPlayingOneTime = false;
@@ -46,12 +43,6 @@ struct FSoundConfig
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Location")
 	bool bIs2D = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play", meta = (ClampMin = "0.0"))
-	float FadeInTime = 0.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play", meta = (ClampMin = "0.0"))
-	float FadeOutTime = 0.0f;
 };
 
 UENUM(BlueprintType)
@@ -72,9 +63,6 @@ private:
 
 	UPROPERTY()
 	TArray<int32> IdStack;
-
-	UPROPERTY()
-	TArray<int32> LoopingSoundsId;
 
 	int32 CurrentNumberAvailable;
 
@@ -124,7 +112,6 @@ public:
 	bool SetSoundAttachment(int32 SoundId,
 		AActor* NewAttachementActor,
 		EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget);
-	bool SetSoundLooping(int32 SoundId, bool bNewIsLooping);
 	bool SetSoundAutoDestroy(int32 SoundId, bool bNewAutoDestroy);
 	bool SetSoundPlayingOneTime(int32 SoundId, bool bNewIsPlayingOneTime);
 
@@ -132,7 +119,6 @@ public:
 	float GetSoundPitch(int32 SoundId);
 	FVector GetSoundLocation(int32 SoundId);
 	USceneComponent* GetSoundAttachment(int32 SoundId);
-	bool GetSoundLooping(int32 SoundId);
 	bool GetSoundAutoDestroy(int32 SoundId);
 	bool GetSoundPlayingOneTime(int32 SoundId);
 
