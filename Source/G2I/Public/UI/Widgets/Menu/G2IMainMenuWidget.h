@@ -36,6 +36,9 @@ protected:
 	void OnNewGameButtonClicked();
 
 	UFUNCTION()
+	void OnOptionsButtonClicked();
+
+	UFUNCTION()
 	void OnQuitGameButtonClicked();
 
 private:
@@ -43,6 +46,7 @@ private:
 	void NewGameWithSaveExists() const;
 	void LoadNewGame() const;
 	
+	void InitializeDefaults() const;
 	void BindDelegates();
 	
 	TFunction<void()> GetShowCurrentWidgetFunction() const;

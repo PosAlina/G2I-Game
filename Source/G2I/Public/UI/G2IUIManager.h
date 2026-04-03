@@ -10,6 +10,7 @@ class UWidgetSwitcher;
 class UPanelWidget;
 class UG2IPropertyRow;
 class UG2INumericalMultiValuePropertyRow;
+class UListView;
 class UG2ITextMultiValuePropertyRow;
 class UInputAction;
 enum class EG2IWidgetNames : uint8;
@@ -78,7 +79,7 @@ public:
 	void AddWidgetToPanel(UPanelWidget *Panel, EG2IWidgetNames WidgetName) const;
 	void SwitchWidget(UWidgetSwitcher* Switcher, EG2IWidgetNames WidgetName) const;
 	
-	void OpenWidget(EG2IWidgetNames WidgetName) const;
+	void OpenWidget(EG2IWidgetNames WidgetName, bool bIsFocus = true) const;
 	void CloseWidget(EG2IWidgetNames WidgetName) const;
 
 	void ShowWidget(EG2IWidgetNames WidgetName) const;
@@ -113,6 +114,10 @@ public:
 	// ==================== LOADING WIDGET ====================
 	void SetLoadingProgressPercent(float Percent) const;
 
+	// ==================== OPTIONS WIDGETS ====================
+	void SetupOptionsWidget(const TFunction<void()>& NewBackAction) const;
+	void SetupControlsWidget(UWidgetSwitcher* CharacterControlsSwitcher) const;
+
 	// ==================== OPTIONS PROPERTIES ====================
 	void SetPropertyRow(UG2ITextMultiValuePropertyRow* PropertySelector, const FString& PropertyNameStringID,
 					TArray<FString>& ValuesNamesStringID, int32 DefaultValueIndex = 0) const;
@@ -122,4 +127,5 @@ public:
 	void SavePropertiesValues(TArray<UG2IPropertyRow*> Properties) const;
 	void ApplyPropertyValue(const UG2IPropertyRow* PropertyRow) const;
 	void SavePropertyValue(const UG2IPropertyRow* PropertyRow) const;
+	void SetActionControl(const FText& ActionName, const FText& KeyName, UListView* ControlsList) const;
 };

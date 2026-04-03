@@ -30,6 +30,9 @@ protected:
 	void OnContinueButtonClicked();
 
 	UFUNCTION()
+	void OnOptionsButtonClicked();
+
+	UFUNCTION()
 	void OnMainMenuButtonClicked();
 
 private:

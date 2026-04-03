@@ -108,7 +108,7 @@ public:
 
 	UG2IUserWidget *CreateNewWidget(const EG2IWidgetNames WidgetName);
 
-	void OpenWidget(const EG2IWidgetNames WidgetName);
+	void OpenWidget(const EG2IWidgetNames WidgetName, bool bIsFocus = true);
 	void CloseWidget(const EG2IWidgetNames WidgetName);
 
 	void ShowWidget(const EG2IWidgetNames WidgetName);
