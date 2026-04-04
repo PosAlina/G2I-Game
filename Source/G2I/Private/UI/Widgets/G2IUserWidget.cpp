@@ -4,6 +4,13 @@
 #include "G2IPlayerController.h"
 #include "G2IUIManager.h"
 
+void UG2IUserWidget::NativePreConstruct()
+{
+	Super::NativePreConstruct();
+
+	SetIsFocusable(true);
+}
+
 void UG2IUserWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();

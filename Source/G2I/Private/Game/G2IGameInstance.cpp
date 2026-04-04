@@ -240,7 +240,7 @@ bool UG2IGameInstance::LoadScreenLoading() const
 			*UG2IUIManager::StaticClass()->GetName());
 		return false;
 	}
-	UIManager->OpenWidget(EG2IWidgetNames::LevelLoadingScreen);
+	UIManager->OpenWidget(EG2IWidgetNames::LevelLoadingScreen, false);
 	return true;
 }
 

@@ -141,7 +141,7 @@ void UG2IAimingComponent::StartAimingAction_Implementation()
 			UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
 				*UG2IUIManager::StaticClass()->GetName(), *GetName());
 		}
-		UIManager->OpenWidget(EG2IWidgetNames::Aim);
+		UIManager->OpenWidget(EG2IWidgetNames::Aim, false);
 	}
 	OutlineController(AimTargetActor, true);
 }

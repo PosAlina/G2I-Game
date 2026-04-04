@@ -32,6 +32,8 @@ protected:
 
 public:
 
+	virtual void NativePreConstruct() override;
+
 	virtual void NativeOnInitialized() override;
 
 protected:
