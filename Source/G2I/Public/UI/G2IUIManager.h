@@ -131,4 +131,10 @@ public:
 	void ApplyPropertyValue(const UG2IPropertyRow* PropertyRow) const;
 	void SavePropertyValue(const UG2IPropertyRow* PropertyRow) const;
 	void SetActionControl(const FText& ActionName, const FText& KeyName, UListView* ControlsList) const;
+
+	// ==================== PAUSE WIDGET ====================
+	void SetupPauseWidget(const TFunction<void()>& NewContinueAction) const;
+
+	// ==================== CUT SCENES WIDGETS ====================
+	void CloseCutScene(EG2IWidgetNames WidgetName) const;
 };

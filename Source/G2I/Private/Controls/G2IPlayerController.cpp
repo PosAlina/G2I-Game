@@ -462,6 +462,12 @@ void AG2IPlayerController::CallPause(const FInputActionValue& Value)
 	SetPause(true);
 	
 	UIManager->OpenWidget(EG2IWidgetNames::Pause);
+	UIManager->SetupPauseWidget([this]()
+	{
+		SetInputMode(FInputModeGameOnly());
+		bShowMouseCursor = false;
+		SetPause(false);
+	});
 }
 
 void AG2IPlayerController::SetRotationTowardsCamera(const UCameraComponent& Camera)

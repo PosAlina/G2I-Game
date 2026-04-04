@@ -20,6 +20,7 @@
 #include "Gameplay/G2IKeyHintWidget.h"
 #include "HUD/G2IAimingWidget.h"
 #include "Menu/G2ICreatorsWidget.h"
+#include "Menu/G2IPauseWidget.h"
 #include "Menu/Elements/NumericalRow/G2INumericalMultiValuePropertyRow.h"
 #include "Menu/Elements/G2IControlListItem.h"
 #include "Menu/Elements/G2IControlRow.h"
@@ -140,11 +141,69 @@ void UG2IUIManager::InitializeNewLevelUI() const
 	if (GameInstance->IsMainMenuLevel())
 	{
 		OpenWidget(EG2IWidgetNames::MainMenu);
+		return;
 	}
-	else
+
+	if (!ensure(DisplayManager))
 	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
 		OpenHUD();
+		return;
 	}
+	
+	const EG2ILevelName LevelName = GameInstance->GetCurrentLevelEnum();
+	if (LevelName == EG2ILevelName::BoilerRoom)
+	{
+		if (DisplayManager->GetWidget(EG2IWidgetNames::CutSceneStartBoilerRoom))
+		{
+			OpenWidget(EG2IWidgetNames::CutSceneStartBoilerRoom);
+			return;
+		}
+		OpenHUD();
+		return;
+	}
+	if (LevelName == EG2ILevelName::ChildrenRoom)
+	{
+		if (DisplayManager->GetWidget(EG2IWidgetNames::CutSceneStartChildrenRoom))
+		{
+			OpenWidget(EG2IWidgetNames::CutSceneStartChildrenRoom);
+			return;
+		}
+		OpenHUD();
+		return;
+	}
+	if (LevelName == EG2ILevelName::Hall)
+	{
+		if (DisplayManager->GetWidget(EG2IWidgetNames::CutSceneStartHall))
+		{
+			OpenWidget(EG2IWidgetNames::CutSceneStartHall);
+			return;
+		}
+		OpenHUD();
+		return;
+	}
+
+	// Other levels
+	OpenHUD();
+}
+
+void UG2IUIManager::CloseCutScene(const EG2IWidgetNames WidgetName) const
+{
+	CloseWidget(WidgetName);
+	if (WidgetName == EG2IWidgetNames::CutSceneEndGame)
+	{
+		if (!ensure(GameInstance))
+		{
+			UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+				*UG2IGameInstance::StaticClass()->GetName());
+			return;
+		}
+		GameInstance->LoadMainMenuLevel();
+		return;
+	}
+
+	OpenHUD();
 }
 
 void UG2IUIManager::CloseLevelUI()
@@ -657,6 +716,21 @@ void UG2IUIManager::SetActionControl(const FText& ActionName, const FText& KeyNa
 		ControlsList->GetEntryWidgetClass()->IsChildOf(UG2IControlRow::StaticClass()))
 	{
 		ControlsList->SetSelectedItem(ListEntry);
+	}
+}
+
+void UG2IUIManager::SetupPauseWidget(const TFunction<void()>& NewContinueAction) const
+{
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
+		return;
+	}
+	if (UG2IPauseWidget *Widget = Cast<UG2IPauseWidget>(
+		DisplayManager->GetWidget(EG2IWidgetNames::Pause)))
+	{
+		Widget->OnContinue = NewContinueAction;
 	}
 }
 

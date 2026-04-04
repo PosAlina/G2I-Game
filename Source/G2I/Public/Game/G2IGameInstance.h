@@ -15,7 +15,8 @@ enum class EG2ILevelName : uint8
 	None,
 	TestLevel,
 	BoilerRoom,
-	ChildrenRoom
+	ChildrenRoom,
+	Hall
 };
 
 DECLARE_MULTICAST_DELEGATE(FPlayerControllerInitDelegate);
@@ -87,6 +88,7 @@ public:
 	FString GetCurrentLevelName() const;
 	int32 GetIndex(const EG2ILevelName& LevelName) const;
 	EG2ILevelName GetLevelEnum(const FString& LevelName) const;
+	EG2ILevelName GetCurrentLevelEnum() const;
 
 	bool IsMainMenuLevel() const;
 

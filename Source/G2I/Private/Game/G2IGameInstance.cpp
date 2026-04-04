@@ -98,6 +98,11 @@ EG2ILevelName UG2IGameInstance::GetLevelEnum(const FString& LevelName) const
 	return EG2ILevelName::None;
 }
 
+EG2ILevelName UG2IGameInstance::GetCurrentLevelEnum() const
+{
+	return CurrentLevelEnum;
+}
+
 bool UG2IGameInstance::IsMainMenuLevel() const
 {
 	return MainMenuLevelName == CurrentLevelName;
