@@ -14,7 +14,7 @@ class G2I_API UG2IPipesBoxComponent : public UBoxComponent
 
 public:
 	UPROPERTY(VisibleAnywhere)
-	bool bRecieves = true;
+	bool bReceives = true;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<AActor> Owner;

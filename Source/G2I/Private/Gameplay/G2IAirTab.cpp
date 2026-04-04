@@ -22,12 +22,12 @@ void AG2IAirTab::OnConstruction(const FTransform& Transform)
 		BoxComponent->SetRelativeLocation(StaticMeshComponent->GetStaticMesh()->GetBounds().GetBox().GetCenter());
 }
 
-void AG2IAirTab::RecieveAir_Implementation(AActor* Sender, bool bAirPassed)
+void AG2IAirTab::ReceiveAir_Implementation(AActor* Sender, bool bAirPassed)
 {
 	if (!(Sender) || (Sender == this))
 		return;
 
-	UE_LOG(LogG2I, Log, TEXT("RecieveAir called in %s with bAirPassed = %d."), *GetActorNameOrLabel(), bAirPassed);
+	UE_LOG(LogG2I, Log, TEXT("ReceiveAir called in %s with bAirPassed = %d."), *GetActorNameOrLabel(), bAirPassed);
 	AirSendersMap.Add(Sender, bAirPassed);
 	ChangeActivated(CheckIfEnoughAir());
 }

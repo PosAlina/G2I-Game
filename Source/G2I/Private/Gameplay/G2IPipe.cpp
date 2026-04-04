@@ -180,7 +180,7 @@ void AG2IPipe::SpawnTechnicalHoles()
 		}
 }
 
-void AG2IPipe::RecieveAir_Implementation(AActor* Sender, bool bAirPassed)
+void AG2IPipe::ReceiveAir_Implementation(AActor* Sender, bool bAirPassed)
 {
 	if (ActorsToSendAirTo.Contains(Sender))
 	{
@@ -220,9 +220,9 @@ void AG2IPipe::OnPipeBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* O
 			return;
 		}
 
-		if (!Box->bRecieves && OtherBox->bRecieves)
+		if (!Box->bReceives && OtherBox->bReceives)
 			ActorsToSendAirTo.AddUnique(OtherBox->Owner);
-		else if (Box->bRecieves && !OtherBox->bRecieves)
+		else if (Box->bReceives && !OtherBox->bReceives)
 			ReceiveAirMap.Add(OtherBox->Owner, false);
 	}
 }
@@ -233,7 +233,7 @@ void AG2IPipe::OnPipeEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* Oth
 
 	if (const UG2IPipesBoxComponent* Box = Cast<UG2IPipesBoxComponent>(OtherComp))
 	{
-		if (Box->bRecieves)
+		if (Box->bReceives)
 			ActorsToSendAirTo.Remove(Box->Owner);
 		else
 			ReceiveAirMap.Remove(Box->Owner);
@@ -427,14 +427,14 @@ bool AG2IPipe::GetReceiveFromOtherPipeAtSplinePoint(int32 PointIndex)
 	return false;
 }
 
-UG2IPipesBoxComponent* AG2IPipe::SpawnPipesBoxComponent(int32 PointIndex, bool bRecieves)
+UG2IPipesBoxComponent* AG2IPipe::SpawnPipesBoxComponent(int32 PointIndex, bool bReceives)
 {
 	UG2IPipesBoxComponent* CollisionBox = (UG2IPipesBoxComponent*)(AddComponentByClass(UG2IPipesBoxComponent::StaticClass(), false, SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local), false));
 	
 	if (ensure(CollisionBox))
 	{
 		CollisionBox->SetBoxExtent(FVector(CollisionBoxExtent));
-		CollisionBox->bRecieves = bRecieves;
+		CollisionBox->bReceives = bReceives;
 		CollisionBox->Owner = this;
 		CollisionBox->PointIndex = PointIndex;
 		CollisionBox->OnComponentBeginOverlap.AddDynamic(this, &AG2IPipe::OnPipeBeginOverlap);
@@ -606,13 +606,13 @@ void AG2IPipe::SendAir()
 			continue;
 		}
 
-		if (ActorsToSendAirTo[i]->Implements<UG2IAirRecieverInterface>())
+		if (ActorsToSendAirTo[i]->Implements<UG2IAirReceiverInterface>())
 		{
-			IG2IAirRecieverInterface::Execute_RecieveAir(ActorsToSendAirTo[i], this, bAir);
+			IG2IAirReceiverInterface::Execute_ReceiveAir(ActorsToSendAirTo[i], this, bAir);
 		}
 		else
 		{
-			UE_LOG(LogG2I, Warning, TEXT("Actor %s doesn't implement interface G2IAirRecieverInterface."), *ActorsToSendAirTo[i]->GetActorNameOrLabel());
+			UE_LOG(LogG2I, Warning, TEXT("Actor %s doesn't implement interface G2IAirReceiverInterface."), *ActorsToSendAirTo[i]->GetActorNameOrLabel());
 		}
 	}
 }

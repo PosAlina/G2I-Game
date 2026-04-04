@@ -1,6 +1,6 @@
 #include "Components/G2ISendToPipesComponent.h"
 #include "G2I.h"
-#include "G2IAirRecieverInterface.h"
+#include "G2IAirReceiverInterface.h"
 
 UG2ISendToPipesComponent::UG2ISendToPipesComponent()
 {
@@ -8,7 +8,7 @@ UG2ISendToPipesComponent::UG2ISendToPipesComponent()
 	if (PipesBoxComponent)
 	{
 		PipesBoxComponent->SetupAttachment(this);
-		PipesBoxComponent->bRecieves = false;
+		PipesBoxComponent->bReceives = false;
 	}
 }
 
@@ -78,7 +78,7 @@ void UG2ISendToPipesComponent::OnPipesBoxBeginOverlap(UPrimitiveComponent* Overl
 			return;
 		}
 
-		if (OtherBox->bRecieves)
+		if (OtherBox->bReceives)
 			ActorsToSendAirTo.AddUnique(OtherBox->Owner);
 	}
 }
@@ -93,7 +93,7 @@ void UG2ISendToPipesComponent::OnPipesBoxEndOverlap(UPrimitiveComponent* Overlap
 	UG2IPipesBoxComponent* OtherBox = Cast<UG2IPipesBoxComponent>(OtherComp);
 	if (OtherBox)
 	{
-		if (OtherBox->bRecieves)
+		if (OtherBox->bReceives)
 			ActorsToSendAirTo.Remove(OtherBox->Owner);
 	}
 }
@@ -108,13 +108,13 @@ void UG2ISendToPipesComponent::SendAir() const
 			continue;
 		}
 
-		if (ActorsToSendAirTo[i]->Implements<UG2IAirRecieverInterface>())
+		if (ActorsToSendAirTo[i]->Implements<UG2IAirReceiverInterface>())
 		{
-			IG2IAirRecieverInterface::Execute_RecieveAir(ActorsToSendAirTo[i], GetOwner(), bHasAir);
+			IG2IAirReceiverInterface::Execute_ReceiveAir(ActorsToSendAirTo[i], GetOwner(), bHasAir);
 		}
 		else
 		{
-			UE_LOG(LogG2I, Warning, TEXT("Actor %s doesn't implement interface G2IAirRecieverInterface."), *ActorsToSendAirTo[i]->GetActorNameOrLabel());
+			UE_LOG(LogG2I, Warning, TEXT("Actor %s doesn't implement interface G2IAirReceiverInterface."), *ActorsToSendAirTo[i]->GetActorNameOrLabel());
 		}
 	}
 }

@@ -2,11 +2,11 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "G2IAirRecieverInterface.generated.h"
+#include "G2IAirReceiverInterface.generated.h"
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
-class UG2IAirRecieverInterface : public UInterface
+class UG2IAirReceiverInterface : public UInterface
 {
 	GENERATED_BODY()
 };
@@ -14,11 +14,11 @@ class UG2IAirRecieverInterface : public UInterface
 /**
  * Interface that every actor that wants to recieve air from pipes needs to implement.
  */
-class G2I_API IG2IAirRecieverInterface
+class G2I_API IG2IAirReceiverInterface
 {
 	GENERATED_BODY()
 
 public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Pipes")
-	void RecieveAir(AActor* Sender, bool bAirPassed);
+	void ReceiveAir(AActor* Sender, bool bAirPassed);
 };
