@@ -50,6 +50,8 @@ private:
 	
 	bool bIsSkipPressed = false;
 
+	bool bIsEnabled = true;
+
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> SkipBarMaterialInstance;
 

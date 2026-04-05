@@ -31,6 +31,11 @@ void UG2ICutSceneWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
 
 FReply UG2ICutSceneWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
 {
+	if (!bIsEnabled)
+	{
+		return FReply::Unhandled();
+	}
+	
 	FReply Reply = Super::NativeOnKeyDown(InGeometry, InKeyEvent);
 	
 	if (InKeyEvent.GetKey() == SkipKey)
@@ -51,7 +56,13 @@ FReply UG2ICutSceneWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FK
 			return Reply;
 		}
 		UIManager->OpenWidget(EG2IWidgetNames::Pause);
-		UIManager->SetupPauseWidget({});
+		bIsEnabled = false;
+		
+		UIManager->SetupPauseWidget([this]()
+		{
+			SetFocus();
+			bIsEnabled = true;
+		});
 	}
 	
 	return Reply;
@@ -59,6 +70,11 @@ FReply UG2ICutSceneWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FK
 
 FReply UG2ICutSceneWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
+	if (!bIsEnabled)
+	{
+		return FReply::Unhandled();
+	}
+	
 	FReply Reply = Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 
 	if (InMouseEvent.IsMouseButtonDown(NextKey))
