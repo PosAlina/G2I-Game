@@ -2,6 +2,7 @@
 #include "G2I.h"
 #include "G2IUIManager.h"
 #include "Components/Image.h"
+#include "Components/RichTextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "CutScenes/G2ICutSceneSheetWidget.h"
 
@@ -9,8 +10,11 @@ void UG2ICutSceneWidget::NativePreConstruct()
 {
 	Super::NativePreConstruct();
 
-	SkipBarMaterialInstance = SkipBarImage->GetDynamicMaterial();
-	SetSkipPercent(0.f);
+	if (SkipBarImage)
+	{
+		SkipBarMaterialInstance = SkipBarImage->GetDynamicMaterial();
+		SetSkipPercent(0.f);
+	}
 }
 
 void UG2ICutSceneWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
