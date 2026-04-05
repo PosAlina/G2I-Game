@@ -46,7 +46,7 @@ void UG2IMainMenuWidget::BindDelegates()
 	}
 	if (ensure(CreatorsButton))
 	{
-		CreatorsButton->SetIsEnabled(false);
+		CreatorsButton->OnClicked.AddDynamic(this, &ThisClass::OnCreatorsButtonClicked);
 	}
 	else
 	{
@@ -120,6 +120,20 @@ void UG2IMainMenuWidget::OnOptionsButtonClicked()
 	UIManager->OpenWidget(EG2IWidgetNames::Options);
 	
 	UIManager->SetupOptionsWidget(GetShowCurrentWidgetFunction());
+}
+
+void UG2IMainMenuWidget::OnCreatorsButtonClicked()
+{
+	if (!ensure(UIManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIManager::StaticClass()->GetName());
+		return;
+	}
+	UIManager->HideWidget(EG2IWidgetNames::MainMenu);
+	UIManager->OpenWidget(EG2IWidgetNames::Creators);
+
+	UIManager->SetupCreatorsWidget(GetShowCurrentWidgetFunction());
 }
 
 void UG2IMainMenuWidget::OnQuitGameButtonClicked()

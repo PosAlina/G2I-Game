@@ -19,6 +19,7 @@
 #include "Components/WidgetSwitcher.h"
 #include "Gameplay/G2IKeyHintWidget.h"
 #include "HUD/G2IAimingWidget.h"
+#include "Menu/G2ICreatorsWidget.h"
 #include "Menu/Elements/NumericalRow/G2INumericalMultiValuePropertyRow.h"
 #include "Menu/Elements/G2IControlListItem.h"
 #include "Menu/Elements/G2IControlRow.h"
@@ -496,6 +497,21 @@ void UG2IUIManager::SetupOptionsWidget(const TFunction<void()>& NewBackAction) c
 	}
 	if (UG2IOptionsWidget *Widget = Cast<UG2IOptionsWidget>(
 		DisplayManager->GetWidget(EG2IWidgetNames::Options)))
+	{
+		Widget->OnBack = NewBackAction;
+	}
+}
+
+void UG2IUIManager::SetupCreatorsWidget(const TFunction<void()>& NewBackAction) const
+{
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
+		return;
+	}
+	if (UG2ICreatorsWidget *Widget = Cast<UG2ICreatorsWidget>(
+		DisplayManager->GetWidget(EG2IWidgetNames::Creators)))
 	{
 		Widget->OnBack = NewBackAction;
 	}

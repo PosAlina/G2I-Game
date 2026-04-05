@@ -114,6 +114,9 @@ public:
 	// ==================== LOADING WIDGET ====================
 	void SetLoadingProgressPercent(float Percent) const;
 
+	// ==================== CREATORS WIDGET ====================
+	void SetupCreatorsWidget(const TFunction<void()>& NewBackAction) const;
+
 	// ==================== OPTIONS WIDGETS ====================
 	void SetupOptionsWidget(const TFunction<void()>& NewBackAction) const;
 	void SetupControlsWidget(UWidgetSwitcher* CharacterControlsSwitcher) const;
