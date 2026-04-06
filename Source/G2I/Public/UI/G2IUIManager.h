@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "G2IUIManager.generated.h"
 
+class UG2ICutScenesParameters;
 class UG2IGameInstance;
 enum class EG2IAimType : uint8;
 class UG2IWidgetComponentParameters;
@@ -48,6 +49,9 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UG2IWidgetComponentParameters> WidgetComponentParameters;
+
+	UPROPERTY()
+	TObjectPtr<UG2ICutScenesParameters> CutScenesParameters;
 
 	FDelegateHandle StartGameDelegateHandle;
 	

@@ -30,9 +30,6 @@ protected:
 	EG2IWidgetNames CurrentWidgetName = EG2IWidgetNames::CutSceneStartBoilerRoom;
 
 	UPROPERTY(EditAnywhere, Category = Skip)
-	float FillSpeedSkipProgressBar = 1.f;
-
-	UPROPERTY(EditAnywhere, Category = Skip)
 	FKey SkipKey = EKeys::SpaceBar;
 
 	UPROPERTY(EditAnywhere, Category = Switch)
@@ -47,6 +44,8 @@ protected:
 #endif
 
 private:
+
+	float SkipSpeed = 1.f;
 	
 	bool bIsSkipPressed = false;
 
@@ -58,6 +57,8 @@ private:
 protected:
 
 	virtual void NativePreConstruct() override;
+
+	virtual void InitializeAfterManagerLoading() override;
 
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 

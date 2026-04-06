@@ -4,6 +4,7 @@
 #include "G2ICharacterDaughter.h"
 #include "G2ICharacterEngineer.h"
 #include "G2IConfirmationWidget.h"
+#include "G2ICutScenesParameters.h"
 #include "G2IGameInstance.h"
 #include "G2ILevelLoadingScreen.h"
 #include "G2IPlayerController.h"
@@ -75,7 +76,14 @@ void UG2IUIManager::InitializeDefaultsInStartGame()
 	if (!ensure(WidgetComponentParameters))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
-			*UG2IWidgetComponentParameters::StaticClass()->GetName(), *GetName());
+			*GetName(), *UG2IWidgetComponentParameters::StaticClass()->GetName());
+	}
+
+	CutScenesParameters = GameInstance->GetCutScenesParameters();
+	if (!ensure(CutScenesParameters))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+			*GetName(), *UG2ICutScenesParameters::StaticClass()->GetName());
 	}
 
 	DisplayManager = NewObject<UG2IUIDisplayManager>(this);
@@ -153,6 +161,20 @@ void UG2IUIManager::InitializeNewLevelUI() const
 	}
 	
 	const EG2ILevelName LevelName = GameInstance->GetCurrentLevelEnum();
+
+#if WITH_EDITOR
+	if (!ensure(CutScenesParameters))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+			*GetName(), *UG2ICutScenesParameters::StaticClass()->GetName());
+	}
+	if (!CutScenesParameters->bIsDebugOn)
+	{
+		OpenHUD();
+		return;
+	}
+#endif
+	
 	if (LevelName == EG2ILevelName::BoilerRoom)
 	{
 		if (DisplayManager->GetWidget(EG2IWidgetNames::CutSceneStartBoilerRoom))

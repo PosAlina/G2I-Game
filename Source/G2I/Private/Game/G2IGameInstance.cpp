@@ -67,6 +67,11 @@ UG2IWidgetComponentParameters* UG2IGameInstance::GetWidgetComponentParameters()
 	return WidgetComponentsParameters;
 }
 
+UG2ICutScenesParameters* UG2IGameInstance::GetCutScenesParameters()
+{
+	return CutScenesParameters;
+}
+
 FString UG2IGameInstance::GetMainMenuLevelName() const
 {
 	return MainMenuLevelName;

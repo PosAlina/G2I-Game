@@ -1,5 +1,7 @@
 ﻿#include "CutScenes/G2ICutSceneWidget.h"
 #include "G2I.h"
+#include "G2ICutScenesParameters.h"
+#include "G2IGameInstance.h"
 #include "G2IUIManager.h"
 #include "Components/Image.h"
 #include "Components/RichTextBlock.h"
@@ -17,6 +19,26 @@ void UG2ICutSceneWidget::NativePreConstruct()
 	}
 }
 
+void UG2ICutSceneWidget::InitializeAfterManagerLoading()
+{
+	Super::InitializeAfterManagerLoading();
+
+	if (!ensure(GameInstance))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+			*GetName(), *UG2IGameInstance::StaticClass()->GetName());
+		return;
+	}
+	const UG2ICutScenesParameters *CutScenesParameters = GameInstance->GetCutScenesParameters();
+	if (!ensure(CutScenesParameters))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s in %s"),
+			*GetName(), *UG2ICutScenesParameters::StaticClass()->GetName(), *GameInstance->GetName());
+		return;
+	}
+	SkipSpeed = CutScenesParameters->SpeedSkip;
+}
+
 void UG2ICutSceneWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
@@ -24,7 +46,7 @@ void UG2ICutSceneWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
 	if (bIsSkipPressed)
 	{
 		const float CurrentPercent = GetSkipPercent();
-		const float NewPercent = FMath::Clamp(CurrentPercent + FillSpeedSkipProgressBar * InDeltaTime, 0.0f, 1.0f);
+		const float NewPercent = FMath::Clamp(CurrentPercent + SkipSpeed * InDeltaTime, 0.0f, 1.0f);
 		SetSkipPercent(NewPercent);
 		if (NewPercent == 1.f)
 		{
