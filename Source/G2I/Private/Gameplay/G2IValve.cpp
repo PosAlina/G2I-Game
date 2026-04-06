@@ -7,7 +7,7 @@
 
 AG2IValve::AG2IValve()
 {
-	PrimaryActorTick.TickInterval = 0.05f;
+	PrimaryActorTick.TickInterval = 0.01f;
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = false;
 
