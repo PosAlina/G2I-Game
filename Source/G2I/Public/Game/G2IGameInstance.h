@@ -4,6 +4,7 @@
 #include "Engine/GameInstance.h"
 #include "G2IGameInstance.generated.h"
 
+class UG2ICutScenesParameters;
 struct FStreamableHandle;
 class UG2IWidgetComponentParameters;
 class UG2IStringTablesCatalog;
@@ -15,7 +16,8 @@ enum class EG2ILevelName : uint8
 	None,
 	TestLevel,
 	BoilerRoom,
-	ChildrenRoom
+	ChildrenRoom,
+	Hall
 };
 
 DECLARE_MULTICAST_DELEGATE(FPlayerControllerInitDelegate);
@@ -51,6 +53,9 @@ protected:
 	TObjectPtr<UG2IWidgetComponentParameters> WidgetComponentsParameters;
 
 	UPROPERTY(EditAnywhere)
+	TObjectPtr<UG2ICutScenesParameters> CutScenesParameters;
+
+	UPROPERTY(EditAnywhere)
 	TSoftObjectPtr<UWorld> MainMenuLevel;
 	
 	UPROPERTY(EditAnywhere)
@@ -83,10 +88,12 @@ public:
 	UG2IWidgetsCatalog *GetWidgetsCatalog();
 	UG2IStringTablesCatalog *GetStringTablesCatalog();
 	UG2IWidgetComponentParameters *GetWidgetComponentParameters();
+	UG2ICutScenesParameters *GetCutScenesParameters();
 	FString GetMainMenuLevelName() const;
 	FString GetCurrentLevelName() const;
 	int32 GetIndex(const EG2ILevelName& LevelName) const;
 	EG2ILevelName GetLevelEnum(const FString& LevelName) const;
+	EG2ILevelName GetCurrentLevelEnum() const;
 
 	bool IsMainMenuLevel() const;
 

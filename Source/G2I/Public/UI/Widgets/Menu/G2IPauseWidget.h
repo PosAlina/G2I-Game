@@ -22,6 +22,10 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> MainMenuButton;
 
+public:
+
+	TFunction<void()> OnContinue;
+
 protected:
 
 	virtual void InitializeAfterManagerLoading() override;

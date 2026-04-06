@@ -20,5 +20,9 @@ enum class EG2IWidgetNames : uint8
 	EngineerControlsOptions UMETA(DisplayName = "Controls options of engineer widget"),
 	DaughterControlsOptions UMETA(DisplayName = "Controls options of daughter widget"),
 	ControlRow UMETA(DisplayName = "Row of control's option"),
-	LevelLoadingScreen UMETA(DisplayName = "Loading screen widget for levels loading")
+	LevelLoadingScreen UMETA(DisplayName = "Loading screen widget for levels loading"),
+	CutSceneStartBoilerRoom UMETA(DisplayName = "CutScene - in Boiler Room"),
+	CutSceneStartChildrenRoom UMETA(DisplayName = "CutScene - in Child Room"),
+	CutSceneStartHall UMETA(DisplayName = "CutScene - in Hall"),
+	CutSceneEndGame UMETA(DisplayName = "CutScene - End Game")
 };

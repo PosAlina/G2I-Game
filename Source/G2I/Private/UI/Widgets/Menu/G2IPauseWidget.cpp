@@ -49,18 +49,12 @@ void UG2IPauseWidget::OnContinueButtonClicked()
 			*UG2IUIManager::StaticClass()->GetName());
 		return;
 	}
-	if (!ensure(PlayerController))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
-			*AG2IPlayerController::StaticClass()->GetName());
-		return;
-	}
-	
-	UIManager->CloseUI();
+	UIManager->CloseWidget(EG2IWidgetNames::Pause);
 
-	PlayerController->SetInputMode(FInputModeGameOnly());
-	PlayerController->bShowMouseCursor = false;
-	PlayerController->SetPause(false);
+	if (OnContinue)
+	{
+		OnContinue();
+	}
 }
 
 void UG2IPauseWidget::OnOptionsButtonClicked()

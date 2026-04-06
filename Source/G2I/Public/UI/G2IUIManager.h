@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "G2IUIManager.generated.h"
 
+class UG2ICutScenesParameters;
 class UG2IGameInstance;
 enum class EG2IAimType : uint8;
 class UG2IWidgetComponentParameters;
@@ -48,6 +49,9 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UG2IWidgetComponentParameters> WidgetComponentParameters;
+
+	UPROPERTY()
+	TObjectPtr<UG2ICutScenesParameters> CutScenesParameters;
 
 	FDelegateHandle StartGameDelegateHandle;
 	
@@ -131,4 +135,10 @@ public:
 	void ApplyPropertyValue(const UG2IPropertyRow* PropertyRow) const;
 	void SavePropertyValue(const UG2IPropertyRow* PropertyRow) const;
 	void SetActionControl(const FText& ActionName, const FText& KeyName, UListView* ControlsList) const;
+
+	// ==================== PAUSE WIDGET ====================
+	void SetupPauseWidget(const TFunction<void()>& NewContinueAction) const;
+
+	// ==================== CUT SCENES WIDGETS ====================
+	void CloseCutScene(EG2IWidgetNames WidgetName) const;
 };

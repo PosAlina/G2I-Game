@@ -67,6 +67,11 @@ UG2IWidgetComponentParameters* UG2IGameInstance::GetWidgetComponentParameters()
 	return WidgetComponentsParameters;
 }
 
+UG2ICutScenesParameters* UG2IGameInstance::GetCutScenesParameters()
+{
+	return CutScenesParameters;
+}
+
 FString UG2IGameInstance::GetMainMenuLevelName() const
 {
 	return MainMenuLevelName;
@@ -96,6 +101,11 @@ EG2ILevelName UG2IGameInstance::GetLevelEnum(const FString& LevelName) const
 		}
 	}
 	return EG2ILevelName::None;
+}
+
+EG2ILevelName UG2IGameInstance::GetCurrentLevelEnum() const
+{
+	return CurrentLevelEnum;
 }
 
 bool UG2IGameInstance::IsMainMenuLevel() const
