@@ -141,4 +141,7 @@ public:
 
 	// ==================== CUT SCENES WIDGETS ====================
 	void CloseCutScene(EG2IWidgetNames WidgetName) const;
+
+	// ==================== GALLERY WIDGETS ====================
+	void SetupGalleryWidget(const TFunction<void()>& NewBackAction) const;
 };

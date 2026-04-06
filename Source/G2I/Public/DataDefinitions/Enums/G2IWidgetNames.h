@@ -24,5 +24,6 @@ enum class EG2IWidgetNames : uint8
 	CutSceneStartBoilerRoom UMETA(DisplayName = "CutScene - in Boiler Room"),
 	CutSceneStartChildrenRoom UMETA(DisplayName = "CutScene - in Child Room"),
 	CutSceneStartHall UMETA(DisplayName = "CutScene - in Hall"),
-	CutSceneEndGame UMETA(DisplayName = "CutScene - End Game")
+	CutSceneEndGame UMETA(DisplayName = "CutScene - End Game"),
+	Gallery UMETA(DisplayName = "Gallery widget")
 };
