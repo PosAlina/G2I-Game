@@ -39,6 +39,9 @@ protected:
 	void OnOptionsButtonClicked();
 
 	UFUNCTION()
+	void OnCreatorsButtonClicked();
+
+	UFUNCTION()
 	void OnQuitGameButtonClicked();
 
 private:
