@@ -52,6 +52,14 @@ void UG2IMainMenuWidget::BindDelegates()
 	{
 		UE_LOG(LogG2I, Error, TEXT("Creators button isn't existed in %s"), *GetName());
 	}
+	if (ensure(GalleryButton))
+	{
+		GalleryButton->OnClicked.AddDynamic(this, &ThisClass::OnGalleryButtonClicked);
+	}
+	else
+	{
+		UE_LOG(LogG2I, Error, TEXT("Gallery button isn't existed in %s"), *GetName());
+	}
 	if (ensure(QuitGameButton))
 	{
 		QuitGameButton->OnClicked.AddDynamic(this, &ThisClass::OnQuitGameButtonClicked);
@@ -134,6 +142,20 @@ void UG2IMainMenuWidget::OnCreatorsButtonClicked()
 	UIManager->OpenWidget(EG2IWidgetNames::Creators);
 
 	UIManager->SetupCreatorsWidget(GetShowCurrentWidgetFunction());
+}
+
+void UG2IMainMenuWidget::OnGalleryButtonClicked()
+{
+	if (!ensure(UIManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIManager::StaticClass()->GetName());
+		return;
+	}
+	UIManager->HideWidget(EG2IWidgetNames::MainMenu);
+	UIManager->OpenWidget(EG2IWidgetNames::Gallery);
+	
+	UIManager->SetupGalleryWidget(GetShowCurrentWidgetFunction());
 }
 
 void UG2IMainMenuWidget::OnQuitGameButtonClicked()

@@ -19,6 +19,6 @@ public:
 
 #if WITH_EDITORONLY_DATA
 	UPROPERTY(EditAnywhere, Category = Skip)
-	bool bIsDebugOn = true;
+	bool bIsOnInEditor = true;
 #endif
 };

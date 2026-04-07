@@ -9,5 +9,6 @@ enum class EG2IStringTablesTypes : uint8
 	Creators UMETA(DisplayName = "String table of creators widget"),
 	Controls UMETA(DisplayName = "String table of controls widget"),
 	TrainingScreen UMETA(DisplayName = "String table of debug HUD with mechanic description"),
-	CutScenes UMETA(DisplayName = "String table of cut scenes")
+	CutScenes UMETA(DisplayName = "String table of cut scenes"),
+	Gallery UMETA(DisplayName = "String table of gallery")
 };

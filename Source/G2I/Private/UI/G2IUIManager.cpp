@@ -26,6 +26,7 @@
 #include "Menu/Elements/G2IControlListItem.h"
 #include "Menu/Elements/G2IControlRow.h"
 #include "Menu/Elements/TextRow/G2ITextMultiValuePropertyRow.h"
+#include "Menu/Gallery/G2IGalleryWidget.h"
 #include "Menu/Options/G2ICharacterControlsWidget.h"
 #include "Menu/Options/G2IOptionsWidget.h"
 
@@ -168,7 +169,7 @@ void UG2IUIManager::InitializeNewLevelUI() const
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
 			*GetName(), *UG2ICutScenesParameters::StaticClass()->GetName());
 	}
-	if (!CutScenesParameters->bIsDebugOn)
+	if (!CutScenesParameters->bIsOnInEditor)
 	{
 		OpenHUD();
 		return;
@@ -753,6 +754,21 @@ void UG2IUIManager::SetupPauseWidget(const TFunction<void()>& NewContinueAction)
 		DisplayManager->GetWidget(EG2IWidgetNames::Pause)))
 	{
 		Widget->OnContinue = NewContinueAction;
+	}
+}
+
+void UG2IUIManager::SetupGalleryWidget(const TFunction<void()>& NewBackAction) const
+{
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIDisplayManager::StaticClass()->GetName());
+		return;
+	}
+	if (UG2IGalleryWidget *Widget = Cast<UG2IGalleryWidget>(
+		DisplayManager->GetWidget(EG2IWidgetNames::Gallery)))
+	{
+		Widget->OnBack = NewBackAction;
 	}
 }
 

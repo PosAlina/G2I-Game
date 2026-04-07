@@ -26,6 +26,9 @@ public:
 	TObjectPtr<UButton> CreatorsButton;
 
 	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> GalleryButton;
+
+	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> QuitGameButton;
 
 protected:
@@ -40,6 +43,9 @@ protected:
 
 	UFUNCTION()
 	void OnCreatorsButtonClicked();
+
+	UFUNCTION()
+	void OnGalleryButtonClicked();
 
 	UFUNCTION()
 	void OnQuitGameButtonClicked();
