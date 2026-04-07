@@ -50,6 +50,7 @@ public:
 
 	virtual void BeginPlay() override;
 	virtual void OnRegister() override;
+	virtual void OnComponentCreated() override;
 	
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void InteractAction_Implementation(const FName& Tag) override;

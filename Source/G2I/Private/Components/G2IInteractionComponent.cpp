@@ -167,12 +167,13 @@ void UG2IInteractionComponent::OnRegister()
 {
 	Super::OnRegister();
 
-	AActor *OwnerActor = GetOwner();
+	AActor* OwnerActor = GetOwner();
 	if (!ensure(OwnerActor))
 	{
 		UE_LOG(LogG2I, Error, TEXT("Owner doesn't exist in %s"), *GetName());
 		return;
 	}
+
 	Owner = Cast<ACharacter>(OwnerActor);
 	if (!ensure(Owner))
 	{
@@ -180,42 +181,19 @@ void UG2IInteractionComponent::OnRegister()
 			*OwnerActor->GetActorNameOrLabel());
 		return;
 	}
+
 	if (!ensure(InteractionBox))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s doesn't have interaction box component"), *GetName());
 		return;
 	}
-	
+
 	if (USceneComponent* Root = OwnerActor->GetRootComponent())
 	{
-		InteractionBox->AttachToComponent(
-			Root,
-			FAttachmentTransformRules::SnapToTargetNotIncludingScale
-		);
-		UCapsuleComponent* Capsule = Owner->GetCapsuleComponent();
-		if (Capsule)
-		{
-			float Radius = Capsule->GetUnscaledCapsuleRadius();
-			float HalfHeight = Capsule->GetUnscaledCapsuleHalfHeight();;
-
-			float Length = InteractionBoxLength;
-
-			FVector HalfSize;
-			HalfSize.X = Length * 0.5f;
-			HalfSize.Y = Radius; 
-			HalfSize.Z = HalfHeight;
-
-			InteractionBox->SetBoxExtent(HalfSize);
-
-			InteractionBox->SetRelativeLocation(
-				FVector(Length * 0.5f + Radius, 0.f, 0.f)
-			);
-		}
-		else {
-			UE_LOG(LogG2I, Log, TEXT("Character doesn't have a capsule component"));
-		}
+		InteractionBox->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
 	}
-	else {
+	else
+	{
 		UE_LOG(LogG2I, Log, TEXT("Owner doesn't have a RootComponent"));
 	}
 }
@@ -315,10 +293,56 @@ void UG2IInteractionComponent::CloseKeyHintByActor(AActor* OtherActor)
 {
 	if (OtherActor && OtherActor->Implements<UG2IInteractiveObjectInterface>())
 	{
-		if (UG2IWorldHintKeyWidgetComponent *KeyHintComponent =
-		IG2IInteractiveObjectInterface::Execute_GetInteractionKeyHintComponent(OtherActor))
+		if (UG2IWorldHintKeyWidgetComponent* KeyHintComponent =
+			IG2IInteractiveObjectInterface::Execute_GetInteractionKeyHintComponent(OtherActor))
 		{
 			KeyHintComponent->CloseKeyHint();
 		}
+	}
+}
+
+void UG2IInteractionComponent::OnComponentCreated()
+{
+	Super::OnComponentCreated();
+
+	AActor* OwnerActor = GetOwner();
+	if (!ensure(OwnerActor))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Owner doesn't exist in %s"), *GetName());
+		return;
+	}
+
+	Owner = Cast<ACharacter>(OwnerActor);
+	if (!ensure(Owner))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Owner isn't character in %s of %s"), *GetName(),
+			*OwnerActor->GetActorNameOrLabel());
+		return;
+	}
+
+	if (!ensure(InteractionBox))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s doesn't have interaction box component"), *GetName());
+		return;
+	}
+	
+	if (const UCapsuleComponent* Capsule = Owner->GetCapsuleComponent())
+	{
+		const float Radius = Capsule->GetUnscaledCapsuleRadius();
+		const float HalfHeight = Capsule->GetUnscaledCapsuleHalfHeight();
+
+		const float Length = InteractionBoxLength;
+
+		FVector HalfSize;
+		HalfSize.X = Length * 0.5f;
+		HalfSize.Y = Radius;
+		HalfSize.Z = HalfHeight;
+
+		InteractionBox->SetBoxExtent(HalfSize);
+		InteractionBox->SetRelativeLocation(FVector(Length * 0.5f + Radius, 0.f, 0.f));
+	}
+	else
+	{
+		UE_LOG(LogG2I, Log, TEXT("Character doesn't have a capsule component"));
 	}
 }
