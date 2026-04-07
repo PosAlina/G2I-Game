@@ -511,23 +511,6 @@ void UG2IUIManager::SetKeyByInputAction(UG2IWorldHintWidgetComponent* WidgetComp
 	}
 }
 
-void UG2IUIManager::SetKeyWidgetSize(UG2IWorldHintKeyWidgetComponent* WidgetComponent) const
-{
-	if (!ensure(WidgetComponent))
-	{
-		UE_LOG(LogG2I, Warning, TEXT("Attempting to set key in nullptr widget component in %s"), *GetName());
-		return;
-	}
-	if (!ensure(WidgetComponentParameters))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
-			*UG2IWidgetComponentParameters::StaticClass()->GetName(), *GetName());
-		return;
-	}
-
-	WidgetComponent->SetWidgetSize(WidgetComponentParameters->KeyWidgetDefaultSize);
-}
-
 void UG2IUIManager::SetupConfirmationWidget(const TFunction<void()>& NewConfirmAction,
 	const TFunction<void()>& NewCancelAction, const FString& NewQuestionStringID,
                                             const FString& NewConfirmStringID, const FString& NewCancelStringID) const
