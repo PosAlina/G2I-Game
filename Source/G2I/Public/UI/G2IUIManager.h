@@ -108,7 +108,6 @@ public:
 	
 	// ====================KEY HINT WIDGET ====================
 	void SetKeyByInputAction(UG2IWorldHintWidgetComponent *WidgetComponent, UInputAction* InputAction, const TSubclassOf<APawn>& PawnClass) const;
-	void SetKeyWidgetSize(UG2IWorldHintKeyWidgetComponent *WidgetComponent) const;
 	
 	// ==================== CONFIRMATION WIDGET ====================
 	void SetupConfirmationWidget(const TFunction<void()>& NewConfirmAction, const TFunction<void()>& NewCancelAction,

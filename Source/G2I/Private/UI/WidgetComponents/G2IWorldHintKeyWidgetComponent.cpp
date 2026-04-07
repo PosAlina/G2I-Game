@@ -13,14 +13,6 @@ UG2IWorldHintKeyWidgetComponent::UG2IWorldHintKeyWidgetComponent()
 void UG2IWorldHintKeyWidgetComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (!ensure(UIManager))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
-			*UG2IUIManager::StaticClass()->GetName(), *GetName());
-		return;
-	}
-	UIManager->SetKeyWidgetSize(this);
 	
 	FindOrAddWidgetByName(EG2IWidgetNames::KeyHint);
 	FindOrAddWidgetByName(EG2IWidgetNames::PointHint);
