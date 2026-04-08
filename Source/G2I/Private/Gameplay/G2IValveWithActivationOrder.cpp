@@ -16,8 +16,6 @@ AG2IValveWithActivationOrder::AG2IValveWithActivationOrder()
 
 	TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AG2IValveWithActivationOrder::OnTriggerBoxBeginOverlap);
 
-	// i love tags so much
-	// especially Interactive1 that every interactive object needs to have for some reason
 	Tags.Add(FName("Interactive1"));
 }
 
@@ -61,6 +59,12 @@ void AG2IValveWithActivationOrder::ApplyLocalRotation()
 	{
 		CurrentRotation = MaxRotation * (ActivationsNum + !bActivated);
 		SetActorTickEnabled(false);
+
+		if (GetWorld() && GetWorldTimerManager().IsTimerActive(DeactivationTimer))
+		{
+			GetWorldTimerManager().ClearTimer(DeactivationTimer);
+			RestorePosition();
+		}
 	}
 
 	if (CurrentRotation.Pitch < MinRotation.Pitch + MaxRotation.Pitch * (ActivationsNum - bActivated) ||
@@ -69,6 +73,12 @@ void AG2IValveWithActivationOrder::ApplyLocalRotation()
 	{
 		CurrentRotation = MinRotation * (ActivationsNum - bActivated);
 		SetActorTickEnabled(false);
+
+		if (GetWorld() && GetWorldTimerManager().IsTimerActive(DeactivationTimer))
+		{
+			GetWorldTimerManager().ClearTimer(DeactivationTimer);
+			RestorePosition();
+		}
 	}
 }
 
@@ -97,7 +107,17 @@ void AG2IValveWithActivationOrder::Activate_Implementation()
 
 void AG2IValveWithActivationOrder::Deactivate_Implementation()
 {
-	// Restore valve start position
+	if (IsActorTickEnabled() && GetWorld())
+	{
+		GetWorldTimerManager().SetTimer(DeactivationTimer, this, &ThisClass::RestorePosition, DelayTimeToDeactivate, false);
+		return;
+	}
+
+	RestorePosition();
+}
+
+void AG2IValveWithActivationOrder::RestorePosition()
+{
 	if (ActivationsNum != 0)
 	{
 		if (bStartActivation)

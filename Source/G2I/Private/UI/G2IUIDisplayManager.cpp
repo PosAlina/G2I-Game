@@ -186,7 +186,7 @@ UG2IUserWidget *UG2IUIDisplayManager::CreateNewWidget(const EG2IWidgetNames Widg
 	return nullptr;
 }
 
-void UG2IUIDisplayManager::OpenWidget(const EG2IWidgetNames WidgetName)
+void UG2IUIDisplayManager::OpenWidget(const EG2IWidgetNames WidgetName, const bool bIsFocus)
 {
 	if (const auto WidgetInfo = AllWidgets.Find(WidgetName))
 	{
@@ -195,20 +195,23 @@ void UG2IUIDisplayManager::OpenWidget(const EG2IWidgetNames WidgetName)
 			Widget->AddToViewport();
 			
 			TSet<EG2IWidgetNames>& ActiveWidgetsNamesByType = AllActiveWidgetsNames.FindOrAdd(WidgetInfo->Type);
+			const bool bSetActiveWidgetsIsEmpty = ActiveWidgetsNamesByType.IsEmpty();
 			ActiveWidgetsNamesByType.Add(WidgetName);
 
-			if (WidgetInfo->Type == EG2IWidgetTypes::UI)
+			if (WidgetInfo->Type == EG2IWidgetTypes::UI && bSetActiveWidgetsIsEmpty)
 			{
 				if (!ensure(PlayerController))
 				{
 					UE_LOG(LogG2I, Error, TEXT("Player controller doesn't exist in %s"), *GetName());
 					return;
 				}
-				
-				FInputModeUIOnly InputMode;
-				InputMode.SetWidgetToFocus(Widget->TakeWidget());
+				const FInputModeUIOnly InputMode;
 				PlayerController->SetInputMode(InputMode);
 				PlayerController->bShowMouseCursor = true;
+			}
+			if (bIsFocus)
+			{
+				Widget->SetFocus();
 			}
 		}
 	}
@@ -238,6 +241,10 @@ void UG2IUIDisplayManager::ShowWidget(const EG2IWidgetNames WidgetName)
 		{
 			Widget->SetVisibility(ESlateVisibility::Visible);
 			AllHiddenWidgets.Remove(WidgetName);
+			if (WidgetInfo->Type == EG2IWidgetTypes::UI)
+			{
+				Widget->SetFocus();
+			}
 		}
 	}
 }

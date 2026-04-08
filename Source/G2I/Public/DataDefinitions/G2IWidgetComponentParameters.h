@@ -14,7 +14,4 @@ class G2I_API UG2IWidgetComponentParameters : public UDataAsset
 
 public:
 
-	UPROPERTY(EditAnywhere)
-	FVector2D KeyWidgetDefaultSize = FVector2D(100.f, 100.f);
-
 };

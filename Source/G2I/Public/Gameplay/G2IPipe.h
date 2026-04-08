@@ -8,11 +8,11 @@
 #include "Gameplay/G2ITechnicalHole.h"
 #include "Gameplay/G2IValve.h"
 #include "SplinesMetadata/G2IPipesSplineMetadata.h"
-#include "Interfaces/G2IAirRecieverInterface.h"
+#include "Interfaces/G2IAirReceiverInterface.h"
 #include "G2IPipe.generated.h"
 
 UCLASS(Blueprintable, Placeable)
-class G2I_API AG2IPipe : public AActor, public IG2IAirRecieverInterface
+class G2I_API AG2IPipe : public AActor, public IG2IAirReceiverInterface
 {
 	GENERATED_BODY()
 	
@@ -20,12 +20,12 @@ public:
 	AG2IPipe();
 
 	// Generates Meshes, Interactable Objects & Pipes Connections
-	void OnConstruction(const FTransform& Transform) override;
+	virtual void OnConstruction(const FTransform& Transform) override;
 
-	void BeginPlay() override;
+	virtual void BeginPlay() override;
 
 	// Interface function
-	void RecieveAir_Implementation(AActor* Sender, bool bAirPassed) override;
+	virtual void ReceiveAir_Implementation(AActor* Sender, bool bAirPassed) override;
 
 	UFUNCTION()
 	void OnPipeBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -93,7 +93,7 @@ public:
 	bool GetReceiveFromOtherPipeAtSplinePoint(int32 PointIndex);
 
 private:
-	UG2IPipesBoxComponent* SpawnPipesBoxComponent(int32 PointIndex, bool bRecieves);
+	UG2IPipesBoxComponent* SpawnPipesBoxComponent(int32 PointIndex, bool bReceives);
 	void SpawnTechnicalHole(int32 PointIndex);
 	void SpawnValve(int32 PointIndex);
 	void SpawnInteractableBoxComponent(int32 PointIndex);
