@@ -472,9 +472,9 @@ void AG2IPipe::SpawnTechnicalHole(int32 PointIndex)
 
 void AG2IPipe::SpawnValve(int32 PointIndex)
 {
-	if (!ValveClass)
+	if (!ensure(ValveClass))
 	{
-		UE_LOG(LogG2I, Error, TEXT("Valve Class isn't set in %s"), *GetActorNameOrLabel());
+		UE_LOG(LogG2I, Warning, TEXT("Valve Class isn't set in %s"), *GetActorNameOrLabel());
 		return;
 	}
 
