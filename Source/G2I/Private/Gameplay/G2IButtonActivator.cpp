@@ -34,6 +34,16 @@ void AG2IButtonActivator::BeginPlay()
 
 AG2IButtonActivator::AG2IButtonActivator()
 {
+	SceneRootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+	if (!ensure(SceneRootComponent))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't create Root Component"), *GetActorNameOrLabel());
+	}
+	else
+	{
+		SetRootComponent(SceneRootComponent);
+	}
+	
 	LauncherComp = CreateDefaultSubobject<UG2ILauncherComponent>(TEXT("LauncherComp"));
 	if (!ensure(LauncherComp))
 	{

@@ -9,12 +9,12 @@ DEFINE_LOG_CATEGORY(LogG2I)
 
 void FG2IEditorModule::StartupModule()
 {
-    UE_LOG(LogG2I, Warning, TEXT("G2IEditor: Log Started"));
+    UE_LOG(LogG2I, Log, TEXT("G2IEditor: Log Started"));
 }
 
 void FG2IEditorModule::ShutdownModule()
 {
-    UE_LOG(LogG2I, Warning, TEXT("G2IEditor: Log Ended"));
+    UE_LOG(LogG2I, Log, TEXT("G2IEditor: Log Ended"));
 }
 
 #undef LOCTEXT_NAMESPACE

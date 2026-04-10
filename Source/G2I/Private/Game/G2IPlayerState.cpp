@@ -2,6 +2,7 @@
 
 #include "AIController.h"
 #include "G2I.h"
+#include "G2IGameInstance.h"
 #include "DataTables/G2IItemCharacter.h"
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
@@ -13,7 +14,23 @@ void AG2IPlayerState::BeginPlay()
 	Super::BeginPlay();
 
 	SetupPlayableDataTable();
-	SetupPlayableCharacters();
+
+	const UWorld *World = GetWorld();
+	if (!ensure(World))
+	{
+		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
+		return;
+	}
+	const UG2IGameInstance *GameInstance = Cast<UG2IGameInstance>(World->GetGameInstance());
+	if (!ensure(GameInstance))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Game Instance doesn't exist in %s"), *GetName());
+		return;
+	}
+	if (!GameInstance->IsMainMenuLevel())
+	{
+		SetupPlayableCharacters();
+	}
 }
 
 void AG2IPlayerState::SetupPlayableDataTable()

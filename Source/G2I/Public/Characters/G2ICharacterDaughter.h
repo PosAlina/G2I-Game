@@ -28,15 +28,14 @@ class AG2ICharacterDaughter : public ACharacter, public IG2ICharacterInterface, 
 
 public:
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Collision, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Collision)
 	TObjectPtr<UG2ICharacterCollisionComponent> CollisionComp;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction)
 	TObjectPtr<UG2IInteractionComponent> InteractionComp;
-
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
-	UG2IInventoryComponent* InventoryComp;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory)
+	TObjectPtr<UG2IInventoryComponent> InventoryComp;
 	
 	/** Different behavior of camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)

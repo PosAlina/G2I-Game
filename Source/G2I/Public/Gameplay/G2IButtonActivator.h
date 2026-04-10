@@ -31,6 +31,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> StaticMeshComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<USceneComponent> SceneRootComponent;
+
 	virtual bool CanInteract_Implementation(const ACharacter* Interactor) override;
 	virtual void Interact_Implementation(const ACharacter* Interactor) override;
 	virtual UG2IWorldHintKeyWidgetComponent* GetInteractionKeyHintComponent_Implementation() override;
