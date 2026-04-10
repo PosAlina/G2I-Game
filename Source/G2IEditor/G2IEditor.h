@@ -7,9 +7,6 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(LogG2I, Log, All);
 
-class FG2IEditorModule : public IModuleInterface
+class FG2IEditorModule final : public IModuleInterface
 {
-public:
-    virtual void StartupModule() override;
-    virtual void ShutdownModule() override;
 };
