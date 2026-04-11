@@ -3,11 +3,11 @@
 #include "G2IAimingComponent.h"
 #include "G2IGlovePunchComponent.h"
 #include "G2ISteamShotComponent.h"
-#include "G2IReloadingComponent.h"
 #include "GameFramework/Character.h"
 
 #if WITH_EDITORONLY_DATA
 #include "G2ISteamMovementComponent.h"
+#include "G2IReloadingComponent.h"
 #endif
 
 UG2ISteamGloveComponent::UG2ISteamGloveComponent()
@@ -16,17 +16,19 @@ UG2ISteamGloveComponent::UG2ISteamGloveComponent()
 	SteamShotComp = CreateDefaultSubobject<UG2ISteamShotComponent>(FName("SteamShotComp"));
 	GlovePunchComp = CreateDefaultSubobject<UG2IGlovePunchComponent>(FName("GlovePunchComp"));
 
-#if WITH_EDITOR
-	ReloadingComp = CreateDefaultSubobject<UG2IReloadingComponent>(FName("ReloadingComp"));
-	SteamMovementComp = CreateDefaultSubobject<UG2ISteamMovementComponent>(FName("SteamMovementComp"));
-#endif
+	bWantsInitializeComponent = true;
 }
 
-void UG2ISteamGloveComponent::OnRegister()
+void UG2ISteamGloveComponent::InitializeComponent()
 {
-	Super::OnRegister();
+	Super::InitializeComponent();
 
 	AttachGloveComponents();
+
+#if WITH_EDITOR
+	SteamMovementComp = NewObject<UG2ISteamMovementComponent>(this, UG2ISteamMovementComponent::StaticClass(), FName("SteamMovementComp"));
+	ReloadingComp = NewObject<UG2IReloadingComponent>(this, UG2IReloadingComponent::StaticClass(), FName("ReloadingComp"));
+#endif
 }
 
 void UG2ISteamGloveComponent::AttachGloveComponents()

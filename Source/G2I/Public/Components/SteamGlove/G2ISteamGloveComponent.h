@@ -6,11 +6,11 @@
 
 class UG2ISteamShotComponent;
 class UG2IAimingComponent;
-class UG2IReloadingComponent;
 class UG2IGlovePunchComponent;
 
 #if WITH_EDITORONLY_DATA
 class UG2ISteamMovementComponent;
+class UG2IReloadingComponent;
 #endif
 
 UCLASS(ClassGroup=(SteamGlove), meta=(BlueprintSpawnableComponent))
@@ -57,8 +57,7 @@ protected:
 public:
 	
 	UG2ISteamGloveComponent();
-	
-	virtual void OnRegister() override;
+	virtual void InitializeComponent() override;
 
 private:
 	
