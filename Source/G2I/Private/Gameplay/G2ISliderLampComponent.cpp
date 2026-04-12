@@ -193,8 +193,8 @@ void UG2ISliderLampComponent::SetBaseColor(const FLinearColor& NewBaseColor)
 	{
 		return;
 	}
-	float OutValue;
-	if (!ensure(DynamicMaterial->GetScalarParameterValue(FName("Base Color"), OutValue)))
+	FLinearColor OutValue;
+	if (!ensure(DynamicMaterial->GetVectorParameterValue(FName("Base Color"), OutValue)))
 	{
 		G2I::DebugWarningMessage("Material of " + GetName() + " has no Base Color" );
 		return;
