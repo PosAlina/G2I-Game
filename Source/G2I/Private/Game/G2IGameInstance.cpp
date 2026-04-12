@@ -174,11 +174,25 @@ bool UG2IGameInstance::LoadLevel(const TSoftObjectPtr<UWorld>& Level, const uint
 
 bool UG2IGameInstance::LoadNextLevel()
 {
-	if (!LoadLevel(CurrentLevelIndex + 1))
+#if WITH_EDITOR
+	int32 LastLevelIndex = LevelsNameInOrderInEditor.Num() - 1;
+#else
+	int32 LastLevelIndex = LevelsNameInOrderInGame.Num() - 1;
+#endif
+	
+	if (CurrentLevelIndex == LastLevelIndex)
 	{
-		return LoadMainMenuLevel();
+		const UG2IUIManager *UIManager = GetSubsystem<UG2IUIManager>();
+		if (!ensure(UIManager))
+		{
+			UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+				*UG2IUIManager::StaticClass()->GetName());
+			return false;
+		}
+		UIManager->OpenWidget(EG2IWidgetNames::CutSceneEndGame);
+		return true;
 	}
-	return true;
+	return LoadLevel(CurrentLevelIndex + 1);
 }
 
 bool UG2IGameInstance::LoadMainMenuLevel()
