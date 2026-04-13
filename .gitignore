@@ -82,5 +82,9 @@ Plugins/**/Intermediate/*
 # Cache files for the editor to use
 DerivedDataCache/*
 
+# Temp files for local computers
 enc_temp_folder/*
+**/_GENERATED/*
+
+# File of Pchola -_-
 TODO.txt

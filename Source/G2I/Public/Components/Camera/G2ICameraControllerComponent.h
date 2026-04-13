@@ -50,8 +50,13 @@ private:
 	float OldCameraYawRotation = 0.;
 
 protected:
-
+	
+	UG2ICameraControllerComponent();
+	
 	virtual void BeginPlay() override;
+	virtual void InitializeComponent() override;
+
+	void PreInitializationDefaults();
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 		FActorComponentTickFunction* ThisTickFunction) override;

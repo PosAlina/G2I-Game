@@ -8,6 +8,11 @@ AG2IAIControllerEngineer::AG2IAIControllerEngineer()
 
 void AG2IAIControllerEngineer::OnPossess(APawn* InPawn)
 {
+	if (InPawn == GetPawn())
+	{
+		return;
+	}
+	
 	Super::OnPossess(InPawn);
 
 	if (MovementComponent)

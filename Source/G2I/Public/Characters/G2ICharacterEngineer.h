@@ -52,9 +52,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	TObjectPtr<UG2IFixedCamerasComponent> FixedCamerasComp;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
-	UG2IInventoryComponent* InventoryComp;
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory)
+	TObjectPtr<UG2IInventoryComponent> InventoryComp;
 
 private:
 

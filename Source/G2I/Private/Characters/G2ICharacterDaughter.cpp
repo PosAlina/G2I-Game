@@ -22,14 +22,15 @@ AG2ICharacterDaughter::AG2ICharacterDaughter(const FObjectInitializer& ObjectIni
 
 
 	InventoryComp = CreateDefaultSubobject<UG2IInventoryComponent>(TEXT("InventoryComp"));
-
-
+	
 	if (!ensure(InventoryComp))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s hasn't inventory component %s"), *GetName(), *UG2IInventoryComponent::StaticClass()->GetName());
-		return;
 	}
-	InventoryComp->PickupItemTag = TEXT("Ghost");
+	else
+	{
+		InventoryComp->PickupItemTag = TEXT("Ghost");
+	}
 
 	CameraControllerComp = CreateDefaultSubobject<UG2ICameraControllerComponent>(TEXT("CameraControllerComp"));
 	ThirdPersonCameraComp = CreateDefaultSubobject<UG2IThirdPersonCameraComponent>(TEXT("ThirdPersonCameraComp"));

@@ -26,6 +26,8 @@ UG2ICharacterMovementComponent::UG2ICharacterMovementComponent()
 	MinAnalogWalkSpeed = 20.f;
 	BrakingDecelerationWalking = 2000.f;
 	BrakingDecelerationFalling = 1500.0f;
+	MaxSimulationIterations = 10;
+	MaxSimulationTimeStep = 0.06f;
 }
 
 void UG2ICharacterMovementComponent::BeginPlay()
