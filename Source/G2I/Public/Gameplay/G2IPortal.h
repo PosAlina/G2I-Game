@@ -8,6 +8,7 @@ class ACharacter;
 class UArrowComponent;
 class UStaticMeshComponent;
 class UBoxComponent;
+class AG2IPlayerController;
 
 UCLASS()
 class G2I_API AG2IPortal : public AActor
@@ -20,8 +21,13 @@ public:
 protected:
     virtual void BeginPlay() override;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    virtual void OnConstruction(const FTransform& Transform) override;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
     TObjectPtr<UArrowComponent> Arrow;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    TObjectPtr<UArrowComponent> CameraRotationArrow;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     TObjectPtr<UStaticMeshComponent> PortalMesh;
@@ -40,5 +46,8 @@ public:
     bool bIsActive = true;
 
     UFUNCTION(BlueprintCallable)
-    void Teleport(ACharacter* Interactor);
+    void Teleport(ACharacter* Interactor) const;
+
+    UPROPERTY()
+    TObjectPtr<AG2IPlayerController> PlayerController;
 };

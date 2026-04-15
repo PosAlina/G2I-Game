@@ -26,6 +26,9 @@ public:
 	TObjectPtr<UButton> CreatorsButton;
 
 	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> GalleryButton;
+
+	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> QuitGameButton;
 
 protected:
@@ -36,6 +39,15 @@ protected:
 	void OnNewGameButtonClicked();
 
 	UFUNCTION()
+	void OnOptionsButtonClicked();
+
+	UFUNCTION()
+	void OnCreatorsButtonClicked();
+
+	UFUNCTION()
+	void OnGalleryButtonClicked();
+
+	UFUNCTION()
 	void OnQuitGameButtonClicked();
 
 private:
@@ -43,6 +55,7 @@ private:
 	void NewGameWithSaveExists() const;
 	void LoadNewGame() const;
 	
+	void InitializeDefaults() const;
 	void BindDelegates();
 	
 	TFunction<void()> GetShowCurrentWidgetFunction() const;

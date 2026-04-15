@@ -10,10 +10,11 @@ void UG2IMainMenuWidget::InitializeAfterManagerLoading()
 {
 	Super::InitializeAfterManagerLoading();
 
+	InitializeDefaults();
 	BindDelegates();
 }
 
-void UG2IMainMenuWidget::BindDelegates()
+void UG2IMainMenuWidget::InitializeDefaults() const
 {
 	if (ensure(ContinueButton))
 	{
@@ -23,6 +24,10 @@ void UG2IMainMenuWidget::BindDelegates()
 	{
 		UE_LOG(LogG2I, Error, TEXT("Continue button isn't existed in %s"), *GetName());
 	}
+}
+
+void UG2IMainMenuWidget::BindDelegates()
+{
 	if (ensure(NewGameButton))
 	{
 		NewGameButton->OnClicked.AddDynamic(this, &ThisClass::OnNewGameButtonClicked);
@@ -33,7 +38,7 @@ void UG2IMainMenuWidget::BindDelegates()
 	}
 	if (ensure(OptionsButton))
 	{
-		OptionsButton->SetIsEnabled(false);
+		OptionsButton->OnClicked.AddDynamic(this, &ThisClass::OnOptionsButtonClicked);
 	}
 	else
 	{
@@ -41,11 +46,19 @@ void UG2IMainMenuWidget::BindDelegates()
 	}
 	if (ensure(CreatorsButton))
 	{
-		CreatorsButton->SetIsEnabled(false);
+		CreatorsButton->OnClicked.AddDynamic(this, &ThisClass::OnCreatorsButtonClicked);
 	}
 	else
 	{
 		UE_LOG(LogG2I, Error, TEXT("Creators button isn't existed in %s"), *GetName());
+	}
+	if (ensure(GalleryButton))
+	{
+		GalleryButton->OnClicked.AddDynamic(this, &ThisClass::OnGalleryButtonClicked);
+	}
+	else
+	{
+		UE_LOG(LogG2I, Error, TEXT("Gallery button isn't existed in %s"), *GetName());
 	}
 	if (ensure(QuitGameButton))
 	{
@@ -101,6 +114,48 @@ void UG2IMainMenuWidget::NewGameWithSaveExists() const
 	"Confirmation.Question.NewGame",
 	"Confirmation.Confirm.NewGame",
 	"Confirmation.Cancel.NewGame");
+}
+
+void UG2IMainMenuWidget::OnOptionsButtonClicked()
+{
+	if (!ensure(UIManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIManager::StaticClass()->GetName());
+		return;
+	}
+	UIManager->HideWidget(EG2IWidgetNames::MainMenu);
+	UIManager->OpenWidget(EG2IWidgetNames::Options);
+	
+	UIManager->SetupOptionsWidget(GetShowCurrentWidgetFunction());
+}
+
+void UG2IMainMenuWidget::OnCreatorsButtonClicked()
+{
+	if (!ensure(UIManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIManager::StaticClass()->GetName());
+		return;
+	}
+	UIManager->HideWidget(EG2IWidgetNames::MainMenu);
+	UIManager->OpenWidget(EG2IWidgetNames::Creators);
+
+	UIManager->SetupCreatorsWidget(GetShowCurrentWidgetFunction());
+}
+
+void UG2IMainMenuWidget::OnGalleryButtonClicked()
+{
+	if (!ensure(UIManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIManager::StaticClass()->GetName());
+		return;
+	}
+	UIManager->HideWidget(EG2IWidgetNames::MainMenu);
+	UIManager->OpenWidget(EG2IWidgetNames::Gallery);
+	
+	UIManager->SetupGalleryWidget(GetShowCurrentWidgetFunction());
 }
 
 void UG2IMainMenuWidget::OnQuitGameButtonClicked()

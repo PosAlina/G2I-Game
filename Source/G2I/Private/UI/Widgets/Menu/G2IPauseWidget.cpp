@@ -25,7 +25,7 @@ void UG2IPauseWidget::BindDelegates()
 	}
 	if (ensure(OptionsButton))
 	{
-		OptionsButton->SetIsEnabled(false);
+		OptionsButton->OnClicked.AddDynamic(this, &ThisClass::OnOptionsButtonClicked);
 	}
 	else
 	{
@@ -49,18 +49,27 @@ void UG2IPauseWidget::OnContinueButtonClicked()
 			*UG2IUIManager::StaticClass()->GetName());
 		return;
 	}
-	if (!ensure(PlayerController))
+	UIManager->CloseWidget(EG2IWidgetNames::Pause);
+
+	if (OnContinue)
+	{
+		OnContinue();
+	}
+}
+
+void UG2IPauseWidget::OnOptionsButtonClicked()
+{
+	if (!ensure(UIManager))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
-			*AG2IPlayerController::StaticClass()->GetName());
+			*UG2IUIManager::StaticClass()->GetName());
 		return;
 	}
 	
-	UIManager->CloseUI();
-
-	PlayerController->SetInputMode(FInputModeGameOnly());
-	PlayerController->bShowMouseCursor = false;
-	PlayerController->SetPause(false);
+	UIManager->HideWidget(EG2IWidgetNames::Pause);
+	UIManager->OpenWidget(EG2IWidgetNames::Options);
+	
+	UIManager->SetupOptionsWidget(GetShowCurrentWidgetFunction());
 }
 
 void UG2IPauseWidget::OnMainMenuButtonClicked()
@@ -83,7 +92,7 @@ void UG2IPauseWidget::OnMainMenuButtonClicked()
 		}
 		GameInstance->LoadMainMenuLevel();
 	},
-	{},
+	GetShowCurrentWidgetFunction(),
 	"Confirmation.Question.OpenMainMenu",
 	"Confirmation.Confirm.OpenMainMenu",
 	"Confirmation.Cancel.OpenMainMenu");

@@ -5,18 +5,61 @@
 #include "Camera/CameraComponent.h"
 #include "G2ICameraInterface.h"
 #include "G2IFixedCamerasInputInterface.h"
+#include "G2IGameInstance.h"
 #include "G2IThirdPersonCameraInputInterface.h"
 #include "Engine/World.h"
 #include "GameFramework/Character.h"
+
+UG2ICameraControllerComponent::UG2ICameraControllerComponent()
+{
+	bWantsInitializeComponent = true;
+}
 
 void UG2ICameraControllerComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	
 	PrimaryComponentTick.bCanEverTick = true;
-	SetupDefaults();
+
 	BindDelegates();
 	SetupCamerasDefaults();
+}
+
+void UG2ICameraControllerComponent::InitializeComponent()
+{
+	Super::InitializeComponent();
+
+	PreInitializationDefaults();
+}
+
+void UG2ICameraControllerComponent::PreInitializationDefaults()
+{
+	AActor *OwnerActor = GetOwner();
+	if (!ensure(OwnerActor))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Owner doesn't exist in %s"), *GetName());
+		return;
+	}
+	
+	Owner = Cast<ACharacter>(OwnerActor);
+	if (!ensure(Owner))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Owner isn't character in %s"), *GetName());
+		return;
+	}
+	const UWorld *World = GetWorld();
+	if (!ensure(World))
+	{
+		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
+		return;
+	}
+	UG2IGameInstance *GameInstance = Cast<UG2IGameInstance>(World->GetGameInstance());
+	if (!ensure(GameInstance))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Game Instance doesn't exist in %s"), *GetName());
+		return;
+	}
+	GameInstance->OnStartLevelInitDelegate.AddUObject(this, &ThisClass::SetupDefaults);
 }
 
 void UG2ICameraControllerComponent::TickComponent(float DeltaTime, ELevelTick TickType,
@@ -112,7 +155,7 @@ void UG2ICameraControllerComponent::BroadcastCameraTypeAtBlendStart()
 
 bool UG2ICameraControllerComponent::IsOwnerControllable() const
 {
-	if (!Owner)
+	if (!ensure(Owner))
 	{
 		UE_LOG(LogG2I, Error, TEXT("Owner doesn't exist in %s"), *GetName());
 		return false;
@@ -202,20 +245,6 @@ void UG2ICameraControllerComponent::SetupDefaults()
 	if (!ensure(World))
 	{
 		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
-		return;
-	}
-	
-	AActor *OwnerActor = GetOwner();
-	if (!ensure(OwnerActor))
-	{
-		UE_LOG(LogG2I, Error, TEXT("Owner doesn't exist in %s"), *GetName());
-		return;
-	}
-	
-	Owner = Cast<ACharacter>(OwnerActor);
-	if (!ensure(Owner))
-	{
-		UE_LOG(LogG2I, Error, TEXT("Owner isn't character in %s"), *GetName());
 		return;
 	}
 	

@@ -1,6 +1,6 @@
-
 #include "Gameplay/G2IAirTab.h"
 #include "Interfaces/G2IActivationInterface.h"
+#include "G2I.h"
 
 AG2IAirTab::AG2IAirTab()
 {
@@ -8,40 +8,40 @@ AG2IAirTab::AG2IAirTab()
 	if (StaticMeshComponent)
 		SetRootComponent(StaticMeshComponent);
 
-	BoxComponent = CreateDefaultSubobject<UG2IPipesBoxComponent>(TEXT("G2IPipesBoxComponent"));
+	BoxComponent = CreateDefaultSubobject<UG2IPipesBoxComponent>(TEXT("PipesBoxComponent"));
 	BoxComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	BoxComponent->Owner = this;
-	BoxComponent->bRecieves = true;
-	BoxComponent->SetGenerateOverlapEvents(true);
-	BoxComponent->SetCollisionObjectType(ECC_GameTraceChannel3);					 // Pipes Custom Collision
-	BoxComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Overlap); // Pipes Custom Collision
 }
 
 void AG2IAirTab::OnConstruction(const FTransform& Transform)
 {
-	BoxComponent->Owner = this;
+	Super::OnConstruction(Transform);
 
 	BoxComponent->SetBoxExtent(BoxExtents);
 	if (StaticMeshComponent->GetStaticMesh())
 		BoxComponent->SetRelativeLocation(StaticMeshComponent->GetStaticMesh()->GetBounds().GetBox().GetCenter());
 }
 
-void AG2IAirTab::RecieveAir_Implementation(AActor* Sender, bool bAirPassed)
+void AG2IAirTab::ReceiveAir_Implementation(AActor* Sender, bool bAirPassed)
 {
-	UE_LOG(LogG2I, Log, TEXT("RecieveAir called in %s"), *GetActorNameOrLabel());
+	if (!(Sender) || (Sender == this))
+		return;
+
+	UE_LOG(LogG2I, Log, TEXT("ReceiveAir called in %s with bAirPassed = %d."), *GetActorNameOrLabel(), bAirPassed);
 	AirSendersMap.Add(Sender, bAirPassed);
 	ChangeActivated(CheckIfEnoughAir());
 }
 
-bool AG2IAirTab::CheckIfEnoughAir()
+bool AG2IAirTab::CheckIfEnoughAir() const
 {
-	int Counter = 0;
+	int32 Counter = 0;
 
-	for (auto& SenderPair : AirSendersMap)
+	for (const auto& [_, bHasAir] : AirSendersMap)
 	{
-		if (SenderPair.Value)
+		if (bHasAir)
 		{
-			if (++Counter >= NumOfPipesNeeded)
+			++Counter;
+			if (Counter == NumOfPipesNeeded)
 				return true;
 		}
 	}
@@ -54,17 +54,18 @@ bool AG2IAirTab::GetActivated() const
 	return bActivated;
 }
 
-void AG2IAirTab::ChangeActivated(bool bNewActivated)
+void AG2IAirTab::ChangeActivated(const bool bNewActivated)
 {
 	if (bActivated != bNewActivated)
 	{
-		UE_LOG(LogG2I, Log, TEXT("bActivated changed in %s to %d"), *GetActorNameOrLabel(), bNewActivated);
 		bActivated = bNewActivated;
+		UE_LOG(LogG2I, Log, TEXT("bActivated changed in %s to %d"), *GetActorNameOrLabel(), bNewActivated);
+
 		if (bActivated)
 		{
 			ActivateActors();
 		}
-		else 
+		else
 		{
 			DeactivateActors();
 		}
@@ -73,7 +74,7 @@ void AG2IAirTab::ChangeActivated(bool bNewActivated)
 
 void AG2IAirTab::ActivateActors()
 {
-	for (auto& Actor : ActorsToActivate)
+	for (const auto& Actor : ActorsToActivate)
 	{
 		if (Actor && Actor->Implements<UG2IActivationInterface>())
 		{
@@ -86,7 +87,7 @@ void AG2IAirTab::ActivateActors()
 
 void AG2IAirTab::DeactivateActors()
 {
-	for (auto& Actor : ActorsToActivate)
+	for (const auto& Actor : ActorsToActivate)
 	{
 		if (Actor && Actor->Implements<UG2IActivationInterface>())
 		{
@@ -99,6 +100,8 @@ void AG2IAirTab::DeactivateActors()
 
 void AG2IAirTab::BeginPlay()
 {
+	Super::BeginPlay();
+
 	if (bActivated)
 	{
 		ActivateActors();
