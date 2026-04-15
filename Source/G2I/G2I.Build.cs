@@ -23,7 +23,8 @@ public class G2I : ModuleRules
       		"GameplayTags",
 			"CinematicCamera",
 			"NavigationSystem",
-			"SlateCore"
+			"SlateCore",
+			"Niagara"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
