@@ -73,6 +73,7 @@ void UG2ISliderLampComponent::SetDefaultValues()
 	}
 	
 	SetEmissiveColor(EmissiveInfo.Color);
+	SetMaxEmissiveIntensity(MaxLightIntensityInActivationColorZone);
 	
 	if (EmissiveInfo.bIsOn)
 	{

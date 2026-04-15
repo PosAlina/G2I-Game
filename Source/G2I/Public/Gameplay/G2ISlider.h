@@ -5,6 +5,7 @@
 #include "GameFramework/Actor.h"
 #include "G2ISlider.generated.h"
 
+class UG2ISoundComponent;
 class AG2IPlayerController;
 class UG2ILauncherComponent;
 struct FInputActionValue;
@@ -16,6 +17,13 @@ class UG2ISliderLampComponent;
 enum class EZoneColor : uint8;
 class UBoxComponent;
 class FTimerManager;
+
+UENUM(BlueprintType)
+enum class EG2ISliderDirection : uint8
+{
+	Up UMETA(DisplayName = "Up"),
+	Down UMETA(DisplayName = "Down")
+};
 
 UCLASS()
 class G2I_API AG2ISlider : public AActor, public IG2IInteractiveObjectInterface
@@ -60,6 +68,11 @@ private:
 
 	void SetupDefaults();
 	void BindDelegates();
+
+	void SliderPush();
+	void SelectColor();
+
+	void SoundComponentPlay(const int32 SoundID) const;
 	
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
@@ -95,15 +108,19 @@ public:
 	TObjectPtr<UInputAction> MoveSliderAction;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TObjectPtr<UInputAction> SliderExitAction;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TObjectPtr<UInputAction> SliderPushAction;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float LampActivationTime = 1.5f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 LampFlashCount = 3;
+	int32 LampFlashCount = 1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float LampFlashFrequency = 0.3f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float LampErrorTime = 1.5f;
+	float LampErrorTime = 0.1f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 LampErrorFlashCount = 4;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float ImpulsePower = 17.0f;
@@ -112,6 +129,24 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float ImpulseDeclineFrequency = 0.008f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SliderPushLength = 5.0f;
+	float SliderZStartLocation;
+	bool bIsSliderPush = false;
+	EG2ISliderDirection SliderPushDirection = EG2ISliderDirection::Down;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SliderPushSpeed = 0.15f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TObjectPtr<UG2ISoundComponent> SoundComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString CorrectSoundName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString ErrorSoundName;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<AActor> SliderHelpList;
 	
@@ -138,9 +173,7 @@ private:
 	TObjectPtr<AG2IPlayerController> PlayerController;
 	UPROPERTY()
 	TObjectPtr<UWorld> World;
-	UPROPERTY()
 	FTimerHandle ActivationZoneTimer;
-	UPROPERTY()
 	FTimerHandle ImpulseTimer;
 	UPROPERTY()
 	TMap<EZoneColor, TObjectPtr<UG2ISliderLampComponent>> Lamps;
@@ -150,5 +183,7 @@ private:
 	TObjectPtr<UG2IColorZoneComponent> CurrentCommonColorZone;
 	UPROPERTY()
 	TObjectPtr<UG2IColorZoneComponent> CurrentActivationColorZone;
-	FTimerManager* TimerManager;
+	FTimerHandle SliderPushTimer;
+	int32 CorrectSoundID;
+	int32 ErrorSoundID;
 };
