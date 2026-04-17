@@ -2,10 +2,12 @@
 
 #include "CoreMinimal.h"
 #include "G2IMovementInputInterface.h"
+#include "Camera/CameraComponent.h"
 #include "Components/ActorComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "G2ICharacterMovementComponent.generated.h"
 
+class AG2IPlayerController;
 class UG2ICameraDefaultsParameters;
 enum class EG2ICameraBlendState : uint8;
 enum class EG2ICameraTypeEnum : uint8;
@@ -26,6 +28,9 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UG2ICameraDefaultsParameters> CameraDefaultsParameters;
+	
+	UPROPERTY()
+	TObjectPtr<AG2IPlayerController> PlayerController;
 	
 protected:
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FJumpingDelegate);
@@ -59,11 +64,11 @@ protected:
 	
 	UG2ICharacterMovementComponent();
 
+public:
+	
 	virtual void BeginPlay() override;
 
 	virtual void OnRegister() override;
-
-public:
 
 	// Interface methods
 	UFUNCTION(BlueprintCallable, Category="Input")
@@ -125,9 +130,12 @@ protected:
 	void DisableRotationTowardsCamera();
 
 	UFUNCTION()
-	void SetAbilityRotationTowardsCamera(EG2ICameraTypeEnum CurrentCameraType, EG2ICameraBlendState CurrentBlendState);
+	void SetMovementWithThirdPersonCamera(EG2ICameraBlendState CurrentBlendState, const UCameraComponent* NewCamera);
 	
-	void ResetCameraPendingYawRotation();
+	UFUNCTION()
+	void SetMovementWithFixedCamera(EG2ICameraBlendState CurrentBlendState, const UCameraComponent* NewCamera);
+	
+	void ResetCameraPendingYawRotation(const UCameraComponent* NewCamera);
 
 	UFUNCTION()
 	void SetCameraPendingYawRotation(double YawValue);

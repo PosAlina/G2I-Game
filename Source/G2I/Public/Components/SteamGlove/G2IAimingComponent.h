@@ -5,12 +5,12 @@
 #include "G2IHitInfo.h"
 #include "Components/ActorComponent.h"
 #include "G2IAimTypeEnum.h"
+#include "Camera/CameraComponent.h"
 #include "G2IAimingComponent.generated.h"
 
 enum class EG2ICameraBlendState : uint8;
 class UG2IUIManager;
 enum class EG2IAimType : uint8;
-enum class EG2ICameraTypeEnum : uint8;
 class UG2IAimingWidget;
 class AG2IPlayerController;
 
@@ -101,7 +101,10 @@ public:
 protected:
 
 	UFUNCTION()
-	void SetAbilityAiming(EG2ICameraTypeEnum CurrentCameraType, EG2ICameraBlendState CurrentBlendState);
+	void EnableAbilityAiming(EG2ICameraBlendState CurrentBlendState,const UCameraComponent* NewCamera);
+	
+	UFUNCTION()
+	void DisableAbilityAiming(EG2ICameraBlendState CurrentBlendState, const UCameraComponent* NewCamera);
 	
 	UFUNCTION()
 	void SetAimDistance(const float NewAimDistance);
@@ -121,6 +124,6 @@ private:
 
 	void SetAimType(const AActor* TargetActor);
 	
-	void OutlineController(const AActor* ActorToChangeOutline, bool bOutlineMode);
+	void OutlineController(const AActor* ActorToChangeOutline, bool bOutlineMode) const;
 
 };

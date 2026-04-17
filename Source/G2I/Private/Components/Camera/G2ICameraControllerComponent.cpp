@@ -18,8 +18,6 @@ UG2ICameraControllerComponent::UG2ICameraControllerComponent()
 void UG2ICameraControllerComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	PrimaryComponentTick.bCanEverTick = true;
 
 	BindDelegates();
 	SetupCamerasDefaults();
@@ -60,22 +58,6 @@ void UG2ICameraControllerComponent::PreInitializationDefaults()
 		return;
 	}
 	GameInstance->OnStartLevelInitDelegate.AddUObject(this, &ThisClass::SetupDefaults);
-}
-
-void UG2ICameraControllerComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-	FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	if (IsOwnerControllable())
-	{
-		if (!CurrentCameraComponents.IsEmpty() &&
-			CurrentCameraComponents[CurrentCameraIndex % CurrentCameraComponents.Num()])
-		{
-			PlayerController->SetRotationTowardsCamera(
-				*CurrentCameraComponents[CurrentCameraIndex % CurrentCameraComponents.Num()]);
-		}
-	}
 }
 
 void UG2ICameraControllerComponent::SetupCurrentCamera_Implementation()
@@ -145,12 +127,34 @@ void UG2ICameraControllerComponent::RemoveCamera(UCameraComponent* RemovedCamera
 
 void UG2ICameraControllerComponent::BroadcastCameraTypeAfterBlendFinish()
 {
-	OnSetCameraTypeDelegate.Broadcast(CurrentCameraType, EG2ICameraBlendState::Finish);
+	const UCameraComponent *NewCamera = nullptr;
+	if (CurrentCameraComponents.IsValidIndex(CurrentCameraIndex))
+	{
+		NewCamera= CurrentCameraComponents[CurrentCameraIndex];
+	}
+		
+	switch (CurrentCameraType)
+	{
+	case EG2ICameraTypeEnum::ThirdPersonCamera:
+		OnSetThirdPersonCameraTypeDelegate.Broadcast(EG2ICameraBlendState::Finish, NewCamera);
+		break;
+	case EG2ICameraTypeEnum::FixedCamera:
+		OnSetFixedCameraTypeDelegate.Broadcast(EG2ICameraBlendState::Finish, NewCamera);
+		break;
+	}
 }
 
-void UG2ICameraControllerComponent::BroadcastCameraTypeAtBlendStart()
+void UG2ICameraControllerComponent::BroadcastCameraTypeAtBlendStart(const UCameraComponent& NewCamera) const
 {
-	OnSetCameraTypeDelegate.Broadcast(CurrentCameraType, EG2ICameraBlendState::Start);
+	switch (CurrentCameraType)
+	{
+	case EG2ICameraTypeEnum::ThirdPersonCamera:
+		OnSetThirdPersonCameraTypeDelegate.Broadcast(EG2ICameraBlendState::Start, &NewCamera);
+		break;
+	case EG2ICameraTypeEnum::FixedCamera:
+		OnSetFixedCameraTypeDelegate.Broadcast(EG2ICameraBlendState::Start, &NewCamera);
+		break;
+	}
 }
 
 bool UG2ICameraControllerComponent::IsOwnerControllable() const
@@ -199,11 +203,10 @@ bool UG2ICameraControllerComponent::SetCamera(const UCameraComponent& NewCamera)
 	{
 		CurrentCameraType = EG2ICameraTypeEnum::FixedCamera;
 	}
-	BroadcastCameraTypeAtBlendStart();
-	
+	SetThirdPersonCameraYawRotation();
+	BroadcastCameraTypeAtBlendStart(NewCamera);
 	PlayerController->SetViewTargetWithBlend(OwnerActor, CameraDefaultsParameters->CameraTransitionTime,
 		VTBlend_Linear, 0, true);
-	PlayerController->SetRotationTowardsCamera(NewCamera);
 	
 	return true;
 }
@@ -377,10 +380,5 @@ void UG2ICameraControllerComponent::SetThirdPersonCameraYawRotation()
 
 void UG2ICameraControllerComponent::SetCurrentCameraIndex(const int32 NewCameraIndex)
 {
-	if (CurrentCameraIndex == NewCameraIndex)
-	{
-		return;
-	}
-	SetThirdPersonCameraYawRotation();
 	CurrentCameraIndex = NewCameraIndex;
 }

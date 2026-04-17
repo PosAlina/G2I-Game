@@ -118,7 +118,8 @@ void UG2IAimingComponent::BindDelegates()
 	
 	if (UG2ICameraControllerComponent *CameraControllerComponent = Owner->FindComponentByClass<UG2ICameraControllerComponent>())
 	{
-		CameraControllerComponent->OnSetCameraTypeDelegate.AddDynamic(this, &ThisClass::SetAbilityAiming);
+		CameraControllerComponent->OnSetThirdPersonCameraTypeDelegate.AddDynamic(this, &ThisClass::EnableAbilityAiming);
+		CameraControllerComponent->OnSetFixedCameraTypeDelegate.AddDynamic(this, &ThisClass::DisableAbilityAiming);
 	}
 
 	if (UG2ISteamShotComponent *SteamShotComponent = Owner->FindComponentByClass<UG2ISteamShotComponent>())
@@ -186,9 +187,9 @@ UActorComponent *UG2IAimingComponent::GetCurrentComponentUsingAim_Implementation
 	return nullptr;
 }
 
-void UG2IAimingComponent::SetAbilityAiming(EG2ICameraTypeEnum CurrentCameraType, EG2ICameraBlendState CurrentBlendState)
+void UG2IAimingComponent::EnableAbilityAiming(const EG2ICameraBlendState CurrentBlendState, const UCameraComponent* NewCamera)
 {
-	if (CurrentCameraType == EG2ICameraTypeEnum::ThirdPersonCamera && CurrentBlendState == EG2ICameraBlendState::Finish)
+	if (CurrentBlendState == EG2ICameraBlendState::Finish)
 	{
 		bCanAiming = true;
 		if (bWantsAiming)
@@ -197,8 +198,12 @@ void UG2IAimingComponent::SetAbilityAiming(EG2ICameraTypeEnum CurrentCameraType,
 		}
 		return;
 	}
+}
 
-	if (CurrentCameraType == EG2ICameraTypeEnum::FixedCamera && CurrentBlendState == EG2ICameraBlendState::Start)
+void UG2IAimingComponent::DisableAbilityAiming(const EG2ICameraBlendState CurrentBlendState,
+	const UCameraComponent* NewCamera)
+{
+	if (CurrentBlendState == EG2ICameraBlendState::Start)
 	{
 		bCanAiming = false;
 		if (bIsAiming)
@@ -215,7 +220,7 @@ void UG2IAimingComponent::SetAimDistance(const float NewAimDistance)
 	CurrentAimDistance = NewAimDistance;
 }
 
-void UG2IAimingComponent::SetPendingAimType(EG2IAimType NewAimType)
+void UG2IAimingComponent::SetPendingAimType(const EG2IAimType NewAimType)
 {
 	bAimViewIsPending = true;
 
@@ -301,7 +306,7 @@ void UG2IAimingComponent::DetectAimLineHitInfo()
 	}
 }
 
-void UG2IAimingComponent::OutlineController(const AActor* ActorToChangeOutline, bool bOutlineMode)
+void UG2IAimingComponent::OutlineController(const AActor* ActorToChangeOutline, const bool bOutlineMode) const
 {
 	TArray<UStaticMeshComponent*> OutlineMeshes;
 	if (ActorToChangeOutline && ActorToChangeOutline->Implements<UG2ITraceableObectInterface>())
@@ -309,7 +314,7 @@ void UG2IAimingComponent::OutlineController(const AActor* ActorToChangeOutline, 
 		ActorToChangeOutline->GetComponents<UStaticMeshComponent>(OutlineMeshes);
 	}
 
-	for (auto OutlineMesh : OutlineMeshes)
+	for (const auto OutlineMesh : OutlineMeshes)
 	{
 		if (!OutlineMesh)
 		{
