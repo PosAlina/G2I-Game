@@ -26,22 +26,18 @@ void UG2ISteamShotComponent::ShootAction_Implementation(const FG2IHitInfo Target
 	DrawDebugLine(World, StartShootLocation, TargetHitInfo.HitResult.Location, FColor::Red, false, 1.f);
 	if (TargetHitInfo.HitSuccess)
 	{
-		
-		OnAimTypeAfterHitChangedDelegate.Broadcast(EG2IAimType::SuccessfulHitAim);
-		DrawDebugSphere(World, TargetHitInfo.HitResult.ImpactPoint, 8.0f, 12, FColor::Red, false, 1.f);
-		
 		if (!TargetHitInfo.HitResult.GetActor()) {
+			OnAimTypeAfterHitChangedDelegate.Broadcast(EG2IAimType::MissedHitAim);
 			UE_LOG(LogG2I, Warning, TEXT("Shooting actor was deleted"));
 			return;
 		}
 		if (TargetHitInfo.HitResult.GetActor()->Implements<UG2ITraceableObectInterface>()) {
+			OnAimTypeAfterHitChangedDelegate.Broadcast(EG2IAimType::SuccessfulHitAim);
 			IG2ITraceableObectInterface::Execute_OnShoot(TargetHitInfo.HitResult.GetActor(), TargetHitInfo.HitResult, GetOwner());
+			return;
 		}
 	}
-	else
-	{
-		OnAimTypeAfterHitChangedDelegate.Broadcast(EG2IAimType::MissedHitAim);
-	}
+	OnAimTypeAfterHitChangedDelegate.Broadcast(EG2IAimType::MissedHitAim);
 }
 
 void UG2ISteamShotComponent::ActivateForAim_Implementation()
@@ -56,12 +52,9 @@ void UG2ISteamShotComponent::ActivateForAim_Implementation()
  */
 EG2IAimType UG2ISteamShotComponent::GetAimTypeByActor_Implementation(const AActor *TargetActor)
 {
-	if (TargetActor)
+	if (TargetActor && TargetActor->Implements<UG2ITraceableObectInterface>())
 	{
 		return EG2IAimType::TargetAim;
 	}
-	else
-	{
-		return EG2IAimType::DefaultAim;
-	}
+	return EG2IAimType::DefaultAim;
 }
