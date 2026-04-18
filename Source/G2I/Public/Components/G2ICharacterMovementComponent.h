@@ -8,10 +8,7 @@
 #include "G2ICharacterMovementComponent.generated.h"
 
 class AG2IPlayerController;
-class UG2ICameraDefaultsParameters;
 enum class EG2ICameraBlendState : uint8;
-enum class EG2ICameraTypeEnum : uint8;
-class UCharacterMovementComponent;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class G2I_API UG2ICharacterMovementComponent : public UCharacterMovementComponent, public IG2IMovementInputInterface
@@ -25,9 +22,6 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UWorld> World;
-
-	UPROPERTY()
-	TObjectPtr<UG2ICameraDefaultsParameters> CameraDefaultsParameters;
 	
 	UPROPERTY()
 	TObjectPtr<AG2IPlayerController> PlayerController;
@@ -133,7 +127,8 @@ protected:
 	void SetMovementWithThirdPersonCamera(EG2ICameraBlendState CurrentBlendState, const UCameraComponent* NewCamera);
 	
 	UFUNCTION()
-	void SetMovementWithFixedCamera(EG2ICameraBlendState CurrentBlendState, const UCameraComponent* NewCamera);
+	void SetMovementWithFixedCamera(EG2ICameraBlendState CurrentBlendState, const UCameraComponent* NewCamera,
+		float DelayMovementTime);
 	
 	void ResetCameraPendingYawRotation(const UCameraComponent* NewCamera);
 

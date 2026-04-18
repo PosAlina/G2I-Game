@@ -7,7 +7,6 @@
 #include "GameFramework/PlayerController.h"
 #include "G2IAimingComponent.h"
 #include "G2ICameraControllerComponent.h"
-#include "G2ICameraDefaultsParameters.h"
 #include "G2ICameraStateEnums.h"
 #include "G2IPlayerController.h"
 #include "Components/CapsuleComponent.h"
@@ -50,14 +49,6 @@ void UG2ICharacterMovementComponent::SetupDefaults()
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
 			*GetName(), *AG2IPlayerController::StaticClass()->GetName());
-		return;
-	}
-
-	CameraDefaultsParameters = PlayerController->GetCameraDefaultsParameters();
-	if (!ensure(CameraDefaultsParameters))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s can not return camera defaults parameters in %s in %s"),
-			*PlayerController->GetName(), *GetName(), *Owner->GetActorNameOrLabel());
 		return;
 	}
 }
@@ -526,12 +517,18 @@ void UG2ICharacterMovementComponent::SetMovementWithThirdPersonCamera(const EG2I
 }
 
 void UG2ICharacterMovementComponent::SetMovementWithFixedCamera(const EG2ICameraBlendState CurrentBlendState,
-	const UCameraComponent* NewCamera)
+	const UCameraComponent* NewCamera, const float DelayMovementTime)
 {
 	if (CurrentBlendState == EG2ICameraBlendState::Start)
 	{
 		bCanRotationTowardsCamera = false;
 		DisableRotationTowardsCamera();
+
+		if (DelayMovementTime <= 0)
+		{
+			ResetCameraPendingYawRotation(NewCamera);
+			return;
+		}
 		
 		if (!ensure(World))
 		{
@@ -539,21 +536,12 @@ void UG2ICharacterMovementComponent::SetMovementWithFixedCamera(const EG2ICamera
 			ResetCameraPendingYawRotation(NewCamera);
 			return;
 		}
-
 		World->GetTimerManager().ClearTimer(TimerBeforeDisableRotationTowardsCamera);
-		
-		if (!ensure(CameraDefaultsParameters))
-		{
-			UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
-				*UG2ICameraDefaultsParameters::StaticClass()->GetName());
-			ResetCameraPendingYawRotation(NewCamera);
-			return;
-		}
 		
 		const FTimerDelegate Delegate = FTimerDelegate::CreateUObject(
 			this, &ThisClass::ResetCameraPendingYawRotation, NewCamera);
-		World->GetTimerManager().SetTimer(TimerBeforeDisableRotationTowardsCamera, Delegate,
-			CameraDefaultsParameters->PendingTimeAfterSwitchingToControlCharacter, false);
+		World->GetTimerManager().SetTimer(
+			TimerBeforeDisableRotationTowardsCamera, Delegate, DelayMovementTime, false);
 	}
 }
 

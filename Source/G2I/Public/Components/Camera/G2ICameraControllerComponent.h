@@ -12,8 +12,8 @@ class UCameraComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSetThirdPersonCameraTypeDelegate,
 	EG2ICameraBlendState, CurrentBlendState, const UCameraComponent *, NewCamera);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSetFixedCameraTypeDelegate,
-	EG2ICameraBlendState, CurrentBlendState, const UCameraComponent *, NewCamera);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FSetFixedCameraTypeDelegate,
+	EG2ICameraBlendState, CurrentBlendState, const UCameraComponent *, NewCamera, float, DelayMovementTime);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FThirdPersonCameraYawRotationDelegate, double, OldCameraYawRotation);
 
 UCLASS(ClassGroup=(Camera), meta=(BlueprintSpawnableComponent))
@@ -50,7 +50,9 @@ private:
 
 	EG2ICameraTypeEnum CurrentCameraType = EG2ICameraTypeEnum::FixedCamera;
 
-	float OldCameraYawRotation = 0.;
+	double OldCameraYawRotation = 0.;
+	
+	float DelayMovementTime = 0.f;
 
 protected:
 	
@@ -84,7 +86,7 @@ private:
 	UFUNCTION()
 	void BroadcastCameraTypeAfterBlendFinish();
 
-	void BroadcastCameraTypeAtBlendStart(const UCameraComponent& NewCamera) const;
+	void BroadcastCameraTypeAtBlendStart(const UCameraComponent& NewCamera);
 
 	bool IsOwnerControllable() const;
 
@@ -106,5 +108,7 @@ private:
 	void SetThirdPersonCameraYawRotation();
 
 	void SetCurrentCameraIndex(int32 NewCameraIndex);
+	
+	void SetDefaultDelayMovementTime();
 	
 };

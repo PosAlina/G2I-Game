@@ -13,6 +13,7 @@
 UG2ICameraControllerComponent::UG2ICameraControllerComponent()
 {
 	bWantsInitializeComponent = true;
+	DelayMovementTime = 0.f;
 }
 
 void UG2ICameraControllerComponent::BeginPlay()
@@ -67,6 +68,7 @@ void UG2ICameraControllerComponent::SetupCurrentCamera_Implementation()
 
 void UG2ICameraControllerComponent::SwitchCameraBehavior_Implementation()
 {
+	DelayMovementTime = 0.f;
 	for (int32 CameraOffset = 1; CameraOffset < CurrentCameraComponents.Num(); ++CameraOffset)
 	{
 		const int32 NewCameraIndex = (CurrentCameraIndex + CameraOffset) % CurrentCameraComponents.Num();
@@ -139,12 +141,12 @@ void UG2ICameraControllerComponent::BroadcastCameraTypeAfterBlendFinish()
 		OnSetThirdPersonCameraTypeDelegate.Broadcast(EG2ICameraBlendState::Finish, NewCamera);
 		break;
 	case EG2ICameraTypeEnum::FixedCamera:
-		OnSetFixedCameraTypeDelegate.Broadcast(EG2ICameraBlendState::Finish, NewCamera);
+		OnSetFixedCameraTypeDelegate.Broadcast(EG2ICameraBlendState::Finish, NewCamera, DelayMovementTime);
 		break;
 	}
 }
 
-void UG2ICameraControllerComponent::BroadcastCameraTypeAtBlendStart(const UCameraComponent& NewCamera) const
+void UG2ICameraControllerComponent::BroadcastCameraTypeAtBlendStart(const UCameraComponent& NewCamera)
 {
 	switch (CurrentCameraType)
 	{
@@ -152,9 +154,10 @@ void UG2ICameraControllerComponent::BroadcastCameraTypeAtBlendStart(const UCamer
 		OnSetThirdPersonCameraTypeDelegate.Broadcast(EG2ICameraBlendState::Start, &NewCamera);
 		break;
 	case EG2ICameraTypeEnum::FixedCamera:
-		OnSetFixedCameraTypeDelegate.Broadcast(EG2ICameraBlendState::Start, &NewCamera);
+		OnSetFixedCameraTypeDelegate.Broadcast(EG2ICameraBlendState::Start, &NewCamera, DelayMovementTime);
 		break;
 	}
+	SetDefaultDelayMovementTime();
 }
 
 bool UG2ICameraControllerComponent::IsOwnerControllable() const
@@ -381,4 +384,15 @@ void UG2ICameraControllerComponent::SetThirdPersonCameraYawRotation()
 void UG2ICameraControllerComponent::SetCurrentCameraIndex(const int32 NewCameraIndex)
 {
 	CurrentCameraIndex = NewCameraIndex;
+}
+
+void UG2ICameraControllerComponent::SetDefaultDelayMovementTime()
+{
+	if (!ensure(CameraDefaultsParameters))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2ICameraDefaultsParameters::StaticClass()->GetName());
+		return;
+	}
+	DelayMovementTime = CameraDefaultsParameters->PendingTimeAfterSwitchingToControlCharacter;
 }

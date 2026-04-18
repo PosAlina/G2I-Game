@@ -104,7 +104,8 @@ protected:
 	void EnableAbilityAiming(EG2ICameraBlendState CurrentBlendState,const UCameraComponent* NewCamera);
 	
 	UFUNCTION()
-	void DisableAbilityAiming(EG2ICameraBlendState CurrentBlendState, const UCameraComponent* NewCamera);
+	void DisableAbilityAiming(EG2ICameraBlendState CurrentBlendState, const UCameraComponent* NewCamera,
+		float DelayMovementTime);
 	
 	UFUNCTION()
 	void SetAimDistance(const float NewAimDistance);

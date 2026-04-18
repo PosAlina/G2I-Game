@@ -201,7 +201,7 @@ void UG2IAimingComponent::EnableAbilityAiming(const EG2ICameraBlendState Current
 }
 
 void UG2IAimingComponent::DisableAbilityAiming(const EG2ICameraBlendState CurrentBlendState,
-	const UCameraComponent* NewCamera)
+	const UCameraComponent* NewCamera, const float DelayMovementTime)
 {
 	if (CurrentBlendState == EG2ICameraBlendState::Start)
 	{
