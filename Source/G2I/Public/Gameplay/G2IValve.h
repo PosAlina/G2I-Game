@@ -32,9 +32,11 @@ public:
 	UFUNCTION()
 	void PassActivationToPipe();
 
-protected:
+	void AddRotationToStaticMesh(const FRotator& Rotation) const;
 
 	virtual void BeginPlay() override;
+
+protected:
 
 	UFUNCTION(BlueprintCallable)
 	virtual void ApplyLocalRotation();

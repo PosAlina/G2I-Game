@@ -11,6 +11,8 @@ AG2IValve::AG2IValve()
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = false;
 
+	Tags.Add(TEXT("Interactive1"));
+
 	SceneRootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root Component"));
 
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Static Mesh Component"));
@@ -21,7 +23,7 @@ AG2IValve::AG2IValve()
 	{
 		SetRootComponent(SceneRootComponent);
 		if (StaticMeshComponent)
-			StaticMeshComponent->AttachToComponent(SceneRootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+			StaticMeshComponent->SetupAttachment(SceneRootComponent);
 	}
 
 	HintKeyWidgetComp = CreateDefaultSubobject<UG2IWorldHintKeyWidgetComponent>(TEXT("HintKeyWidget"));
@@ -106,6 +108,11 @@ void AG2IValve::PassActivationToPipe()
 	{
 		Pipe->OnValveActivationChanged(this, bActivated);
 	}
+}
+
+void AG2IValve::AddRotationToStaticMesh(const FRotator& Rotation) const
+{
+	StaticMeshComponent->AddRelativeRotation(Rotation);
 }
 
 void AG2IValve::ApplyLocalRotation()
