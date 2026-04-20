@@ -58,12 +58,9 @@ protected:
 	
 	UG2ICameraControllerComponent();
 
-	void PreInitializationDefaults();
-
 public:
 	
 	virtual void BeginPlay() override;
-	virtual void InitializeComponent() override;
 	
 	// Interface methods
 	UFUNCTION(BlueprintCallable, Category="Setup")
