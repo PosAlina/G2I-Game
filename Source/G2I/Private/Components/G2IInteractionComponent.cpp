@@ -249,6 +249,27 @@ void UG2IInteractionComponent::SetTagOfInteractionActions()
 	TagOfInteractionActions = PlayerController->GetActionToTagMap();
 }
 
+bool UG2IInteractionComponent::IsOwnerControllable() const
+{
+	if (!ensure(Owner))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Owner doesn't exist in %s"), *GetName());
+		return false;
+	}
+	
+	if (!ensure(PlayerController))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Player Controller doesn't exist in %s"), *GetName());
+		return false;
+	}
+	
+	if (Owner != PlayerController->GetPawn())
+	{
+		return false;
+	}
+	return true;
+}
+
 void UG2IInteractionComponent::OnInteractionBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent,
 	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
 	const FHitResult& SweepResult)
@@ -264,6 +285,10 @@ void UG2IInteractionComponent::OnInteractionBoxEndOverlap(UPrimitiveComponent* O
 
 void UG2IInteractionComponent::OpenKeyHintByActor(AActor* OtherActor)
 {
+	if (!IsOwnerControllable())
+	{
+		return;
+	}
 	if (OtherActor && OtherActor->Implements<UG2IInteractiveObjectInterface>())
 	{
 		if (UG2IWorldHintKeyWidgetComponent *KeyHintComponent =
