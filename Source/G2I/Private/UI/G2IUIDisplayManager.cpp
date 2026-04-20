@@ -164,9 +164,14 @@ void UG2IUIDisplayManager::ReactActiveWidgetComponentsToNewCameraLocation(const 
 			FVector WidgetLocation = WidgetComponent->GetComponentLocation();
 			
 			FHitResult HitResult;
-			const bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult,
+			const bool bVisibilityHit = GetWorld()->LineTraceSingleByChannel(HitResult,
 				NewCameraLocation, WidgetLocation, ECC_Visibility,
 				QueryParamsForWorldWidgetsActivate);
+			const bool bBlockedCollisionHit = GetWorld()->LineTraceSingleByChannel(HitResult,
+				NewCameraLocation, WidgetLocation, ECC_GameTraceChannel6,
+				QueryParamsForWorldWidgetsActivate);
+			const bool bHit = bVisibilityHit || bBlockedCollisionHit;
+			
 			WidgetComponent->SetVisibility(!bHit);
 		}
 	}
