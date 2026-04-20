@@ -34,9 +34,9 @@ public:
 
 	void AddRotationToStaticMesh(const FRotator& Rotation) const;
 
-	virtual void BeginPlay() override;
-
 protected:
+
+	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable)
 	virtual void ApplyLocalRotation();

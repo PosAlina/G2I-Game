@@ -14,16 +14,17 @@ AG2IValve::AG2IValve()
 	Tags.Add(TEXT("Interactive1"));
 
 	SceneRootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root Component"));
-
-	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Static Mesh Component"));
-	StaticMeshComponent->SetGenerateOverlapEvents(true);
-	StaticMeshComponent->SetMobility(EComponentMobility::Movable);
-
 	if (SceneRootComponent)
 	{
 		SetRootComponent(SceneRootComponent);
-		if (StaticMeshComponent)
-			StaticMeshComponent->SetupAttachment(SceneRootComponent);
+	}
+
+	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Static Mesh Component"));
+	if (StaticMeshComponent)
+	{
+		StaticMeshComponent->SetupAttachment(RootComponent);
+		StaticMeshComponent->SetGenerateOverlapEvents(true);
+		StaticMeshComponent->SetMobility(EComponentMobility::Movable);
 	}
 
 	HintKeyWidgetComp = CreateDefaultSubobject<UG2IWorldHintKeyWidgetComponent>(TEXT("HintKeyWidget"));
@@ -34,7 +35,7 @@ AG2IValve::AG2IValve()
 	}
 	else
 	{
-		HintKeyWidgetComp->SetupAttachment(SceneRootComponent);
+		HintKeyWidgetComp->SetupAttachment(RootComponent);
 	}
 }
 
@@ -112,7 +113,14 @@ void AG2IValve::PassActivationToPipe()
 
 void AG2IValve::AddRotationToStaticMesh(const FRotator& Rotation) const
 {
-	StaticMeshComponent->AddRelativeRotation(Rotation);
+	if (!ensure(StaticMeshComponent))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't rotate StaticMeshComponent."), *GetActorNameOrLabel());
+	}
+	else
+	{
+		StaticMeshComponent->AddRelativeRotation(Rotation);
+	}
 }
 
 void AG2IValve::ApplyLocalRotation()
