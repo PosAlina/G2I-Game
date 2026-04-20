@@ -30,8 +30,6 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FFinishAimingDelegate OnFinishAimingDelegate;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	TObjectPtr<UMaterialInstance> ShootableObjOutlineMaterialInstance;
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = View, meta = (Units = "s", ToolTip =
 		"After the event, the aim takes on a specific view for that time. Afterward, the aiming logic returns"))
@@ -125,6 +123,4 @@ private:
 
 	void SetAimType(const AActor* TargetActor);
 	
-	void OutlineController(const AActor* ActorToChangeOutline, bool bOutlineMode) const;
-
 };
