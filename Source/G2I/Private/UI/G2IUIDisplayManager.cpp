@@ -152,6 +152,15 @@ void UG2IUIDisplayManager::ReactActiveWidgetComponentsToNewCameraLocation(const 
 		if (const TObjectPtr<UG2IWorldHintWidgetComponent>* WidgetComponentPtr = AllWidgetComponents.Find(WidgetHintID))
 		{
 			UG2IWorldHintWidgetComponent *WidgetComponent = *WidgetComponentPtr;
+			if (!ensure(WidgetComponent))
+			{
+				UE_LOG(LogG2I, Warning, TEXT("%s: ActiveWidgetComponent has null widget"), *GetName());
+				continue;
+			}
+			if (!WidgetComponent->IsInVisibleZone())
+			{
+				continue;
+			}
 			FVector WidgetLocation = WidgetComponent->GetComponentLocation();
 			
 			FHitResult HitResult;
@@ -311,7 +320,6 @@ void UG2IUIDisplayManager::ShowWorldWidget(UG2IWorldHintWidgetComponent& WidgetC
 	}
 	
 	ActiveWidgetComponentsID.Add(WidgetComponentID);
-	WidgetComponent.SetVisibility(true);
 }
 
 void UG2IUIDisplayManager::HideWorldWidget(UG2IWorldHintWidgetComponent& WidgetComponent)
