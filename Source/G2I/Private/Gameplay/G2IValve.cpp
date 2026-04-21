@@ -11,17 +11,20 @@ AG2IValve::AG2IValve()
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = false;
 
+	Tags.Add(TEXT("Interactive1"));
+
 	SceneRootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root Component"));
-
-	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Static Mesh Component"));
-	StaticMeshComponent->SetGenerateOverlapEvents(true);
-	StaticMeshComponent->SetMobility(EComponentMobility::Movable);
-
 	if (SceneRootComponent)
 	{
 		SetRootComponent(SceneRootComponent);
-		if (StaticMeshComponent)
-			StaticMeshComponent->AttachToComponent(SceneRootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	}
+
+	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Static Mesh Component"));
+	if (StaticMeshComponent)
+	{
+		StaticMeshComponent->SetupAttachment(RootComponent);
+		StaticMeshComponent->SetGenerateOverlapEvents(true);
+		StaticMeshComponent->SetMobility(EComponentMobility::Movable);
 	}
 
 	HintKeyWidgetComp = CreateDefaultSubobject<UG2IWorldHintKeyWidgetComponent>(TEXT("HintKeyWidget"));
@@ -32,7 +35,7 @@ AG2IValve::AG2IValve()
 	}
 	else
 	{
-		HintKeyWidgetComp->SetupAttachment(SceneRootComponent);
+		HintKeyWidgetComp->SetupAttachment(RootComponent);
 	}
 }
 
@@ -105,6 +108,18 @@ void AG2IValve::PassActivationToPipe()
 	if (AG2IPipe* Pipe = Cast<AG2IPipe>(OwnerActor))
 	{
 		Pipe->OnValveActivationChanged(this, bActivated);
+	}
+}
+
+void AG2IValve::AddRotationToStaticMesh(const FRotator& Rotation) const
+{
+	if (!ensure(StaticMeshComponent))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't rotate StaticMeshComponent."), *GetActorNameOrLabel());
+	}
+	else
+	{
+		StaticMeshComponent->AddRelativeRotation(Rotation);
 	}
 }
 

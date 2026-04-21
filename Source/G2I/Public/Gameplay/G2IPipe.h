@@ -99,7 +99,7 @@ private:
 	void SpawnInteractableBoxComponent(int32 PointIndex);
 	void GenerateMesh(UStaticMesh* Mesh, int32 PointIndex);
 	void RegenerateMesh(UStaticMesh* Mesh, int32 PointIndex);
-	FVector GetLocationBetweenPoints(int32 Point1, int32 Point2, ESplineCoordinateSpace::Type CoordSpace = ESplineCoordinateSpace::Local);
+	FVector GetLocationBetweenPoints(int32 Point1, int32 Point2, ESplineCoordinateSpace::Type CoordSpace = ESplineCoordinateSpace::Local) const;
 	void ForceOverlaps();
 	void SpawnValves();
 	void SpawnTechnicalHoles();
