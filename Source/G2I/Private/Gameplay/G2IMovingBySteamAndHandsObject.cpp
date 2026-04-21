@@ -1,14 +1,19 @@
 #include "Gameplay/G2IMovingBySteamAndHandsObject.h"
 #include "G2I.h"
+#include "G2IOutlineComponent.h"
 #include "Components/SteamGlove/G2ISteamGloveComponent.h"
-#include "PhysicsEngine/PhysicsConstraintComponent.h" 
-#include "Components/CapsuleComponent.h"
 
 AG2IMovingBySteamAndHandsObject::AG2IMovingBySteamAndHandsObject()
 {
 	Timeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("SteamForceTimeline"));
 	TimelineValue = 0.0f;
 	TimelineCurve = nullptr;
+	
+	OutlineComponent = CreateDefaultSubobject<UG2IOutlineComponent>(TEXT("OutlineComponent"));
+	if (!ensure(OutlineComponent))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Failed to create Outline Component"), *GetName());
+	}
 }
 
 void AG2IMovingBySteamAndHandsObject::BeginPlay()
@@ -31,7 +36,7 @@ void AG2IMovingBySteamAndHandsObject::BeginPlay()
 }
 
 
-void AG2IMovingBySteamAndHandsObject::OnTimelineUpdate(float Output)
+void AG2IMovingBySteamAndHandsObject::OnTimelineUpdate(const float Output)
 {
 	UStaticMeshComponent* SM = this->GetComponentByClass<UStaticMeshComponent>();
 	if (!SM) {
