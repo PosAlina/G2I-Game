@@ -6,7 +6,6 @@
 #include "G2IConfirmationWidget.h"
 #include "G2ICutScenesParameters.h"
 #include "G2IGameInstance.h"
-#include "G2ILevelLoadingScreen.h"
 #include "G2IPlayerController.h"
 #include "G2IStringTablesTypes.h"
 #include "G2IUIDisplayManager.h"
@@ -181,26 +180,6 @@ void UG2IUIManager::InitializeNewLevelUI() const
 		if (DisplayManager->GetWidget(EG2IWidgetNames::CutSceneStartBoilerRoom))
 		{
 			OpenWidget(EG2IWidgetNames::CutSceneStartBoilerRoom);
-			return;
-		}
-		OpenHUD();
-		return;
-	}
-	if (LevelName == EG2ILevelName::ChildrenRoom)
-	{
-		if (DisplayManager->GetWidget(EG2IWidgetNames::CutSceneStartChildrenRoom))
-		{
-			OpenWidget(EG2IWidgetNames::CutSceneStartChildrenRoom);
-			return;
-		}
-		OpenHUD();
-		return;
-	}
-	if (LevelName == EG2ILevelName::Hall)
-	{
-		if (DisplayManager->GetWidget(EG2IWidgetNames::CutSceneStartHall))
-		{
-			OpenWidget(EG2IWidgetNames::CutSceneStartHall);
 			return;
 		}
 		OpenHUD();
@@ -534,21 +513,6 @@ void UG2IUIManager::SetupConfirmationWidget(const TFunction<void()>& NewConfirmA
 			NewConfirmStringID, "Confirmation.Confirm");
 		DisplayManager->SetText<URichTextBlock>(Widget->CancelTextBlock, EG2IStringTablesTypes::Confirmations,
 			NewCancelStringID, "Confirmation.Cancel");
-	}
-}
-
-void UG2IUIManager::SetLoadingProgressPercent(const float Percent) const
-{
-	if (!ensure(DisplayManager))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
-			*UG2IUIDisplayManager::StaticClass()->GetName());
-		return;
-	}
-	if (const UG2ILevelLoadingScreen *Widget = Cast<UG2ILevelLoadingScreen>(
-		DisplayManager->GetWidget(EG2IWidgetNames::LevelLoadingScreen)))
-	{
-		Widget->SetLoadingProgress(Percent);
 	}
 }
 

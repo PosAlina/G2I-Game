@@ -24,7 +24,8 @@ public class G2I : ModuleRules
 			"CinematicCamera",
 			"NavigationSystem",
 			"SlateCore",
-			"Niagara"
+			"Niagara",
+			"AsyncLoadingScreen"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
