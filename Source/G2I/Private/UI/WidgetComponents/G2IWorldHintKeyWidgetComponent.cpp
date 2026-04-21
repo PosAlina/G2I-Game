@@ -1,9 +1,7 @@
 #include "G2IWorldHintKeyWidgetComponent.h"
 #include "G2I.h"
-#include "G2IPlayerController.h"
 #include "G2IUIManager.h"
 #include "InputAction.h"
-#include "GameFramework/Character.h"
 
 UG2IWorldHintKeyWidgetComponent::UG2IWorldHintKeyWidgetComponent()
 {
@@ -16,16 +14,20 @@ void UG2IWorldHintKeyWidgetComponent::BeginPlay()
 	
 	FindOrAddWidgetByName(EG2IWidgetNames::KeyHint);
 	FindOrAddWidgetByName(EG2IWidgetNames::PointHint);
+}
 
-	if (!ensure(UIManager))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
-			*UG2IUIManager::StaticClass()->GetName(), *GetName());
-		return;
-	}
-
+void UG2IWorldHintKeyWidgetComponent::SetDefaultsByPlayerPawn(APawn* Pawn)
+{
+	Super::SetDefaultsByPlayerPawn(Pawn);
+	
 	if (const TObjectPtr<UInputAction> *OverrideKeyInput = OverridenInputAction.Find(PlayerPawnClass))
 	{
+		if (!ensure(UIManager))
+		{
+			UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
+				*UG2IUIManager::StaticClass()->GetName(), *GetName());
+			return;
+		}
 		UIManager->SetKeyByInputAction(this, *OverrideKeyInput, PlayerPawnClass);
 	}
 }

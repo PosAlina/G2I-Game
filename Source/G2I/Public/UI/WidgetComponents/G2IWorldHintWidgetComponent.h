@@ -44,6 +44,10 @@ protected:
 
 	UPROPERTY()
 	TSubclassOf<APawn> PlayerPawnClass;
+	
+private:
+	
+	bool bIsInVisibleZone = false;
 
 public:
 
@@ -53,6 +57,8 @@ public:
 
 	virtual void SetIsLocked_Implementation(bool bIsNewLocked) override;
 	virtual bool IsLocked_Implementation() override;
+
+	bool IsInVisibleZone() const;
 
 protected:
 
@@ -69,7 +75,7 @@ protected:
 	void OnVisibilityZoneEndOverlap(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex);
 
 	UFUNCTION()
-	void SetPlayerPawn(APawn *Pawn);
+	virtual void SetDefaultsByPlayerPawn(APawn *Pawn);
 
 	void OpenWidget();
 

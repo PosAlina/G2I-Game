@@ -152,12 +152,26 @@ void UG2IUIDisplayManager::ReactActiveWidgetComponentsToNewCameraLocation(const 
 		if (const TObjectPtr<UG2IWorldHintWidgetComponent>* WidgetComponentPtr = AllWidgetComponents.Find(WidgetHintID))
 		{
 			UG2IWorldHintWidgetComponent *WidgetComponent = *WidgetComponentPtr;
+			if (!ensure(WidgetComponent))
+			{
+				UE_LOG(LogG2I, Warning, TEXT("%s: ActiveWidgetComponent has null widget"), *GetName());
+				continue;
+			}
+			if (!WidgetComponent->IsInVisibleZone())
+			{
+				continue;
+			}
 			FVector WidgetLocation = WidgetComponent->GetComponentLocation();
 			
 			FHitResult HitResult;
-			const bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult,
+			const bool bVisibilityHit = GetWorld()->LineTraceSingleByChannel(HitResult,
 				NewCameraLocation, WidgetLocation, ECC_Visibility,
 				QueryParamsForWorldWidgetsActivate);
+			const bool bBlockedCollisionHit = GetWorld()->LineTraceSingleByChannel(HitResult,
+				NewCameraLocation, WidgetLocation, ECC_GameTraceChannel6,
+				QueryParamsForWorldWidgetsActivate);
+			const bool bHit = bVisibilityHit || bBlockedCollisionHit;
+			
 			WidgetComponent->SetVisibility(!bHit);
 		}
 	}
@@ -311,7 +325,6 @@ void UG2IUIDisplayManager::ShowWorldWidget(UG2IWorldHintWidgetComponent& WidgetC
 	}
 	
 	ActiveWidgetComponentsID.Add(WidgetComponentID);
-	WidgetComponent.SetVisibility(true);
 }
 
 void UG2IUIDisplayManager::HideWorldWidget(UG2IWorldHintWidgetComponent& WidgetComponent)
