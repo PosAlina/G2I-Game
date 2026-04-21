@@ -4,6 +4,7 @@
 #include "G2IPlayerCameraManager.h"
 #include "G2IPlayerController.h"
 #include "G2IStringTablesCatalog.h"
+#include "G2IWidgetComponentParameters.h"
 #include "G2IWidgetsCatalog.h"
 #include "G2IWorldHintWidgetComponent.h"
 #include "Blueprint/UserWidget.h"
@@ -85,6 +86,12 @@ void UG2IUIDisplayManager::InitializeGameInstanceDefaults()
 			*UG2IGameInstance::StaticClass()->GetName(), *GetName());
 		return;
 	}
+	WidgetComponentParameters = GameInstance->GetWidgetComponentParameters();
+	if (!ensure(WidgetComponentParameters))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+			*GetName(), *UG2IWidgetComponentParameters::StaticClass()->GetName());
+	}
 	UG2IWidgetsCatalog *WidgetsCatalog = GameInstance->GetWidgetsCatalog();
 	if (!ensure(WidgetsCatalog))
 	{
@@ -157,24 +164,76 @@ void UG2IUIDisplayManager::ReactActiveWidgetComponentsToNewCameraLocation(const 
 				UE_LOG(LogG2I, Warning, TEXT("%s: ActiveWidgetComponent has null widget"), *GetName());
 				continue;
 			}
-			if (!WidgetComponent->IsInVisibleZone())
-			{
-				continue;
-			}
-			FVector WidgetLocation = WidgetComponent->GetComponentLocation();
 			
-			FHitResult HitResult;
-			const bool bVisibilityHit = GetWorld()->LineTraceSingleByChannel(HitResult,
-				NewCameraLocation, WidgetLocation, ECC_Visibility,
-				QueryParamsForWorldWidgetsActivate);
-			const bool bBlockedCollisionHit = GetWorld()->LineTraceSingleByChannel(HitResult,
-				NewCameraLocation, WidgetLocation, ECC_GameTraceChannel6,
-				QueryParamsForWorldWidgetsActivate);
-			const bool bHit = bVisibilityHit || bBlockedCollisionHit;
-			
-			WidgetComponent->SetVisibility(!bHit);
+			ReactVisibilityWidgetComponentToNewCameraLocation(NewCameraLocation, *WidgetComponent);
+			ReactScaleWidgetComponentToNewCameraLocation(NewCameraLocation, *WidgetComponent);
 		}
 	}
+}
+
+void UG2IUIDisplayManager::ReactVisibilityWidgetComponentToNewCameraLocation(
+	const FVector& NewCameraLocation, UG2IWorldHintWidgetComponent& WidgetComponent) const
+{
+	if (!WidgetComponent.IsInVisibleZone())
+	{
+		return;
+	}
+
+	const FVector WidgetLocation = WidgetComponent.GetComponentLocation();
+	FHitResult HitResult;
+	const bool bVisibilityHit = GetWorld()->LineTraceSingleByChannel(HitResult,
+		NewCameraLocation, WidgetLocation, ECC_Visibility,
+		QueryParamsForWorldWidgetsActivate);
+	const bool bBlockedCollisionHit = GetWorld()->LineTraceSingleByChannel(HitResult,
+		NewCameraLocation, WidgetLocation, ECC_GameTraceChannel6,
+		QueryParamsForWorldWidgetsActivate);
+	const bool bHit = bVisibilityHit || bBlockedCollisionHit;
+			
+	WidgetComponent.SetVisibility(!bHit);
+}
+
+void UG2IUIDisplayManager::ReactScaleWidgetComponentToNewCameraLocation(
+	const FVector& NewCameraLocation, UG2IWorldHintWidgetComponent& WidgetComponent) const
+{
+	if (!WidgetComponent.IsEnableScaleFromDistance())
+	{
+		return;
+	}
+	if (!ensure(WidgetComponentParameters))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+			*GetName(), *UG2IWidgetComponentParameters::StaticClass()->GetName());
+		return;
+	}
+	
+	const FVector WidgetLocation = WidgetComponent.GetComponentLocation();
+	const double Distance = FVector::Dist(WidgetLocation, NewCameraLocation);
+	
+	const double MinDistance = WidgetComponentParameters->MinDistanceForChangedScale;
+	const double MaxDistance = WidgetComponentParameters->MaxDistanceForChangedScale;
+	
+	const double ClampedDistance = FMath::Clamp(Distance, MinDistance, MaxDistance);
+	
+	const FVector2D WidgetSize = WidgetComponent.GetDefaultDrawSize();
+	
+	const double ScaleForMaxDistance = WidgetComponentParameters->ScaleForMaxDistance;
+	const double ScaleForMinDistance = WidgetComponentParameters->ScaleForMinDistance;
+	
+	double Scale = ScaleForMinDistance;
+	if (MaxDistance != MinDistance)
+	{
+		Scale = FMath::Lerp(ScaleForMinDistance, ScaleForMaxDistance,
+			(ClampedDistance - MinDistance) / (MaxDistance - MinDistance));
+	}
+
+	const FVector2D ScaledWidgetSize = WidgetSize * Scale;
+	if (FMath::IsNearlyZero(ScaledWidgetSize.X) || FMath::IsNearlyZero(ScaledWidgetSize.Y))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: Active WidgetComponent %s tried to set zero size"),
+			*GetName(), *WidgetComponent.GetName());
+		return;
+	}
+	WidgetComponent.SetDrawSize(ScaledWidgetSize);
 }
 
 UG2IUserWidget* UG2IUIDisplayManager::GetWidget(const EG2IWidgetNames WidgetName)

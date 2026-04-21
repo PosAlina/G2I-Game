@@ -42,6 +42,8 @@ void UG2IWorldHintKeyWidgetComponent::OpenKeyHint(UInputAction *KeyInput)
 		return;
 	}
 
+	SetEnableScaleFromDistance(false);
+	SetDrawSize(GetDefaultDrawSize());
 	if (const TObjectPtr<UInputAction> *OverrideKeyInput = OverridenInputAction.Find(PlayerPawnClass))
 	{
 		UIManager->SetKeyByInputAction(this, *OverrideKeyInput, PlayerPawnClass);
@@ -56,5 +58,6 @@ void UG2IWorldHintKeyWidgetComponent::OpenKeyHint(UInputAction *KeyInput)
 
 void UG2IWorldHintKeyWidgetComponent::CloseKeyHint()
 {
+	SetEnableScaleFromDistance(true);
 	SetWidgetByName(EG2IWidgetNames::PointHint);
 }

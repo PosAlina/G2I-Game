@@ -18,6 +18,8 @@ private:
 	TMap<TSubclassOf<APawn>, TObjectPtr<UInputAction>> OverridenInputAction;
 	
 public:
+	
+	virtual void BeginPlay() override;
 
 	void OpenKeyHint(UInputAction *KeyInput = nullptr);
 
@@ -26,8 +28,6 @@ public:
 protected:
 
 	UG2IWorldHintKeyWidgetComponent();
-
-	virtual void BeginPlay() override;
 
 	virtual void SetDefaultsByPlayerPawn(APawn* Pawn) override;
 	
