@@ -249,7 +249,7 @@ void UG2IInteractionComponent::SetTagOfInteractionActions()
 	TagOfInteractionActions = PlayerController->GetActionToTagMap();
 }
 
-bool UG2IInteractionComponent::IsOwnerControllable() const
+bool UG2IInteractionComponent::IsOwnerPlayerControlled() const
 {
 	if (!ensure(Owner))
 	{
@@ -285,7 +285,7 @@ void UG2IInteractionComponent::OnInteractionBoxEndOverlap(UPrimitiveComponent* O
 
 void UG2IInteractionComponent::OpenKeyHintByActor(AActor* OtherActor)
 {
-	if (!IsOwnerControllable())
+	if (!IsOwnerPlayerControlled())
 	{
 		return;
 	}

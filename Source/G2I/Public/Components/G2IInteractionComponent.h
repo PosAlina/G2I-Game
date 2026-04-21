@@ -83,5 +83,5 @@ private:
 
 	void SetTagOfInteractionActions();
 	
-	bool IsOwnerControllable() const;
+	bool IsOwnerPlayerControlled() const;
 };
