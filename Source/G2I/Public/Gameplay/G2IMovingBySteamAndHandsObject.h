@@ -1,6 +1,5 @@
-
-
 #pragma once
+
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Interfaces/G2IInteractiveObjectInterface.h"
@@ -9,7 +8,8 @@
 #include "Components/TimelineComponent.h"
 #include "G2IMovingBySteamAndHandsObject.generated.h"
 
-class UPhysicsConstraintComponent;
+class UG2IOutlineComponent;
+
 UCLASS()
 class G2I_API AG2IMovingBySteamAndHandsObject : public AActor, public IG2ITraceableObectInterface, public IG2IInteractiveObjectInterface, public IG2IMovingObjectInterface
 {
@@ -40,14 +40,17 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Data")
 	float SteamPushForce;
+	
+	UPROPERTY(EditAnywhere, Category = "Outliner")
+	TObjectPtr<UG2IOutlineComponent> OutlineComponent;
 
 	UFUNCTION(BlueprintCallable, Category = "Timeline")
 	void OnTimelineUpdate(float Output);
 
-	void BeginPlay() override;
+	virtual void BeginPlay() override;
 public:
-	bool CanInteract_Implementation(const ACharacter* Interactor) override;
-	void Interact_Implementation(const ACharacter* Interactor) override;
-	void OnShoot_Implementation(const FHitResult& HitResult, AActor* Character) override;
-	float GetSpeedChange_Implementation() override;
+	virtual bool CanInteract_Implementation(const ACharacter* Interactor) override;
+	virtual void Interact_Implementation(const ACharacter* Interactor) override;
+	virtual void OnShoot_Implementation(const FHitResult& HitResult, AActor* Character) override;
+	virtual float GetSpeedChange_Implementation() override;
 };
