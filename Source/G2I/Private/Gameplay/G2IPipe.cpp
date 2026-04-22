@@ -12,7 +12,9 @@ AG2IPipe::AG2IPipe()
 	if (SplineComponent)
 		SetRootComponent(SplineComponent);
 
-	bRunConstructionScriptOnDrag = false;
+#if WITH_EDITOR
+	bRunConstructionScriptOnDrag = 0;
+#endif
 }
 
 void AG2IPipe::OnConstruction(const FTransform& Transform)
@@ -50,7 +52,7 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 
 	if (!DefaultMesh)
 	{
-		UE_LOG(LogG2I, Error, TEXT("Default Mesh isn't set in %s"), *GetActorNameOrLabel());
+		UE_LOG(LogG2I, Warning, TEXT("Default Mesh isn't set in %s. Terminating further setup."), *GetActorNameOrLabel());
 		return;
 	}
 
@@ -94,7 +96,7 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 				Mesh = BrokenMesh;
 			}
 			else
-				UE_LOG(LogG2I, Error, TEXT("Broken Mesh isn't set in %s"), *GetActorNameOrLabel());
+				UE_LOG(LogG2I, Warning, TEXT("Broken Mesh isn't set in %s. Technical hole isn't going to spawn at the %i point."), *GetActorNameOrLabel(), PointIndex);
 		}
 		else
 			Mesh = DefaultMesh;
