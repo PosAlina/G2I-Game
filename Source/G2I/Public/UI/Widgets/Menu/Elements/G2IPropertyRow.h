@@ -19,6 +19,6 @@ public:
 public:
 	
 	TFunction<void()> OnApplyPropertyValue;
-	TFunction<void()> OnSavePropertyValue;
+	TFunction<void()> OnCancelUnAppliedPropertyValue;
 	
 };

@@ -71,6 +71,11 @@ UG2ICutScenesParameters* UG2IGameInstance::GetCutScenesParameters()
 	return CutScenesParameters;
 }
 
+UG2IOptionsParameters* UG2IGameInstance::GetOptionsParameters()
+{
+	return OptionsParameters;
+}
+
 FString UG2IGameInstance::GetMainMenuLevelName() const
 {
 	return MainMenuLevelName;

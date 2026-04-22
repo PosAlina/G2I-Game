@@ -18,12 +18,6 @@ public:
 	float CameraTransitionTime = 0.5f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	bool bIsInvertedCameraHorizontalRotation = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	bool bIsInvertedCameraVerticalRotation = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float DefaultTargetArm = 220.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

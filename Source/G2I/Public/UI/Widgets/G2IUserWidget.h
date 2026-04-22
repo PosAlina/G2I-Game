@@ -30,13 +30,11 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UG2IGameInstance> GameInstance;
 
-public:
+protected:
 
 	virtual void NativePreConstruct() override;
 
 	virtual void NativeOnInitialized() override;
-
-protected:
 	
 	UFUNCTION()
 	virtual void InitializeAfterManagerLoading() {}
