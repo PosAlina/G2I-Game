@@ -5,7 +5,6 @@
 #include "Camera/CameraComponent.h"
 #include "G2ICameraInterface.h"
 #include "G2IFixedCamerasInputInterface.h"
-#include "G2IGameInstance.h"
 #include "G2IThirdPersonCameraInputInterface.h"
 #include "Engine/World.h"
 #include "GameFramework/Character.h"
@@ -13,6 +12,7 @@
 UG2ICameraControllerComponent::UG2ICameraControllerComponent()
 {
 	DelayMovementTime = 0.f;
+	bIsInitialized = false;
 }
 
 void UG2ICameraControllerComponent::BeginPlay()
@@ -26,6 +26,10 @@ void UG2ICameraControllerComponent::BeginPlay()
 
 void UG2ICameraControllerComponent::SetupCurrentCamera_Implementation()
 {
+	if (!bIsInitialized)
+	{
+		return;
+	}
 	SetCurrentCamera(CurrentCameraIndex);
 }
 
@@ -302,6 +306,7 @@ void UG2ICameraControllerComponent::SetupCamerasDefaults()
 	SetupThirdPersonCameras();
 	SetupFixedCameras();
 	
+	bIsInitialized = true;
 	if (!CurrentCameraComponents.IsEmpty())
 	{
 		SetCurrentCameraIndex(CurrentCameraComponents.Num() - 1);
