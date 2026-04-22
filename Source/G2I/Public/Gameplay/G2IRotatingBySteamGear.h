@@ -6,6 +6,9 @@
 #include "Components/TimelineComponent.h"
 #include "G2IRotatingBySteamGear.generated.h"
 
+
+class UG2ISoundComponent;
+
 UCLASS()
 class G2I_API AG2IRotatingBySteamGear : public AActor, public IG2ITraceableObectInterface
 {
@@ -19,6 +22,8 @@ private:
 	float TimelineValue;
 
 	float RotationSign;
+
+	int32 GearRotationSoundId = -1;
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "Data")
@@ -48,6 +53,9 @@ protected:
 	
 	
 public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
+	TObjectPtr<UG2ISoundComponent> SoundComp;
+
 	void OnShoot_Implementation(const FHitResult& HitResult, AActor* Character);
 	AG2IRotatingBySteamGear();
 

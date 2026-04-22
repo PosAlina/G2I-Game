@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "G2IInteractionComponent.generated.h"
 
+class UG2ISoundComponent;
 class UInputAction;
 class UBoxComponent;
 
@@ -39,6 +40,7 @@ private:
 	TMap<TObjectPtr<UInputAction>, FName> TagOfInteractionActions;
 
 public:
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	float InteractionBoxLength = 100.f;
 

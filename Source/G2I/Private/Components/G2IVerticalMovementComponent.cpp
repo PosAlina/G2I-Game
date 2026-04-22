@@ -3,6 +3,7 @@
 #include "Components/ActorComponent.h"
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
+#include "Sound/G2ISoundComponent.h"
 
 float UG2IVerticalMovementComponent::FindTargetLocation()
 {
@@ -130,6 +131,11 @@ void UG2IVerticalMovementComponent::BeginPlay()
 	{
 		UE_LOG(LogG2I, Warning, TEXT("No mesh component found on %s"), *Owner->GetName());
 	}
+
+	if (SharedSoundComp && SharedSoundComp->SetupSounds.Contains(TEXT("VerticallyMovingSound")))
+	{
+		MovingSoundId = SharedSoundComp->AddSound(SharedSoundComp->SetupSounds[TEXT("VerticallyMovingSound")]);
+	}
 }
 
 
@@ -143,6 +149,10 @@ void UG2IVerticalMovementComponent::UpdateMovement()
 	{
 		StopMovement();
 		return;
+	}
+	
+	if (SharedSoundComp && !SharedSoundComp->IsSoundPlaying(MovingSoundId)) {
+		SharedSoundComp->PlaySound(MovingSoundId);
 	}
 
 	float Step = MovingVerticallySpeed * MovingVerticallyTimerInterval;
@@ -178,6 +188,9 @@ void UG2IVerticalMovementComponent::UpdateMovement()
 
 void UG2IVerticalMovementComponent::StopMovement()
 {
+	if (SharedSoundComp) {
+		SharedSoundComp->StopSound(MovingSoundId);
+	}
 	if (ensure(World))
 	{
 		World->GetTimerManager().ClearTimer(MovementTimer);

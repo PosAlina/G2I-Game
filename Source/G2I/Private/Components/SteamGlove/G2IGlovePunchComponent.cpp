@@ -4,6 +4,7 @@
 #include "Chaos/CollisionResolutionUtil.h"
 #include "GameFramework/Character.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Sound/G2ISoundComponent.h"
 
 void UG2IGlovePunchComponent::ActivatePunch()
 {
@@ -45,6 +46,12 @@ void UG2IGlovePunchComponent::ActivatePunch()
 		PunchBoneLocation = Mesh->GetBoneLocation(PunchBoneName);
 	}
 	
+	if (SoundComponent) {
+		if (!SoundComponent->IsSoundPlaying(PunchSoundId)) {
+			SoundComponent->PlaySound(PunchSoundId);
+		}
+	}
+
 	UKismetSystemLibrary::SphereOverlapActors(
 		World,
 		PunchBoneLocation,
@@ -113,4 +120,36 @@ void UG2IGlovePunchComponent::GlovePunchActivation_Implementation()
 void UG2IGlovePunchComponent::ClearActorsToDestroy()
 {
 	ActorsToDestroy.Empty();
+}
+
+void UG2IGlovePunchComponent::BeginPlay() 
+{
+	Super::BeginPlay();
+
+	AActor* MyOwner = GetOwner();
+
+	if (MyOwner)
+	{
+		UG2ISoundComponent* FoundSoundComp = MyOwner->FindComponentByClass<UG2ISoundComponent>();
+
+		if (FoundSoundComp)
+		{
+			SoundComponent = FoundSoundComp;
+
+			UE_LOG(LogTemp, Display, TEXT("Звуковой компонент успешно найден!"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("На Экторе %s нет компонента UG2ISoundComponent!"), *MyOwner->GetName());
+		}
+	}
+
+	if (SoundComponent && SoundComponent->SetupSounds.Contains(TEXT("PunchSound")))
+	{
+			PunchSoundId = SoundComponent->AddSound(SoundComponent->SetupSounds[TEXT("PunchSound")]);
+			if (PunchSoundId == -1)
+			{
+				UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: PunchSoundId (ID == -1)"), *GetName(), *FString(__FUNCTION__));
+			}
+	}
 }

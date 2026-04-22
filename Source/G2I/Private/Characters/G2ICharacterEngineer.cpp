@@ -11,6 +11,7 @@
 #include "GameFramework/Controller.h"
 #include "Engine/World.h"
 #include "G2I.h"
+#include "Sound/G2ISoundComponent.h"
 
 AG2ICharacterEngineer::AG2ICharacterEngineer(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UG2ICharacterMovementComponent>(
@@ -28,6 +29,28 @@ AG2ICharacterEngineer::AG2ICharacterEngineer(const FObjectInitializer& ObjectIni
 	ValveInteractionComp = CreateDefaultSubobject<UG2IValveInteractionComponent>(TEXT("ValveInteractionComp"));
 	HoleInteractionComp = CreateDefaultSubobject<UG2IHoleInteractionComponent>(TEXT("HoleInteractionComp"));
 	SteamGloveComp = CreateDefaultSubobject<UG2ISteamGloveComponent>(TEXT("SteamGloveComp"));
+
+	SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("SoundComponent"));
+	if (SoundComp) {
+		SoundComp->SetupAttachment(RootComponent);
+		FSoundConfig PunchConfig;
+		FSoundConfig SteamShotConfig;
+		if (RootComponent)
+		{
+			PunchConfig.AttachToComponent.ComponentProperty = RootComponent->GetFName();
+			SteamShotConfig.AttachToComponent.ComponentProperty = RootComponent->GetFName();
+		}
+		static ConstructorHelpers::FObjectFinder<USoundWave> PunchSoundAsset(TEXT("/Script/Engine.SoundWave'/Game/G2I_Game/Audio/Sounds/SoundRaw/SW_GlovePunch.SW_GlovePunch'"));
+		if (PunchSoundAsset.Succeeded()) {
+			PunchConfig.Sound = PunchSoundAsset.Object;
+		}
+		static ConstructorHelpers::FObjectFinder<USoundWave> SteamShotSoundAsset(TEXT("/Script/Engine.SoundWave'/Game/G2I_Game/Audio/Sounds/SoundRaw/SW_SteamShot.SW_SteamShot'"));
+		if (SteamShotSoundAsset.Succeeded()) {
+			SteamShotConfig.Sound = SteamShotSoundAsset.Object;
+		}
+		SoundComp->SetupSounds.Add(TEXT("PunchSound"), PunchConfig);
+		SoundComp->SetupSounds.Add(TEXT("SteamShotSound"), SteamShotConfig);
+	}
 
 	if (!ensure(InventoryComp))
 	{

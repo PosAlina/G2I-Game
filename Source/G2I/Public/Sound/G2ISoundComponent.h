@@ -11,7 +11,7 @@ class G2I_API UG2ISoundComponent : public USceneComponent
 
 private:
 	UPROPERTY()
-	TWeakObjectPtr<UG2IGameSoundManager> SoundManager;
+	TObjectPtr<UG2IGameSoundManager> SoundManager;
 protected:
 	virtual void BeginPlay() override;
 
@@ -74,4 +74,7 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Sounds")
 	bool GetSoundAutoDestroy(const int32 SoundId);
+
+	UFUNCTION(BlueprintPure, Category = "Sounds")
+	bool IsSoundPlaying(const int32 SoundId);
 };

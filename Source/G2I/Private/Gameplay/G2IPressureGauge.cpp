@@ -3,6 +3,7 @@
 #include "G2I.h"
 #include "G2IAnswerInterface.h"
 #include "LaunchingIndication/G2ILauncherComponent.h"
+#include "Sound/G2ISoundComponent.h"
 
 AG2IPressureGauge::AG2IPressureGauge()
 {
@@ -15,6 +16,21 @@ AG2IPressureGauge::AG2IPressureGauge()
         UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
             *UG2ILauncherComponent::StaticClass()->GetName());
     }
+    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("DefaultSceneRoot"));
+    SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("GaugeSoundComponent"));
+    if (SoundComp) {
+        SoundComp->SetupAttachment(RootComponent);
+        FSoundConfig DefaultConfig;
+        if (RootComponent)
+        {
+            DefaultConfig.AttachToComponent.ComponentProperty = RootComponent->GetFName();
+        }
+        static ConstructorHelpers::FObjectFinder<USoundWave> SoundAsset(TEXT("/Script/Engine.SoundWave'/Game/G2I_Game/Audio/Sounds/SoundRaw/SW_GaugeArrowRotaionSound.SW_GaugeArrowRotaionSound'"));
+        if (SoundAsset.Succeeded()) {
+            DefaultConfig.Sound = SoundAsset.Object;
+        }
+        SoundComp->SetupSounds.Add(TEXT("ArrowRotationSound"), DefaultConfig);
+    }
 }
 
 void AG2IPressureGauge::BeginPlay()
@@ -23,6 +39,14 @@ void AG2IPressureGauge::BeginPlay()
 
     SetupDefaults();
     BindDelegates();
+
+    if (SoundComp && SoundComp->SetupSounds.Contains(TEXT("ArrowRotationSound"))) {
+        ArrowRotationSoundId = SoundComp->AddSound(SoundComp->SetupSounds[TEXT("ArrowRotationSound")]);
+        if (ArrowRotationSoundId == -1)
+        {
+            UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: ArrowRotationSoundId (ID == -1)"), *GetName(), *FString(__FUNCTION__));
+        }
+    }
 }
 
 void AG2IPressureGauge::SetupDefaults()
@@ -110,7 +134,9 @@ void AG2IPressureGauge::ChangeAngles_Implementation(const TArray<float>& AngleDe
 void AG2IPressureGauge::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-
+    if (SoundComp && !SoundComp->IsSoundPlaying(ArrowRotationSoundId)) {
+        SoundComp->PlaySound(ArrowRotationSoundId);
+    }
     for (int32 i = ActiveMovements.Num() - 1; i >= 0; --i)
     {
         FActiveMovement& Movement = ActiveMovements[i];
@@ -141,6 +167,9 @@ void AG2IPressureGauge::Tick(float DeltaTime)
 
     if (ActiveMovements.Num() == 0)
     {
+        if (SoundComp) {
+            SoundComp->StopSound(ArrowRotationSoundId);
+        }
         SetActorTickEnabled(false);
     }
 }

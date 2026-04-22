@@ -2,12 +2,28 @@
 #include "G2I.h"
 #include "Interfaces/G2IMovingByGearObjectInterface.h"
 #include "Components/G2IInventoryComponent.h"
+#include "Sound/G2ISoundComponent.h"
 
 AG2IRotatingBySteamGear::AG2IRotatingBySteamGear()
 {
 	Timeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("SteamForceTimeline"));
 	TimelineValue = 0.0f;
 	TimelineCurve = nullptr;
+
+	SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("SoundComponent"));
+	if (SoundComp) {
+		SoundComp->SetupAttachment(RootComponent);
+		FSoundConfig DefaultConfig;
+		if (RootComponent)
+		{
+			DefaultConfig.AttachToComponent.ComponentProperty = RootComponent->GetFName();
+		}
+		static ConstructorHelpers::FObjectFinder<USoundWave> SoundAsset(TEXT("/Script/Engine.SoundWave'/Game/G2I_Game/Audio/Sounds/SoundRaw/SW_GearRottaion.SW_GearRottaion'"));
+		if (SoundAsset.Succeeded()) {
+			DefaultConfig.Sound = SoundAsset.Object;
+		}
+		SoundComp->SetupSounds.Add(TEXT("GearRotationSound"), DefaultConfig);
+	}
 }
 
 void AG2IRotatingBySteamGear::BeginPlay()
@@ -27,6 +43,15 @@ void AG2IRotatingBySteamGear::BeginPlay()
 	Timeline->AddInterpFloat(TimelineCurve, TimelineUpdate);
 	Timeline->SetTimelineLengthMode(ETimelineLengthMode::TL_LastKeyFrame);
 	Timeline->SetLooping(false);
+
+	if (SoundComp && SoundComp->SetupSounds.Contains(TEXT("GearRotationSound")))
+	{
+		GearRotationSoundId = SoundComp->AddSound(SoundComp->SetupSounds[TEXT("GearRotationSound")]);
+		if (GearRotationSoundId == -1)
+		{
+			UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: GearRotationSoundId (ID == -1)"), *GetName(), *FString(__FUNCTION__));
+		}
+	}
 }
 
 void AG2IRotatingBySteamGear::OnShoot_Implementation(const FHitResult& HitResult, AActor* Character) {
@@ -82,6 +107,11 @@ void AG2IRotatingBySteamGear::OnTimelineUpdate(float Output)
 		ActorRotator.Yaw = Output * RotationSpeed * FMath::Sign(RotationSign);
 	}
 	AddActorWorldRotation(ActorRotator);
+	if (SoundComp) {
+		if (!SoundComp->IsSoundPlaying(GearRotationSoundId)) {
+			SoundComp->PlaySound(GearRotationSoundId);
+		}
+	}
 }
 
 void AG2IRotatingBySteamGear::Repair(AActor* Interactor)
