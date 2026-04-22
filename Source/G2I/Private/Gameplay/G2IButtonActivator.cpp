@@ -81,16 +81,7 @@ AG2IButtonActivator::AG2IButtonActivator()
 	SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("SoundComponent"));
 	if (SoundComp) {
 		SoundComp->SetupAttachment(RootComponent);
-		FSoundConfig DefaultConfig;
-		if (RootComponent)
-		{
-			DefaultConfig.AttachToComponent.ComponentProperty = RootComponent->GetFName();
-		}
-		static ConstructorHelpers::FObjectFinder<USoundWave> SoundAsset(TEXT("/Script/Engine.SoundWave'/Game/G2I_Game/Audio/Sounds/SoundRaw/SW_ActivationSound.SW_ActivationSound'"));
-		if (SoundAsset.Succeeded()) {
-			DefaultConfig.Sound = SoundAsset.Object;
-		}
-		SoundComp->SetupSounds.Add(TEXT("ActivationSound"), DefaultConfig);
+		SoundComp->SetupSounds.Add(TEXT("ActivationSound"), FSoundConfig());
 	}
 }
 

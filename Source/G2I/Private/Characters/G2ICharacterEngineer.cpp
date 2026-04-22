@@ -33,23 +33,8 @@ AG2ICharacterEngineer::AG2ICharacterEngineer(const FObjectInitializer& ObjectIni
 	SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("SoundComponent"));
 	if (SoundComp) {
 		SoundComp->SetupAttachment(RootComponent);
-		FSoundConfig PunchConfig;
-		FSoundConfig SteamShotConfig;
-		if (RootComponent)
-		{
-			PunchConfig.AttachToComponent.ComponentProperty = RootComponent->GetFName();
-			SteamShotConfig.AttachToComponent.ComponentProperty = RootComponent->GetFName();
-		}
-		static ConstructorHelpers::FObjectFinder<USoundWave> PunchSoundAsset(TEXT("/Script/Engine.SoundWave'/Game/G2I_Game/Audio/Sounds/SoundRaw/SW_GlovePunch.SW_GlovePunch'"));
-		if (PunchSoundAsset.Succeeded()) {
-			PunchConfig.Sound = PunchSoundAsset.Object;
-		}
-		static ConstructorHelpers::FObjectFinder<USoundWave> SteamShotSoundAsset(TEXT("/Script/Engine.SoundWave'/Game/G2I_Game/Audio/Sounds/SoundRaw/SW_SteamShot.SW_SteamShot'"));
-		if (SteamShotSoundAsset.Succeeded()) {
-			SteamShotConfig.Sound = SteamShotSoundAsset.Object;
-		}
-		SoundComp->SetupSounds.Add(TEXT("PunchSound"), PunchConfig);
-		SoundComp->SetupSounds.Add(TEXT("SteamShotSound"), SteamShotConfig);
+		SoundComp->SetupSounds.Add(TEXT("PunchSound"), FSoundConfig());
+		SoundComp->SetupSounds.Add(TEXT("SteamShotSound"), FSoundConfig());
 	}
 
 	if (!ensure(InventoryComp))

@@ -6,7 +6,6 @@
 #include "Components/ActorComponent.h"
 #include "G2IInteractionComponent.generated.h"
 
-class UG2ISoundComponent;
 class UInputAction;
 class UBoxComponent;
 

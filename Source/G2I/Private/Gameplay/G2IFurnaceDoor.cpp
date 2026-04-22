@@ -79,17 +79,4 @@ AG2IFurnaceDoor::AG2IFurnaceDoor() {
 	if (SoundComp) {
 		SoundComp->SetupSounds.Add(TEXT("FurnaceDoorOpenSound"), FSoundConfig());
 	}
-
-	if (SoundComp) {
-		FSoundConfig DefaultConfig;
-		if (RootComponent) {
-			DefaultConfig.AttachToComponent.ComponentProperty = RootComponent->GetFName();
-		}
-		static ConstructorHelpers::FObjectFinder<USoundWave> SoundAsset(TEXT("/Script/Engine.SoundWave'/Game/G2I_Game/Audio/Sounds/SoundRaw/SW_FurnaceDoorOpenSound.SW_FurnaceDoorOpenSound'"));
-		if (SoundAsset.Succeeded()) {
-			DefaultConfig.Sound = SoundAsset.Object;
-		}
-
-		SoundComp->SetupSounds.Add(TEXT("FurnaceDoorOpenSound"), DefaultConfig);
-	}
 }

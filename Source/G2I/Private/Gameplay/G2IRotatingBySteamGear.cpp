@@ -14,17 +14,8 @@ AG2IRotatingBySteamGear::AG2IRotatingBySteamGear()
 	SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("SoundComponent"));
 	if (SoundComp) {
 		SoundComp->SetupAttachment(RootComponent);
-		FSoundConfig DefaultConfig;
-		if (RootComponent)
-		{
-			DefaultConfig.AttachToComponent.ComponentProperty = RootComponent->GetFName();
-		}
-		static ConstructorHelpers::FObjectFinder<USoundWave> SoundAsset(TEXT("/Script/Engine.SoundWave'/Game/G2I_Game/Audio/Sounds/SoundRaw/SW_GearRottaion.SW_GearRottaion'"));
-		if (SoundAsset.Succeeded()) {
-			DefaultConfig.Sound = SoundAsset.Object;
-		}
-		SoundComp->SetupSounds.Add(TEXT("GearRotationSound"), DefaultConfig);
-	
+		SoundComp->SetupSounds.Add(TEXT("GearRotationSound"), FSoundConfig());
+	}
 	OutlineComponent = CreateDefaultSubobject<UG2IOutlineComponent>(TEXT("OutlineComponent"));
 	if (!ensure(OutlineComponent))
 	{

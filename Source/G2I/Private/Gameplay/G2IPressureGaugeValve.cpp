@@ -42,16 +42,7 @@ AG2IPressureGaugeValve::AG2IPressureGaugeValve()
     SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("ValveSoundComponent"));
     if (SoundComp) {
         SoundComp->SetupAttachment(RootComponent);
-        FSoundConfig DefaultConfig;
-        if (RootComponent)
-        {
-            DefaultConfig.AttachToComponent.ComponentProperty = RootComponent->GetFName();
-        }
-        static ConstructorHelpers::FObjectFinder<USoundWave> SoundAsset(TEXT("/Script/Engine.SoundWave'/Game/G2I_Game/Audio/Sounds/SoundRaw/SW_ValveRotationSound.SW_ValveRotationSound'"));
-        if (SoundAsset.Succeeded()) {
-            DefaultConfig.Sound = SoundAsset.Object;
-        }
-        SoundComp->SetupSounds.Add(TEXT("ValveRotationSound"), DefaultConfig);
+        SoundComp->SetupSounds.Add(TEXT("ValveRotationSound"), FSoundConfig());
     }
 }
 

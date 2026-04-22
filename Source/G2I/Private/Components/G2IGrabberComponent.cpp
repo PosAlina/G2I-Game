@@ -31,18 +31,8 @@ UG2IGrabberComponent::UG2IGrabberComponent()
 	SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("GrabberSoundComp"));
 	
 	if (SoundComp) {
-		FSoundConfig VerticallyMovingConfig;
-		FSoundConfig GrabbingConfig;
-		static ConstructorHelpers::FObjectFinder<USoundWave> VerticallyMovingSoundAsset(TEXT("/Script/Engine.SoundWave'/Game/G2I_Game/Audio/Sounds/SoundRaw/SW_GrabberVerticalMovementSound.SW_GrabberVerticalMovementSound'"));
-		if (VerticallyMovingSoundAsset.Succeeded()) {
-			VerticallyMovingConfig.Sound = VerticallyMovingSoundAsset.Object;
-		}
-		static ConstructorHelpers::FObjectFinder<USoundWave> GrabbingSoundAsset(TEXT("/Script/Engine.SoundWave'/Game/G2I_Game/Audio/Sounds/SoundRaw/SW_GrabbingSound.SW_GrabbingSound'"));
-		if (GrabbingSoundAsset.Succeeded()) {
-			GrabbingConfig.Sound = GrabbingSoundAsset.Object;
-		}
-		SoundComp->SetupSounds.Add(TEXT("VerticallyMovingSound"), VerticallyMovingConfig);
-		SoundComp->SetupSounds.Add(TEXT("GrabbingSound"), GrabbingConfig);
+		SoundComp->SetupSounds.Add(TEXT("VerticallyMovingSound"), FSoundConfig());
+		SoundComp->SetupSounds.Add(TEXT("GrabbingSound"), FSoundConfig());
 	}
 }
 

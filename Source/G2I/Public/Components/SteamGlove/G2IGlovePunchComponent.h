@@ -37,7 +37,7 @@ private:
 	
 public:
 	
-	virtual void BeginPlay();
+	virtual void BeginPlay() override;
 
 	void ActivatePunch();
 	TArray<AActor*> GetActorsToDestroy();

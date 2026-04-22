@@ -135,12 +135,6 @@ void UG2IGlovePunchComponent::BeginPlay()
 		if (FoundSoundComp)
 		{
 			SoundComponent = FoundSoundComp;
-
-			UE_LOG(LogTemp, Display, TEXT("Звуковой компонент успешно найден!"));
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("На Экторе %s нет компонента UG2ISoundComponent!"), *MyOwner->GetName());
 		}
 	}
 

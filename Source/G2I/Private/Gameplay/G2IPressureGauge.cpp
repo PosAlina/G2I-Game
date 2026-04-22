@@ -20,16 +20,7 @@ AG2IPressureGauge::AG2IPressureGauge()
     SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("GaugeSoundComponent"));
     if (SoundComp) {
         SoundComp->SetupAttachment(RootComponent);
-        FSoundConfig DefaultConfig;
-        if (RootComponent)
-        {
-            DefaultConfig.AttachToComponent.ComponentProperty = RootComponent->GetFName();
-        }
-        static ConstructorHelpers::FObjectFinder<USoundWave> SoundAsset(TEXT("/Script/Engine.SoundWave'/Game/G2I_Game/Audio/Sounds/SoundRaw/SW_GaugeArrowRotaionSound.SW_GaugeArrowRotaionSound'"));
-        if (SoundAsset.Succeeded()) {
-            DefaultConfig.Sound = SoundAsset.Object;
-        }
-        SoundComp->SetupSounds.Add(TEXT("ArrowRotationSound"), DefaultConfig);
+        SoundComp->SetupSounds.Add(TEXT("ArrowRotationSound"), FSoundConfig());
     }
 }
 

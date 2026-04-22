@@ -32,7 +32,7 @@ public:
 		TObjectPtr<UG2ISoundComponent> SoundComp;
 
 	AG2IFurnaceDoor();
-	virtual void BeginPlay();
+	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, Category = "Data|Spline")
 	float Force = 0.1f;
