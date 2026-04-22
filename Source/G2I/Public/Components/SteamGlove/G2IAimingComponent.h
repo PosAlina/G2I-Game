@@ -5,12 +5,12 @@
 #include "G2IHitInfo.h"
 #include "Components/ActorComponent.h"
 #include "G2IAimTypeEnum.h"
+#include "Camera/CameraComponent.h"
 #include "G2IAimingComponent.generated.h"
 
 enum class EG2ICameraBlendState : uint8;
 class UG2IUIManager;
 enum class EG2IAimType : uint8;
-enum class EG2ICameraTypeEnum : uint8;
 class UG2IAimingWidget;
 class AG2IPlayerController;
 
@@ -30,8 +30,6 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FFinishAimingDelegate OnFinishAimingDelegate;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	TObjectPtr<UMaterialInstance> ShootableObjOutlineMaterialInstance;
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = View, meta = (Units = "s", ToolTip =
 		"After the event, the aim takes on a specific view for that time. Afterward, the aiming logic returns"))
@@ -101,7 +99,11 @@ public:
 protected:
 
 	UFUNCTION()
-	void SetAbilityAiming(EG2ICameraTypeEnum CurrentCameraType, EG2ICameraBlendState CurrentBlendState);
+	void EnableAbilityAiming(EG2ICameraBlendState CurrentBlendState,const UCameraComponent* NewCamera);
+	
+	UFUNCTION()
+	void DisableAbilityAiming(EG2ICameraBlendState CurrentBlendState, const UCameraComponent* NewCamera,
+		float DelayMovementTime);
 	
 	UFUNCTION()
 	void SetAimDistance(const float NewAimDistance);
@@ -121,6 +123,4 @@ private:
 
 	void SetAimType(const AActor* TargetActor);
 	
-	void OutlineController(const AActor* ActorToChangeOutline, bool bOutlineMode);
-
 };

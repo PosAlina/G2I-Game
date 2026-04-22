@@ -11,6 +11,8 @@ AG2IPipe::AG2IPipe()
 	SplineComponent = CreateDefaultSubobject<UG2IPipesSplineComponent>(TEXT("SplineComponent"));
 	if (SplineComponent)
 		SetRootComponent(SplineComponent);
+
+	bRunConstructionScriptOnDrag = false;
 }
 
 void AG2IPipe::OnConstruction(const FTransform& Transform)
@@ -77,7 +79,7 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 		{
 			UArrowComponent* Arrow = (UArrowComponent*)(AddComponentByClass(UArrowComponent::StaticClass(), false, SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local), false));
 			Arrow->SetRelativeLocationAndRotation(GetLocationBetweenPoints(PointIndex, PointIndex + 1),
-				GetValveRotationAtSplinePoint(PointIndex).Add(90., 0., 0.));
+				FRotator(GetValveRotationAtSplinePoint(PointIndex).Roll, GetValveRotationAtSplinePoint(PointIndex).Yaw - 90., GetValveRotationAtSplinePoint(PointIndex).Pitch));
 			Arrow->SetRelativeScale3D(FVector(0.3));
 			Arrow->ArrowColor = FColor::Cyan;
 		}
@@ -245,7 +247,7 @@ TObjectPtr<UG2IPipesSplineMetadata> AG2IPipe::GetSplineMetadata() const
 	return SplineMetadata;
 }
 
-void AG2IPipe::ChangeAirPassed(bool bNewAirPassed)
+void AG2IPipe::ChangeAirPassed(const bool bNewAirPassed)
 {
 	if (bHasAirPassed != bNewAirPassed)
 	{
@@ -254,7 +256,7 @@ void AG2IPipe::ChangeAirPassed(bool bNewAirPassed)
 	}
 }
 
-void AG2IPipe::ChangeCanAirPass(bool bNewCanAirPass)
+void AG2IPipe::ChangeCanAirPass(const bool bNewCanAirPass)
 {
 	if (bCanAirPassThrough != bNewCanAirPass)
 	{
@@ -294,7 +296,7 @@ bool AG2IPipe::GetAir() const
 	return bHasAirPassed && bCanAirPassThrough;
 }
 
-float AG2IPipe::GetTestFloatAtSplinePoint(int32 PointIndex)
+float AG2IPipe::GetTestFloatAtSplinePoint(const int32 PointIndex)
 {
 	if (ensure(SplineMetadata))
 	{
@@ -307,7 +309,7 @@ float AG2IPipe::GetTestFloatAtSplinePoint(int32 PointIndex)
 	return 0.0f;
 }
 
-bool AG2IPipe::GetHasPipeAtSplinePoint(int32 PointIndex)
+bool AG2IPipe::GetHasPipeAtSplinePoint(const int32 PointIndex)
 {
 	/*if (ensure(SplineMetadata))
 	{
@@ -325,7 +327,7 @@ bool AG2IPipe::GetHasPipeAtSplinePoint(int32 PointIndex)
 	return false;
 }
 
-bool AG2IPipe::GetHasValveAtSplinePoint(int32 PointIndex)
+bool AG2IPipe::GetHasValveAtSplinePoint(const int32 PointIndex)
 {
 	/*if (ensure(SplineMetadata))
 	{
@@ -343,17 +345,17 @@ bool AG2IPipe::GetHasValveAtSplinePoint(int32 PointIndex)
 	return false;
 }
 
-FRotator AG2IPipe::GetValveRotationAtSplinePoint(int32 PointIndex)
+FRotator AG2IPipe::GetValveRotationAtSplinePoint(const int32 PointIndex)
 {
 	if (ensure(PointParams.IsValidIndex(PointIndex)))
 	{
 		return PointParams[PointIndex].ValveRotation;
 	}
 
-	return FRotator(0.0);
+	return FRotator::ZeroRotator;
 }
 
-bool AG2IPipe::GetValveActivatedAtSplinePoint(int32 PointIndex)
+bool AG2IPipe::GetValveActivatedAtSplinePoint(const int32 PointIndex)
 {
 	if (ensure(PointParams.IsValidIndex(PointIndex)))
 	{
@@ -363,7 +365,7 @@ bool AG2IPipe::GetValveActivatedAtSplinePoint(int32 PointIndex)
 	return false;
 }
 
-bool AG2IPipe::GetHasTechnicalHoleAtSplinePoint(int32 PointIndex)
+bool AG2IPipe::GetHasTechnicalHoleAtSplinePoint(const int32 PointIndex)
 {
 	/*if (ensure(SplineMetadata))
 	{
@@ -381,7 +383,7 @@ bool AG2IPipe::GetHasTechnicalHoleAtSplinePoint(int32 PointIndex)
 	return false;
 }
 
-void AG2IPipe::SetHasTechnicalHoleAtSplinePoint(int32 PointIndex, bool newHasTechnicalHole)
+void AG2IPipe::SetHasTechnicalHoleAtSplinePoint(const int32 PointIndex, const bool newHasTechnicalHole)
 {
 	if (ensure(PointParams.IsValidIndex(PointIndex)))
 	{
@@ -389,7 +391,7 @@ void AG2IPipe::SetHasTechnicalHoleAtSplinePoint(int32 PointIndex, bool newHasTec
 	}
 }
 
-bool AG2IPipe::GetCanInteractAtSplinePoint(int32 PointIndex)
+bool AG2IPipe::GetCanInteractAtSplinePoint(const int32 PointIndex)
 {
 	/*if (ensure(SplineMetadata))
 	{
@@ -407,7 +409,7 @@ bool AG2IPipe::GetCanInteractAtSplinePoint(int32 PointIndex)
 	return false;
 }
 
-bool AG2IPipe::GetSendToOtherPipeAtSplinePoint(int32 PointIndex)
+bool AG2IPipe::GetSendToOtherPipeAtSplinePoint(const int32 PointIndex)
 {
 	if (ensure(PointParams.IsValidIndex(PointIndex)))
 	{
@@ -417,7 +419,7 @@ bool AG2IPipe::GetSendToOtherPipeAtSplinePoint(int32 PointIndex)
 	return false;
 }
 
-bool AG2IPipe::GetReceiveFromOtherPipeAtSplinePoint(int32 PointIndex)
+bool AG2IPipe::GetReceiveFromOtherPipeAtSplinePoint(const int32 PointIndex)
 {
 	if (ensure(PointParams.IsValidIndex(PointIndex)))
 	{
@@ -427,7 +429,7 @@ bool AG2IPipe::GetReceiveFromOtherPipeAtSplinePoint(int32 PointIndex)
 	return false;
 }
 
-UG2IPipesBoxComponent* AG2IPipe::SpawnPipesBoxComponent(int32 PointIndex, bool bReceives)
+UG2IPipesBoxComponent* AG2IPipe::SpawnPipesBoxComponent(const int32 PointIndex, const bool bReceives)
 {
 	UG2IPipesBoxComponent* CollisionBox = (UG2IPipesBoxComponent*)(AddComponentByClass(UG2IPipesBoxComponent::StaticClass(), false, SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local), false));
 	
@@ -444,7 +446,7 @@ UG2IPipesBoxComponent* AG2IPipe::SpawnPipesBoxComponent(int32 PointIndex, bool b
 	return CollisionBox;
 }
 
-void AG2IPipe::SpawnTechnicalHole(int32 PointIndex)
+void AG2IPipe::SpawnTechnicalHole(const int32 PointIndex)
 {
 	if (!HoleClass)
 	{
@@ -470,7 +472,7 @@ void AG2IPipe::SpawnTechnicalHole(int32 PointIndex)
 	}
 }
 
-void AG2IPipe::SpawnValve(int32 PointIndex)
+void AG2IPipe::SpawnValve(const int32 PointIndex)
 {
 	if (!ensure(ValveClass))
 	{
@@ -486,11 +488,12 @@ void AG2IPipe::SpawnValve(int32 PointIndex)
 	// Spawn Valve Actor
 	if (GetWorld())
 	{
-		AG2IValve* Valve = GetWorld()->SpawnActor<AG2IValve>(ValveClass, GetLocationBetweenPoints(PointIndex, PointIndex + 1, ESplineCoordinateSpace::World), GetValveRotationAtSplinePoint(PointIndex), SpawnParams);
+		AG2IValve* Valve = GetWorld()->SpawnActor<AG2IValve>(ValveClass, GetLocationBetweenPoints(PointIndex, PointIndex + 1, ESplineCoordinateSpace::World), FRotator::ZeroRotator, SpawnParams);
 
 		if (ensure(Valve))
 		{
 			Valve->OwnerActor = this;
+			Valve->AddRotationToStaticMesh(GetValveRotationAtSplinePoint(PointIndex));
 			Valve->bActivated = GetValveActivatedAtSplinePoint(PointIndex);
 			ValvesMap.Add(Valve, Valve->bActivated);
 
@@ -499,7 +502,7 @@ void AG2IPipe::SpawnValve(int32 PointIndex)
 	}
 }
 
-void AG2IPipe::SpawnInteractableBoxComponent(int32 PointIndex)
+void AG2IPipe::SpawnInteractableBoxComponent(const int32 PointIndex)
 {
 	UBoxComponent* CollisionBox = (UBoxComponent*)(AddComponentByClass(UBoxComponent::StaticClass(), false, SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local), false));
 	
@@ -514,7 +517,7 @@ void AG2IPipe::SpawnInteractableBoxComponent(int32 PointIndex)
 	}
 }
 
-void AG2IPipe::GenerateMesh(UStaticMesh* Mesh, int32 PointIndex)
+void AG2IPipe::GenerateMesh(UStaticMesh* Mesh, const int32 PointIndex)
 {
 	USplineMeshComponent* SplineMesh = NewObject<USplineMeshComponent>(this, USplineMeshComponent::StaticClass());
 
@@ -552,7 +555,7 @@ void AG2IPipe::GenerateMesh(UStaticMesh* Mesh, int32 PointIndex)
 	}
 }
 
-void AG2IPipe::RegenerateMesh(UStaticMesh* Mesh, int32 PointIndex)
+void AG2IPipe::RegenerateMesh(UStaticMesh* Mesh, const int32 PointIndex)
 {
 	if (ensure(SplineMeshes.IsValidIndex(PointIndex)))
 	{
@@ -574,7 +577,7 @@ void AG2IPipe::RegenerateMesh(UStaticMesh* Mesh, int32 PointIndex)
 	}
 }
 
-FVector AG2IPipe::GetLocationBetweenPoints(int32 Point1, int32 Point2, ESplineCoordinateSpace::Type CoordSpace)
+FVector AG2IPipe::GetLocationBetweenPoints(const int32 Point1, const int32 Point2, const ESplineCoordinateSpace::Type CoordSpace) const
 {
 	if (ensure(SplineComponent))
 	{
@@ -617,7 +620,7 @@ void AG2IPipe::SendAir()
 	}
 }
 
-void AG2IPipe::OnValveActivationChanged(AG2IValve* Valve, bool bNewActivated)
+void AG2IPipe::OnValveActivationChanged(AG2IValve* Valve, const bool bNewActivated)
 {
 	ValvesMap.Add(Valve, bNewActivated);
 

@@ -8,6 +8,7 @@
 
 
 class UG2ISoundComponent;
+class UG2IOutlineComponent;
 
 UCLASS()
 class G2I_API AG2IRotatingBySteamGear : public AActor, public IG2ITraceableObectInterface
@@ -50,13 +51,16 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Interaction")
 	FName RequiredItemID;
 
-	
+	UPROPERTY(EditAnywhere, Category = "Outliner")
+	TObjectPtr<UG2IOutlineComponent> OutlineComponent;
+
+	virtual void BeginPlay() override;
 	
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
 	TObjectPtr<UG2ISoundComponent> SoundComp;
 
-	void OnShoot_Implementation(const FHitResult& HitResult, AActor* Character);
+	virtual void OnShoot_Implementation(const FHitResult& HitResult, AActor* Character) override;
 	AG2IRotatingBySteamGear();
 
 
@@ -65,6 +69,4 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Interaction")
 	bool IsActive = false;
-
-	void BeginPlay() override;
 };

@@ -131,10 +131,10 @@ void UG2IWorldHintWidgetComponent::BindDelegates()
 		UE_LOG(LogG2I, Error, TEXT("Player Controller doesn't exist in %s"), *GetName());
 		return;
 	}
-	PlayerController->OnPossessPawnDelegate.AddDynamic(this, &ThisClass::SetPlayerPawn);
+	PlayerController->OnPossessPawnDelegate.AddDynamic(this, &ThisClass::SetDefaultsByPlayerPawn);
 }
 
-void UG2IWorldHintWidgetComponent::SetPlayerPawn(APawn* Pawn)
+void UG2IWorldHintWidgetComponent::SetDefaultsByPlayerPawn(APawn* Pawn)
 {
 	if (Pawn)
 	{
@@ -180,12 +180,14 @@ UG2IUserWidget *UG2IWorldHintWidgetComponent::FindOrAddWidgetByName(const EG2IWi
 
 void UG2IWorldHintWidgetComponent::ReactWidgetOnOverlappingActors()
 {
+	bIsInVisibleZone = false;
 	TArray<AActor*> OverlappingActors;
 	VisibilityZone->GetOverlappingActors(OverlappingActors);
 	for (AActor *OverlappingActor : OverlappingActors)
 	{
 		if (OverlappingActor == PlayerPawn)
 		{
+			bIsInVisibleZone = true;
 			OpenWidget();
 			return;
 		}
@@ -199,6 +201,7 @@ void UG2IWorldHintWidgetComponent::OnVisibilityZoneBeginOverlap(UPrimitiveCompon
 {
 	if (OtherActor == PlayerPawn)
 	{
+		bIsInVisibleZone = true;
 		OpenWidget();
 	}
 }
@@ -208,6 +211,7 @@ void UG2IWorldHintWidgetComponent::OnVisibilityZoneEndOverlap(UPrimitiveComponen
 {
 	if (OtherActor == PlayerPawn)
 	{
+		bIsInVisibleZone = false;
 		CloseWidget();
 	}
 }
@@ -238,6 +242,11 @@ void UG2IWorldHintWidgetComponent::SetIsLocked_Implementation(const bool bIsNewL
 bool UG2IWorldHintWidgetComponent::IsLocked_Implementation()
 {
 	return bIsLocked;
+}
+
+bool UG2IWorldHintWidgetComponent::IsInVisibleZone() const
+{
+	return bIsInVisibleZone;
 }
 
 void UG2IWorldHintWidgetComponent::OpenWidget()

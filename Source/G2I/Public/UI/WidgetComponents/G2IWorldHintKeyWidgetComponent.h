@@ -28,5 +28,7 @@ protected:
 	UG2IWorldHintKeyWidgetComponent();
 
 	virtual void BeginPlay() override;
+
+	virtual void SetDefaultsByPlayerPawn(APawn* Pawn) override;
 	
 };

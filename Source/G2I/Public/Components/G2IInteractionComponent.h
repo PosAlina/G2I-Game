@@ -84,4 +84,6 @@ private:
 	void CloseKeyHintByActor(AActor* OtherActor);
 
 	void SetTagOfInteractionActions();
+	
+	bool IsOwnerPlayerControlled() const;
 };

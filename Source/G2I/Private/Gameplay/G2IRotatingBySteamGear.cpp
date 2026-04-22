@@ -1,5 +1,6 @@
 #include "Gameplay/G2IRotatingBySteamGear.h"
 #include "G2I.h"
+#include "G2IOutlineComponent.h"
 #include "Interfaces/G2IMovingByGearObjectInterface.h"
 #include "Components/G2IInventoryComponent.h"
 #include "Sound/G2ISoundComponent.h"
@@ -23,6 +24,11 @@ AG2IRotatingBySteamGear::AG2IRotatingBySteamGear()
 			DefaultConfig.Sound = SoundAsset.Object;
 		}
 		SoundComp->SetupSounds.Add(TEXT("GearRotationSound"), DefaultConfig);
+	
+	OutlineComponent = CreateDefaultSubobject<UG2IOutlineComponent>(TEXT("OutlineComponent"));
+	if (!ensure(OutlineComponent))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Failed to create Outline Component"), *GetName());
 	}
 }
 
@@ -62,14 +68,14 @@ void AG2IRotatingBySteamGear::OnShoot_Implementation(const FHitResult& HitResult
 		FVector HitVector = HitResult.ImpactPoint - HitResult.TraceStart;
 		HitVector.X = HitVector.Z;
 		HitVector.Z = 0;
-		FVector RotationNormal = { 1.0f, 0.0f, 0.0f };
-		float CosineValue = FVector::DotProduct(HitVector.GetSafeNormal(), RotationNormal.GetSafeNormal());
+		const FVector RotationNormal = { 1.0f, 0.0f, 0.0f };
+		const float CosineValue = FVector::DotProduct(HitVector.GetSafeNormal(), RotationNormal.GetSafeNormal());
 
 		//Calculating direction based on HitNormal and axis Z
 		FVector HitNormal = HitResult.ImpactNormal;
 		HitNormal.X = 0;
-		FVector AxisZ = { 0.0f, 0.0f, 1.0f };
-		FVector CrossProductResult = FVector::CrossProduct(AxisZ, HitNormal);
+		const FVector AxisZ = { 0.0f, 0.0f, 1.0f };
+		const FVector CrossProductResult = FVector::CrossProduct(AxisZ, HitNormal);
 
 		RotationSign = CrossProductResult.X * CosineValue;
 
@@ -83,7 +89,7 @@ void AG2IRotatingBySteamGear::OnShoot_Implementation(const FHitResult& HitResult
 	}
 }
 
-void AG2IRotatingBySteamGear::OnTimelineUpdate(float Output)
+void AG2IRotatingBySteamGear::OnTimelineUpdate(const float Output)
 {
 	for (const auto& i : MovableObjects) {
 		if (!i) {

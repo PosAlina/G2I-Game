@@ -249,6 +249,11 @@ TSubclassOf<APawn> AG2IPlayerController::GetCurrentPawnClass() const
 	return GetPawnClass(GetPawn());
 }
 
+UG2IAimingComponent* AG2IPlayerController::GetAimingComponent() const
+{
+	return Cast<UG2IAimingComponent>(AimingComponent);
+}
+
 bool AG2IPlayerController::IsCurrentPawnClass(const TSubclassOf<APawn>& PawnClass) const
 {
 	return PawnClass == GetCurrentPawnClass();
@@ -402,14 +407,16 @@ void AG2IPlayerController::OnPossess(APawn* NewPawn)
 		return;
 	}
 	
-	if (GetPawn() == NewPawn)
+	if (GetPawn() != NewPawn)
 	{
-		OnPossessPawnDelegate.Broadcast(NewPawn);
+		return;
 	}
+
 	// TODO: SetupCharacterACtorComponents should be only once in start level, store in map with key - character class
 	SetupCharacterActorComponents();
 	SetupCamera();
 	SetupInputForPawn(GetPawn());
+	OnPossessPawnDelegate.Broadcast(NewPawn);
 }
 
 void AG2IPlayerController::OnUnPossess()
