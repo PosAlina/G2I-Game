@@ -53,6 +53,8 @@ private:
 	double OldCameraYawRotation = 0.;
 	
 	float DelayMovementTime = 0.f;
+	
+	bool bIsInitialized = false;
 
 protected:
 	
