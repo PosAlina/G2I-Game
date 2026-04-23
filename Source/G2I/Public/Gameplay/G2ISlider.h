@@ -111,6 +111,9 @@ public:
 	float ImpulseDeclinePower = 0.23f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float ImpulseDeclineFrequency = 0.008f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<AActor> SliderHelpList;
 	
 protected:
 	UPROPERTY(EditAnywhere)

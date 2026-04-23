@@ -74,6 +74,11 @@ void AG2ISlider::BeginPlay()
 
 void AG2ISlider::SetupDefaults()
 {
+	if (SliderHelpList)
+	{
+		SliderHelpList->SetActorHiddenInGame(true);
+	}
+	
 	if (!ensure(HintKeyWidgetComp))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't create %s"), *GetActorNameOrLabel(),
@@ -159,6 +164,11 @@ void AG2ISlider::Interact_Implementation(const ACharacter* Interactor)
 	else
 	{
 		HintKeyWidgetComp->SetIsLocked_Implementation(true);
+	}
+
+	if (SliderHelpList)
+	{
+		SliderHelpList->SetActorHiddenInGame(false);
 	}
 }
 
@@ -457,6 +467,11 @@ void AG2ISlider::SliderExit()
 	else
 	{
 		HintKeyWidgetComp->SetIsLocked_Implementation(LauncherComp->IsLocked_Implementation());
+	}
+
+	if (SliderHelpList)
+	{
+		SliderHelpList->SetActorHiddenInGame(true);
 	}
 }
 
