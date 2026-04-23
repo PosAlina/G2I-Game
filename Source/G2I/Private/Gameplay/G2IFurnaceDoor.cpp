@@ -1,6 +1,7 @@
 #include "Gameplay/G2IFurnaceDoor.h"
 #include "TimerManager.h"
 #include "G2I.h"
+#include "Sound/G2ISoundComponent.h"
 
 void AG2IFurnaceDoor::StartTick()
 {
@@ -29,6 +30,10 @@ void AG2IFurnaceDoor::StartTick()
 
 void AG2IFurnaceDoor::PerformTick()
 {
+	if (SoundComp && !SoundComp->IsSoundPlaying(FurnaceDoorOpenSoundId)) {
+		SoundComp->PlaySound(FurnaceDoorOpenSoundId);
+	}
+
 	OnPushing_Implementation(Force);
 
 	CurrentTicks++;
@@ -54,4 +59,24 @@ void AG2IFurnaceDoor::Activate_Implementation()
 
 void AG2IFurnaceDoor::Deactivate_Implementation() {
 	return;
+}
+
+void AG2IFurnaceDoor::BeginPlay() {
+	Super::BeginPlay();
+
+	if (SoundComp && SoundComp->SetupSounds.Contains(TEXT("FurnaceDoorOpenSound")))
+	{
+		FurnaceDoorOpenSoundId = SoundComp->AddSound(SoundComp->SetupSounds[TEXT("FurnaceDoorOpenSound")]);
+		if (FurnaceDoorOpenSoundId == -1)
+		{
+			UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: FurnaceDoorOpenSoundId (ID == -1)"), *GetName(), *FString(__FUNCTION__));
+		}
+	}
+}
+
+AG2IFurnaceDoor::AG2IFurnaceDoor() {
+	SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("SoundComponent"));
+	if (SoundComp) {
+		SoundComp->SetupSounds.Add(TEXT("FurnaceDoorOpenSound"), FSoundConfig());
+	}
 }

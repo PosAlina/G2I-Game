@@ -7,6 +7,7 @@
 #include "G2IVerticalMovementComponent.generated.h"
 
 class UActorComponent;
+class UG2ISoundComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMoveDownFinished);
 
@@ -38,7 +39,10 @@ private:
 	UPROPERTY()
 	TObjectPtr<AActor> Owner;
 
+	int32 MovingSoundId;
 public:	
+	UG2ISoundComponent* SharedSoundComp;
+
 	FOnMoveDownFinished OnMoveDownFinished;
 
 	UPROPERTY(EditAnywhere, Category = "Data|Movement")

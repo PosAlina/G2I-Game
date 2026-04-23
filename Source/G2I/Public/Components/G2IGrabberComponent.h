@@ -10,6 +10,7 @@ class UG2IVerticalMovementComponent;
 class UPhysicsHandleComponent;
 class UBoxComponent;
 class USceneComponent;
+class UG2ISoundComponent;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class G2I_API UG2IGrabberComponent : public USceneComponent, public IG2IActivationInterface
@@ -40,10 +41,15 @@ private:
 
 	UFUNCTION()
 	void OnMoveDownFinished();
+
+	int32 MovingSoundId = -1;
+	int32 GrabbingSoundId = -1;
 public:	
 	UG2IGrabberComponent();
 
-public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
+	TObjectPtr<UG2ISoundComponent> SoundComp;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Data|Grabber|Movement")
 	TObjectPtr<UG2IVerticalMovementComponent> VerticalMovementComp;
 

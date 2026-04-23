@@ -5,12 +5,17 @@
 #include "Components/ActorComponent.h"
 #include "G2IGlovePunchComponent.generated.h"
 
+class UG2ISoundComponent;
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class G2I_API UG2IGlovePunchComponent : public UActorComponent, public IG2IGlovePunchInterface
 {
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
+	TObjectPtr<UG2ISoundComponent> SoundComponent;
+
 	UPROPERTY(EditAnywhere, Category = "GlovePunch")
 	float PunchArea = 50.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GlovePunch")
@@ -27,9 +32,13 @@ public:
 private:
 	UPROPERTY()
 	TArray<AActor*> ActorsToDestroy;
+
+	int32 PunchSoundId = -1;
 	
 public:
 	
+	virtual void BeginPlay() override;
+
 	void ActivatePunch();
 	TArray<AActor*> GetActorsToDestroy();
 	void ClearActorsToDestroy();
