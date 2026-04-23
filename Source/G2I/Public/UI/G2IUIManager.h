@@ -6,7 +6,6 @@
 class UG2ICutScenesParameters;
 class UG2IGameInstance;
 enum class EG2IAimType : uint8;
-class UG2IWidgetComponentParameters;
 class UWidgetSwitcher;
 class UPanelWidget;
 class UG2IPropertyRow;
@@ -46,9 +45,6 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UG2IUIDisplayManager> DisplayManager;
-
-	UPROPERTY()
-	TObjectPtr<UG2IWidgetComponentParameters> WidgetComponentParameters;
 
 	UPROPERTY()
 	TObjectPtr<UG2ICutScenesParameters> CutScenesParameters;

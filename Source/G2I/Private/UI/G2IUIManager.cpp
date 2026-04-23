@@ -9,7 +9,6 @@
 #include "G2IPlayerController.h"
 #include "G2IStringTablesTypes.h"
 #include "G2IUIDisplayManager.h"
-#include "G2IWidgetComponentParameters.h"
 #include "G2IWidgetNames.h"
 #include "G2IWorldHintKeyWidgetComponent.h"
 #include "Components/ListView.h"
@@ -72,13 +71,6 @@ void UG2IUIManager::InitializeInStartLevel()
 
 void UG2IUIManager::InitializeDefaultsInStartGame()
 {
-	WidgetComponentParameters = GameInstance->GetWidgetComponentParameters();
-	if (!ensure(WidgetComponentParameters))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
-			*GetName(), *UG2IWidgetComponentParameters::StaticClass()->GetName());
-	}
-
 	CutScenesParameters = GameInstance->GetCutScenesParameters();
 	if (!ensure(CutScenesParameters))
 	{

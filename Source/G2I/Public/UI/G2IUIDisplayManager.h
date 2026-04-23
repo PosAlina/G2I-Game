@@ -7,6 +7,7 @@
 #include "G2IWidgetTypes.h"
 #include "G2IUIDisplayManager.generated.h"
 
+class UG2IWidgetComponentParameters;
 enum class EG2IStringTablesTypes : uint8;
 class UG2IWorldHintWidgetComponent;
 class AG2IPlayerController;
@@ -61,6 +62,9 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<AG2IPlayerController> PlayerController;
+	
+	UPROPERTY()
+	TObjectPtr<UG2IWidgetComponentParameters> WidgetComponentParameters;
 
 	FCollisionQueryParams QueryParamsForWorldWidgetsActivate;
 
@@ -134,6 +138,12 @@ private:
 	
 	UFUNCTION()
 	void ReactActiveWidgetComponentsToNewCameraLocation(const FVector& NewCameraLocation);
+	
+	void ReactVisibilityWidgetComponentToNewCameraLocation(const FVector& NewCameraLocation,
+		UG2IWorldHintWidgetComponent& WidgetComponent) const;
+	
+	void ReactScaleWidgetComponentToNewCameraLocation(const FVector& NewCameraLocation,
+		UG2IWorldHintWidgetComponent& WidgetComponent) const;
 
 	static uint32 GetWorldWidgetComponentID(UG2IWorldHintWidgetComponent& WidgetComponent);
 	
