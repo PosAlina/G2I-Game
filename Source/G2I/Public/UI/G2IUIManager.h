@@ -114,9 +114,6 @@ public:
 		const FString& NewQuestionStringID = {},const FString& NewConfirmStringID = {},
 		const FString& NewCancelStringID = {}) const;
 
-	// ==================== LOADING WIDGET ====================
-	void SetLoadingProgressPercent(float Percent) const;
-
 	// ==================== CREATORS WIDGET ====================
 	void SetupCreatorsWidget(const TFunction<void()>& NewBackAction) const;
 
