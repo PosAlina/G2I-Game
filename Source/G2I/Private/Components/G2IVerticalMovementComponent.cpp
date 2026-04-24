@@ -74,6 +74,10 @@ void UG2IVerticalMovementComponent::MoveDown()
 		UE_LOG(LogG2I, Warning, TEXT("Already moving"));
 		return;
 	}
+	if (LauncherComp)
+	{
+		LauncherComp->SetIsLaunched(true);
+	}
 
 	if (!ensure(Owner)) {
 		UE_LOG(LogG2I, Warning, TEXT("Can't get the owner of the %s"), *this->GetName());
@@ -194,9 +198,9 @@ void UG2IVerticalMovementComponent::StopMovement()
 	{
 		World->GetTimerManager().ClearTimer(MovementTimer);
 	}
-	if (LauncherComp)
+	if (LauncherComp && bIsMovingUp)
 	{
-		LauncherComp->SetIsLaunched(!bIsMovingUp);
+		LauncherComp->SetIsLaunched(false);
 	}
 }
 
