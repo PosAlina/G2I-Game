@@ -6,7 +6,7 @@ void AG2IDestructibleObjectsManager::BeginPlay()
 {
 	DestructibleObjNumber = DestructibleObjectPool.Num();
 
-	if (!ActorToDestroy)
+	if (!ensure(ActorToDestroy))
 	{
 		UE_LOG(LogG2I, Warning, TEXT("ActorToDestroy is null in %s"), *GetName());
 		return;
@@ -24,7 +24,7 @@ void AG2IDestructibleObjectsManager::DestroyedObjectCounter()
 
 	if (DestroyedObjCurrentNumber == DestructibleObjNumber)
 	{
-		if (!ActorToDestroy)
+		if (!ensure(ActorToDestroy))
 		{
 			UE_LOG(LogG2I, Warning, TEXT("ActorToDestroy is null in %s"), *GetName());
 			return;
