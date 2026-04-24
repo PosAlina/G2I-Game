@@ -9,6 +9,8 @@
 #include "G2IPlayerController.h"
 #include "G2IStringTablesTypes.h"
 #include "G2IUIDisplayManager.h"
+#include "G2IUpdateOptions.h"
+#include "G2IWidgetComponentParameters.h"
 #include "G2IWidgetNames.h"
 #include "G2IWorldHintKeyWidgetComponent.h"
 #include "Components/ListView.h"
@@ -604,7 +606,7 @@ void UG2IUIManager::ApplyPropertiesValues(TArray<UG2IPropertyRow*> Properties) c
 	}
 }
 
-void UG2IUIManager::SavePropertiesValues(TArray<UG2IPropertyRow*> Properties) const
+void UG2IUIManager::CancelUnAppliedPropertiesValues(TArray<UG2IPropertyRow*> Properties) const
 {
 	for (const UG2IPropertyRow *PropertyRow : Properties)
 	{
@@ -615,7 +617,7 @@ void UG2IUIManager::SavePropertiesValues(TArray<UG2IPropertyRow*> Properties) co
 			return;
 		}
 		
-		SavePropertyValue(PropertyRow);
+		CancelUnAppliedPropertyValue(PropertyRow);
 	}
 }
 
@@ -634,7 +636,7 @@ void UG2IUIManager::ApplyPropertyValue(const UG2IPropertyRow* PropertyRow) const
 	}
 }
 
-void UG2IUIManager::SavePropertyValue(const UG2IPropertyRow* PropertyRow) const
+void UG2IUIManager::CancelUnAppliedPropertyValue(const UG2IPropertyRow* PropertyRow) const
 {
 	if (!ensure(PropertyRow))
 	{
@@ -643,9 +645,9 @@ void UG2IUIManager::SavePropertyValue(const UG2IPropertyRow* PropertyRow) const
 		return;
 	}
 
-	if (PropertyRow->OnSavePropertyValue)
+	if (PropertyRow->OnCancelUnAppliedPropertyValue)
 	{
-		PropertyRow->OnSavePropertyValue();
+		PropertyRow->OnCancelUnAppliedPropertyValue();
 	}
 }
 
@@ -679,6 +681,52 @@ void UG2IUIManager::SetActionControl(const FText& ActionName, const FText& KeyNa
 	{
 		ControlsList->SetSelectedItem(ListEntry);
 	}
+}
+
+void UG2IUIManager::ApplyAllOptions(const UWidgetSwitcher* OptionsSubWidgetSwitcher) const
+{
+	if (!ensure(OptionsSubWidgetSwitcher))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("An attempt to change nullptr %s in %s"),
+			*UWidgetSwitcher::StaticClass()->GetName(), *GetName());
+		return;
+	}
+	for (UWidget *OptionsSubWidget : OptionsSubWidgetSwitcher->GetAllChildren())
+	{
+		ApplyOptions(OptionsSubWidget);
+	}
+}
+
+void UG2IUIManager::CancelAllUnAppliedOptions(const UWidgetSwitcher* OptionsSubWidgetSwitcher) const
+{
+	if (!ensure(OptionsSubWidgetSwitcher))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("An attempt to change nullptr %s in %s"),
+			*UWidgetSwitcher::StaticClass()->GetName(), *GetName());
+		return;
+	}
+	for (UWidget *OptionsSubWidget : OptionsSubWidgetSwitcher->GetAllChildren())
+	{
+		CancelUnAppliedOptions(OptionsSubWidget);
+	}
+}
+
+void UG2IUIManager::ApplyOptions(UWidget* Widget)
+{
+	if (!Widget->Implements<UG2IUpdateOptions>())
+	{
+		return;
+	}
+	IG2IUpdateOptions::Execute_ApplyOptions(Widget);
+}
+
+void UG2IUIManager::CancelUnAppliedOptions(UWidget* Widget)
+{
+	if (!Widget->Implements<UG2IUpdateOptions>())
+	{
+		return;
+	}
+	IG2IUpdateOptions::Execute_CancelUnAppliedOptions(Widget);
 }
 
 void UG2IUIManager::SetupPauseWidget(const TFunction<void()>& NewContinueAction) const
