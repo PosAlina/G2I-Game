@@ -13,6 +13,7 @@
 
 AG2ISlider::AG2ISlider()
 {
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 	SliderBaseSM = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SliderBase"));
 	SliderSM = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Slider"));
 	SliderCol = CreateDefaultSubobject<UBoxComponent>(TEXT("SliderCol"));

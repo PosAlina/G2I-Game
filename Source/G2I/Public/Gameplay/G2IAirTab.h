@@ -5,6 +5,8 @@
 #include "Interfaces/G2IAirReceiverInterface.h"
 #include "G2IAirTab.generated.h"
 
+class UG2ILauncherComponent;
+
 UCLASS(Blueprintable, Placeable)
 class G2I_API AG2IAirTab : public AActor, public IG2IAirReceiverInterface
 {
@@ -37,6 +39,10 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
+	
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UG2ILauncherComponent> LauncherComp;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> StaticMeshComponent;
 
