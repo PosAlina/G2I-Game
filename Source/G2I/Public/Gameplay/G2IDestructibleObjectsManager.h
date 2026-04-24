@@ -16,7 +16,7 @@ protected:
 
 public:	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<TObjectPtr<AG2IDestructibleActorBase>> DestructibleObjectPool;
+	TSet<TObjectPtr<AG2IDestructibleActorBase>> DestructibleObjectPool;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<AActor> ActorToDestroy;
@@ -24,6 +24,6 @@ public:
 	void DestroyedObjectCounter();
 
 private:
-	int DestructibleObjNumber;
-	int DestroyedObjCurrentNumber;
+	int32 DestructibleObjNumber;
+	int32 DestroyedObjCurrentNumber;
 };

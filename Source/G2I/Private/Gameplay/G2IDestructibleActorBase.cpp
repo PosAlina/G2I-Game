@@ -55,6 +55,7 @@ void AG2IDestructibleActorBase::DestroySelf_Implementation()
 	SoundComponent->PlaySound(SoundID);
 
 	OnDestroyedDelegate.ExecuteIfBound();
+	OnDestroyedDelegate.Unbind();
 }
 
 AG2IDestructibleActorBase::AG2IDestructibleActorBase()
