@@ -8,6 +8,8 @@
 class UG2ISoundComponent;
 class UNiagaraSystem;
 
+DECLARE_DELEGATE(FOnDestroyed)
+
 UCLASS()
 class G2I_API AG2IDestructibleActorBase : public AActor, public IG2IDestructibleActorInterface
 {
@@ -31,6 +33,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString SoundName;
+	
+	FOnDestroyed OnDestroyedDelegate;
 
 protected:
 	virtual void BeginPlay() override;
