@@ -5,8 +5,6 @@
 #include "Components/PrimitiveComponent.h"
 #include "G2ISliderLampComponent.generated.h"
 
-class UPointLightComponent;
-
 DECLARE_DELEGATE(FStopFlashingTimer)
 
 USTRUCT(BlueprintType)
@@ -103,9 +101,6 @@ public:
 	TObjectPtr<UMaterialInstanceDynamic> DynamicMaterial;
 	bool bIsLampFlashing = false;
 	int32 LampMode = 0;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UPointLightComponent> PointLightComp;
 
 	FStopFlashingTimer OnStopFlashingTimer;
 
