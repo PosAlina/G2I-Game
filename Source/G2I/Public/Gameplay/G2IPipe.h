@@ -11,6 +11,8 @@
 #include "Interfaces/G2IAirReceiverInterface.h"
 #include "G2IPipe.generated.h"
 
+class UG2ILauncherComponent;
+
 UCLASS(Blueprintable, Placeable)
 class G2I_API AG2IPipe : public AActor, public IG2IAirReceiverInterface
 {
@@ -64,7 +66,7 @@ public:
 	bool GetAir() const;
 
 	UFUNCTION(BlueprintCallable)
-	float GetTestFloatAtSplinePoint(int32 PointIndex);
+	float GetTestFloatAtSplinePoint(int32 PointIndex) const;
 
 	UFUNCTION(BlueprintCallable)
 	bool GetHasPipeAtSplinePoint(int32 PointIndex);
@@ -91,6 +93,10 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool GetReceiveFromOtherPipeAtSplinePoint(int32 PointIndex);
+	
+	UFUNCTION()
+	void SetIsLockedValve(UG2ILauncherComponent* LauncherComponent, AActor* ComponentOwner, bool bIsLocked);
+	void SetIsLockedValve(bool bIsLocked);
 
 private:
 	UG2IPipesBoxComponent* SpawnPipesBoxComponent(int32 PointIndex, bool bReceives);
@@ -105,6 +111,10 @@ private:
 	void SpawnTechnicalHoles();
 
 public:
+	
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UG2ILauncherComponent> LauncherComp;
+	
 	// If I couldn't fix spline metadata to show up in the Editor - use this
 	UPROPERTY(EditAnywhere, Category = "Spline", meta=(ToolTip="Parameters for spline points. DO NOT CHANGE THE SIZE, it updates automatically when spline is edited."))
 	TArray<FG2IPipesSplinePointParams> PointParams;
