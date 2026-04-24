@@ -3,9 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Interfaces/G2IActivationInterface.h"
 #include "G2IVerticalMovementComponent.generated.h"
 
+class UG2ILauncherComponent;
 class UActorComponent;
 class UG2ISoundComponent;
 
@@ -18,14 +18,16 @@ class G2I_API UG2IVerticalMovementComponent : public UActorComponent
 
 protected:
 
-	float FindTargetLocation();
+	float FindTargetLocation() const;
 	
 	void UpdateMovement();
 
 	void StopMovement();
 
 	void MoveUp();
+	
 private:
+	
 	FTimerHandle MovementTimer;
 	FVector StartLocation = FVector::ZeroVector;;
 	FVector TargetLocation = FVector::ZeroVector;;
@@ -34,14 +36,21 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UPrimitiveComponent> TargetMeshComponent;
+	
 	UPROPERTY()
 	TObjectPtr<UWorld> World;
+	
 	UPROPERTY()
 	TObjectPtr<AActor> Owner;
+	
+	UPROPERTY()
+	TObjectPtr<UG2ILauncherComponent> LauncherComp;
 
 	int32 MovingSoundId;
-public:	
-	UG2ISoundComponent* SharedSoundComp;
+public:
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	TObjectPtr<UG2ISoundComponent> SharedSoundComp;
 
 	FOnMoveDownFinished OnMoveDownFinished;
 
@@ -56,7 +65,6 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float ReturnDelay = 2.0f;
-
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	void MoveDown();

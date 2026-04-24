@@ -70,6 +70,14 @@ void UG2IUIDisplayManager::InitializeDefaults()
 		UE_LOG(LogG2I, Error, TEXT("PlayerController doesn't exist in %s"), *GetName());
 		return;
 	}
+	
+	CameraManager = Cast<AG2IPlayerCameraManager>(PlayerController->PlayerCameraManager);
+	if (!CameraManager)
+	{
+		UE_LOG(LogG2I, Error, TEXT("Camera Manager %s doesn't exist in %s"),
+			*AG2IPlayerCameraManager::StaticClass()->GetName(), *GetName());
+		return;
+	}
 }
 
 void UG2IUIDisplayManager::InitializeGameInstanceDefaults()
@@ -129,8 +137,7 @@ void UG2IUIDisplayManager::InitializeGameInstanceDefaults()
 void UG2IUIDisplayManager::BindDelegatesForLevel()
 {
 	PlayerController->OnPossessPawnDelegate.AddDynamic(this, &ThisClass::UpdateBindingDelegatesForChangedPawn);
-	const TObjectPtr<AG2IPlayerCameraManager> CameraManager =
-		Cast<AG2IPlayerCameraManager>(PlayerController->PlayerCameraManager);
+	
 	if (!CameraManager)
 	{
 		UE_LOG(LogG2I, Error, TEXT("Camera Manager %s doesn't exist in %s"),
@@ -164,11 +171,16 @@ void UG2IUIDisplayManager::ReactActiveWidgetComponentsToNewCameraLocation(const 
 				UE_LOG(LogG2I, Warning, TEXT("%s: ActiveWidgetComponent has null widget"), *GetName());
 				continue;
 			}
-			
-			ReactVisibilityWidgetComponentToNewCameraLocation(NewCameraLocation, *WidgetComponent);
-			ReactScaleWidgetComponentToNewCameraLocation(NewCameraLocation, *WidgetComponent);
+			ReactWidgetComponentToNewCameraLocation(NewCameraLocation, *WidgetComponent);
 		}
 	}
+}
+
+void UG2IUIDisplayManager::ReactWidgetComponentToNewCameraLocation(const FVector& NewCameraLocation,
+	UG2IWorldHintWidgetComponent& WidgetComponent) const
+{
+	ReactVisibilityWidgetComponentToNewCameraLocation(NewCameraLocation, WidgetComponent);
+	ReactScaleWidgetComponentToNewCameraLocation(NewCameraLocation, WidgetComponent);
 }
 
 void UG2IUIDisplayManager::ReactVisibilityWidgetComponentToNewCameraLocation(
@@ -384,6 +396,15 @@ void UG2IUIDisplayManager::ShowWorldWidget(UG2IWorldHintWidgetComponent& WidgetC
 	}
 	
 	ActiveWidgetComponentsID.Add(WidgetComponentID);
+	
+	if (!CameraManager)
+	{
+		UE_LOG(LogG2I, Error, TEXT("Camera Manager %s doesn't exist in %s"),
+			*AG2IPlayerCameraManager::StaticClass()->GetName(), *GetName());
+		return;
+	}
+	const FVector NewCameraLocation = CameraManager->GetCameraCacheView().Location;
+	ReactWidgetComponentToNewCameraLocation(NewCameraLocation, WidgetComponent);
 }
 
 void UG2IUIDisplayManager::HideWorldWidget(UG2IWorldHintWidgetComponent& WidgetComponent)

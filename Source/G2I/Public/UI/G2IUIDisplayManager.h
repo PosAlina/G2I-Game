@@ -7,6 +7,7 @@
 #include "G2IWidgetTypes.h"
 #include "G2IUIDisplayManager.generated.h"
 
+class AG2IPlayerCameraManager;
 class UG2IWidgetComponentParameters;
 enum class EG2IStringTablesTypes : uint8;
 class UG2IWorldHintWidgetComponent;
@@ -65,6 +66,9 @@ private:
 	
 	UPROPERTY()
 	TObjectPtr<UG2IWidgetComponentParameters> WidgetComponentParameters;
+	
+	UPROPERTY()
+	TObjectPtr<AG2IPlayerCameraManager> CameraManager;
 
 	FCollisionQueryParams QueryParamsForWorldWidgetsActivate;
 
@@ -138,6 +142,9 @@ private:
 	
 	UFUNCTION()
 	void ReactActiveWidgetComponentsToNewCameraLocation(const FVector& NewCameraLocation);
+	
+	void ReactWidgetComponentToNewCameraLocation(const FVector& NewCameraLocation,
+		UG2IWorldHintWidgetComponent& WidgetComponent) const;
 	
 	void ReactVisibilityWidgetComponentToNewCameraLocation(const FVector& NewCameraLocation,
 		UG2IWorldHintWidgetComponent& WidgetComponent) const;
