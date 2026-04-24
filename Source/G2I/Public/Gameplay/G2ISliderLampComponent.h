@@ -23,12 +23,6 @@ struct FG2ILampEmissiveInfo
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lamp")
 	float IntensityRate = 0.1f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lamp")
-	float MultiplePointLightIntensity = 1000.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lamp")
-	bool bIsPointLightEnabled = true;
 };
 
 USTRUCT(BlueprintType)
