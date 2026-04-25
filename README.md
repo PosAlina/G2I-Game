@@ -9,12 +9,12 @@
 ## Ссылка на текущий билд
 (другие релизные билды ниже)
 
-* v3.2.0
-* Котельная - 1 уровень
-* Дата создания: 15.04.2026
-* Дата последнего изменения: 15.04.2026
+* v4.0.0
+* 3 уровня - игра для шоукейса
+* Дата создания: 25.04.2026
+* Дата последнего изменения: 25.04.2026
 
-https://drive.google.com/file/d/1hsFKDyYMlB3gEe_rrmvqI2QxZGuqnohO/view?usp=sharing
+https://drive.google.com/file/d/1bIiSuiRv8lMgYA874-TdqMqLn_L8eExa/view?usp=sharing
 
 * Shipping - для игры (пробный)
 * Development - для тестирования (играть в него)
@@ -43,9 +43,9 @@ https://drive.google.com/file/d/1hsFKDyYMlB3gEe_rrmvqI2QxZGuqnohO/view?usp=shari
 
 ### Уровни
 
-* Текущий: котельная
-* (* Холл)
-* (* Детская)
+* Котельная
+* Холл
+* Детская
 
 #### Внешние механики
 
