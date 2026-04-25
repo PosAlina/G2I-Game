@@ -9,11 +9,11 @@
 class UG2ICameraDefaultsParameters;
 class AG2IPlayerController;
 class UCameraComponent;
-class UG2IFixedCamerasComponent;
-class UG2IThirdPersonCameraComponent;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSetCameraTypeDelegate, EG2ICameraTypeEnum, CurrentCameraType,
-	EG2ICameraBlendState, CurrentBlendState);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSetThirdPersonCameraTypeDelegate,
+	EG2ICameraBlendState, CurrentBlendState, const UCameraComponent *, NewCamera);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FSetFixedCameraTypeDelegate,
+	EG2ICameraBlendState, CurrentBlendState, const UCameraComponent *, NewCamera, float, DelayMovementTime);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FThirdPersonCameraYawRotationDelegate, double, OldCameraYawRotation);
 
 UCLASS(ClassGroup=(Camera), meta=(BlueprintSpawnableComponent))
@@ -24,7 +24,10 @@ class G2I_API UG2ICameraControllerComponent : public UActorComponent, public IG2
 public:
 
 	UPROPERTY(BlueprintAssignable)
-	FSetCameraTypeDelegate OnSetCameraTypeDelegate;
+	FSetThirdPersonCameraTypeDelegate OnSetThirdPersonCameraTypeDelegate;
+	
+	UPROPERTY(BlueprintAssignable)
+	FSetFixedCameraTypeDelegate OnSetFixedCameraTypeDelegate;
 
 	UPROPERTY(BlueprintAssignable)
 	FThirdPersonCameraYawRotationDelegate OnThirdPersonCameraYawRotationDelegate;
@@ -47,16 +50,19 @@ private:
 
 	EG2ICameraTypeEnum CurrentCameraType = EG2ICameraTypeEnum::FixedCamera;
 
-	float OldCameraYawRotation = 0.;
+	double OldCameraYawRotation = 0.;
+	
+	float DelayMovementTime = 0.f;
+	
+	bool bIsInitialized = false;
 
 protected:
-
-	virtual void BeginPlay() override;
-
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
-		FActorComponentTickFunction* ThisTickFunction) override;
+	
+	UG2ICameraControllerComponent();
 
 public:
+	
+	virtual void BeginPlay() override;
 	
 	// Interface methods
 	UFUNCTION(BlueprintCallable, Category="Setup")
@@ -79,7 +85,7 @@ private:
 	UFUNCTION()
 	void BroadcastCameraTypeAfterBlendFinish();
 
-	void BroadcastCameraTypeAtBlendStart();
+	void BroadcastCameraTypeAtBlendStart(const UCameraComponent& NewCamera);
 
 	bool IsOwnerControllable() const;
 
@@ -101,5 +107,7 @@ private:
 	void SetThirdPersonCameraYawRotation();
 
 	void SetCurrentCameraIndex(int32 NewCameraIndex);
+	
+	void SetDefaultDelayMovementTime();
 	
 };

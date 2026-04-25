@@ -8,6 +8,11 @@ AG2IAIControllerDaughter::AG2IAIControllerDaughter()
 
 void AG2IAIControllerDaughter::OnPossess(APawn* InPawn)
 {
+	if (InPawn == GetPawn())
+	{
+		return;
+	}
+	
 	Super::OnPossess(InPawn);
 
 	if (MovementComponent)

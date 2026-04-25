@@ -23,7 +23,9 @@ public class G2I : ModuleRules
       		"GameplayTags",
 			"CinematicCamera",
 			"NavigationSystem",
-			"SlateCore"
+			"SlateCore",
+			"Niagara",
+			"AsyncLoadingScreen"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
@@ -50,7 +52,8 @@ public class G2I : ModuleRules
 			"G2I/Public/UI/WidgetComponents",
 			"G2I/Public/Components",
 			"G2I/Public/Components/Camera",
-			"G2I/Public/Components/SteamGlove"
+			"G2I/Public/Components/SteamGlove",
+            "G2I/Public/Sound"
         });
 		
 		PrivateIncludePaths.AddRange(new string[] {
@@ -71,7 +74,8 @@ public class G2I : ModuleRules
 			"G2I/Private/UI/WidgetComponents",
 			"G2I/Private/Components",
 			"G2I/Private/Components/Camera",
-			"G2I/Private/Components/SteamGlove"
+			"G2I/Private/Components/SteamGlove",
+			"G2I/Private/Sound"
         });
 
 		// Uncomment if you are using Slate UI

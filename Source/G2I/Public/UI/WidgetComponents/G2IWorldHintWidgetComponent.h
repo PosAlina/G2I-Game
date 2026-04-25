@@ -24,9 +24,6 @@ public:
 	EG2IWidgetNames CurrentWidgetName = EG2IWidgetNames::PointHint;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FVector2D WidgetSize = FVector2D(100.f, 100.f);
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<USphereComponent> VisibilityZone;
 	
 protected:
@@ -44,23 +41,32 @@ protected:
 
 	UPROPERTY()
 	TSubclassOf<APawn> PlayerPawnClass;
+	
+private:
+	
+	bool bIsInVisibleZone = false;
+	bool bEnableScaleFromDistance = true;
+	FVector2D DefaultDrawSize = FVector2D::ZeroVector;
 
 public:
-
-	void SetWidgetSize(FVector2D InWidgetSize);
+	
+	virtual void BeginPlay() override;
+	virtual void OnRegister() override;
 
 	UG2IUserWidget* FindOrAddWidgetByName(EG2IWidgetNames WidgetName);
 
 	virtual void SetIsLocked_Implementation(bool bIsNewLocked) override;
 	virtual bool IsLocked_Implementation() override;
 
+	bool IsInVisibleZone() const;
+	
+	FVector2D GetDefaultDrawSize() const;
+	bool IsEnableScaleFromDistance() const;
+	void SetEnableScaleFromDistance(bool bInEnableScaleFromDistance);
+
 protected:
 
 	UG2IWorldHintWidgetComponent();
-
-	virtual void BeginPlay() override;
-
-	virtual void OnRegister() override;
 
 	UFUNCTION()
 	void OnVisibilityZoneBeginOverlap(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -69,7 +75,7 @@ protected:
 	void OnVisibilityZoneEndOverlap(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex);
 
 	UFUNCTION()
-	void SetPlayerPawn(APawn *Pawn);
+	virtual void SetDefaultsByPlayerPawn(APawn *Pawn);
 
 	void OpenWidget();
 

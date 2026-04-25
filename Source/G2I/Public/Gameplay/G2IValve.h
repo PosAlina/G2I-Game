@@ -32,6 +32,8 @@ public:
 	UFUNCTION()
 	void PassActivationToPipe();
 
+	void AddRotationToStaticMesh(const FRotator& Rotation) const;
+
 protected:
 
 	virtual void BeginPlay() override;

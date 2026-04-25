@@ -5,8 +5,6 @@
 #include "Components/PrimitiveComponent.h"
 #include "G2ISliderLampComponent.generated.h"
 
-class UPointLightComponent;
-
 DECLARE_DELEGATE(FStopFlashingTimer)
 
 USTRUCT(BlueprintType)
@@ -25,12 +23,6 @@ struct FG2ILampEmissiveInfo
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lamp")
 	float IntensityRate = 0.1f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lamp")
-	float MultiplePointLightIntensity = 1000.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lamp")
-	bool bIsPointLightEnabled = true;
 };
 
 USTRUCT(BlueprintType)
@@ -103,9 +95,6 @@ public:
 	TObjectPtr<UMaterialInstanceDynamic> DynamicMaterial;
 	bool bIsLampFlashing = false;
 	int32 LampMode = 0;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UPointLightComponent> PointLightComp;
 
 	FStopFlashingTimer OnStopFlashingTimer;
 

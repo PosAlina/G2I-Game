@@ -1,14 +1,14 @@
-
 #pragma once
 
-#include "G2I.h"
 #include "GameFramework/Actor.h"
 #include "Components/G2IPipesBoxComponent.h"
-#include "Interfaces/G2IAirRecieverInterface.h"
+#include "Interfaces/G2IAirReceiverInterface.h"
 #include "G2IAirTab.generated.h"
 
+class UG2ILauncherComponent;
+
 UCLASS(Blueprintable, Placeable)
-class G2I_API AG2IAirTab : public AActor, public IG2IAirRecieverInterface
+class G2I_API AG2IAirTab : public AActor, public IG2IAirReceiverInterface
 {
 	GENERATED_BODY()
 	
@@ -16,18 +16,18 @@ public:
 	// Sets default values for this actor's properties
 	AG2IAirTab();
 
-	void OnConstruction(const FTransform& Transform) override;
+	virtual void OnConstruction(const FTransform& Transform) override;
 
-	void RecieveAir_Implementation(AActor* Sender, bool bAirPassed) override;
+	virtual void ReceiveAir_Implementation(AActor* Sender, bool bAirPassed) override;
 
 	UFUNCTION(BlueprintCallable)
-	bool CheckIfEnoughAir();
+	bool CheckIfEnoughAir() const;
 
 	UFUNCTION(BlueprintCallable)
 	bool GetActivated() const;
 
 	UFUNCTION(BlueprintCallable)
-	void ChangeActivated(bool bNewActivated);
+	virtual void ChangeActivated(const bool bNewActivated);
 
 	UFUNCTION(BlueprintCallable)
 	void ActivateActors();
@@ -39,24 +39,28 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
+	
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UG2ILauncherComponent> LauncherComp;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> StaticMeshComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tab")
-	int NumOfPipesNeeded = 1;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 NumOfPipesNeeded = 1;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tab")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<TObjectPtr<AActor>> ActorsToActivate;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<UG2IPipesBoxComponent> BoxComponent;
 
 protected:
-	UPROPERTY(VisibleAnywhere, Category = "Tab")
+	UPROPERTY(VisibleAnywhere)
 	bool bActivated = false;
 
-	UPROPERTY(EditAnywhere, Category = "Tab")
-	FVector BoxExtents = FVector(15.f);
+	UPROPERTY(EditAnywhere)
+	FVector BoxExtents = FVector(50.f);
 
 	UPROPERTY()
 	TMap<TObjectPtr<AActor>, bool> AirSendersMap;

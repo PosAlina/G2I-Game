@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "EnhancedActionKeyMapping.h"
 #include "EnhancedInputSubsystems.h"
+#include "G2IAimingComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "G2IPlayerController.generated.h"
 
@@ -115,9 +116,12 @@ public:
 	UEnhancedInputLocalPlayerSubsystem *GetSubsystem() const;
 	TSubclassOf<APawn> GetPawnClass(const APawn* NewPawn) const;
 	TSubclassOf<APawn> GetCurrentPawnClass() const;
+	UG2IAimingComponent *GetAimingComponent() const;
 
 	bool IsCurrentPawnClass(const TSubclassOf<APawn>& PawnClass) const;
 	
+	void RotateCameraTo(float Yaw, float Pitch);
+
 protected:
 
 	void SetupDefaults();

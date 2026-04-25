@@ -5,6 +5,8 @@
 #include "G2IPlayerController.h"
 #include "Camera/CameraComponent.h"
 #include "G2ICameraControllerInputInterface.h"
+#include "G2IGameInstance.h"
+#include "G2IOptionsParameters.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/SpringArmComponent.h"
 
@@ -65,12 +67,19 @@ void UG2IThirdPersonCameraComponent::LookAction_Implementation(const float Yaw, 
 			return;
 		}
 	}
+	
+	if (!ensure(OptionsParameters))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+			*GetName(), *UG2IOptionsParameters::StaticClass()->GetName());
+		return;
+	}
 
-	const float TargetYaw = CameraDefaultsParameters->bIsInvertedCameraHorizontalRotation ? -Yaw : Yaw;
-	Owner->AddControllerYawInput(TargetYaw);
+	const float TargetYaw = OptionsParameters->bIsInvertedCameraHorizontalRotation ? -Yaw : Yaw;
+	Owner->AddControllerYawInput(TargetYaw * OptionsParameters->MouseSensitive);
 
-	const float TargetPitch = CameraDefaultsParameters->bIsInvertedCameraVerticalRotation ? Pitch : -Pitch;
-	Owner->AddControllerPitchInput(TargetPitch);
+	const float TargetPitch = OptionsParameters->bIsInvertedCameraVerticalRotation ? Pitch : -Pitch;
+	Owner->AddControllerPitchInput(TargetPitch * OptionsParameters->MouseSensitive);
 }
 
 void UG2IThirdPersonCameraComponent::SetupDefaults()
@@ -97,6 +106,22 @@ void UG2IThirdPersonCameraComponent::SetupDefaults()
 	{
 		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
 		return;
+	}
+	
+	UG2IGameInstance *GameInstance = Cast<UG2IGameInstance>(World->GetGameInstance());
+	if (!ensure(GameInstance))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Game Instance doesn't exist in %s"), *GetName());
+	}
+	else
+	{
+		OptionsParameters = GameInstance->GetOptionsParameters();
+		if (!ensure(OptionsParameters))
+		{
+			UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+				*GetName(), *UG2IOptionsParameters::StaticClass()->GetName());
+			return;
+		}
 	}
 
 	APlayerController *LocalPlayerController = World->GetFirstPlayerController();
@@ -227,4 +252,31 @@ void UG2IThirdPersonCameraComponent::SetAimCameraLocation()
 	}
 	ThirdPersonCameraBoom->TargetArmLength = AimTargetArmLength;
 	ThirdPersonCameraBoom->SocketOffset = AimSocketOffset;
+}
+
+void UG2IThirdPersonCameraComponent::RotateToAction_Implementation(const float Yaw, const float Pitch)
+{
+	if (!ensure(Owner))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find owner"), *GetName());
+		return;
+	}
+
+	if (CameraController && CameraController->Implements<UG2ICameraControllerInputInterface>())
+	{
+		if (IG2ICameraControllerInputInterface::Execute_GetCameraComponent(CameraController) != ThirdPersonFollowCamera)
+		{
+			return;
+		}
+	}
+
+	AController* Controller = Owner->Controller;
+	if (!ensure(Controller))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find controller of %s"), *GetName(), *Owner->GetActorNameOrLabel());
+		return;
+	}
+
+	const float Roll = Controller->GetControlRotation().Roll;
+	Controller->SetControlRotation(FRotator(Pitch, Yaw, Roll));
 }

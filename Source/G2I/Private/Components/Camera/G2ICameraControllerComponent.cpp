@@ -9,39 +9,33 @@
 #include "Engine/World.h"
 #include "GameFramework/Character.h"
 
+UG2ICameraControllerComponent::UG2ICameraControllerComponent()
+{
+	DelayMovementTime = 0.f;
+	bIsInitialized = false;
+}
+
 void UG2ICameraControllerComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	PrimaryComponentTick.bCanEverTick = true;
+
 	SetupDefaults();
 	BindDelegates();
 	SetupCamerasDefaults();
 }
 
-void UG2ICameraControllerComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-	FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	if (IsOwnerControllable())
-	{
-		if (!CurrentCameraComponents.IsEmpty() &&
-			CurrentCameraComponents[CurrentCameraIndex % CurrentCameraComponents.Num()])
-		{
-			PlayerController->SetRotationTowardsCamera(
-				*CurrentCameraComponents[CurrentCameraIndex % CurrentCameraComponents.Num()]);
-		}
-	}
-}
-
 void UG2ICameraControllerComponent::SetupCurrentCamera_Implementation()
 {
+	if (!bIsInitialized)
+	{
+		return;
+	}
 	SetCurrentCamera(CurrentCameraIndex);
 }
 
 void UG2ICameraControllerComponent::SwitchCameraBehavior_Implementation()
 {
+	DelayMovementTime = 0.f;
 	for (int32 CameraOffset = 1; CameraOffset < CurrentCameraComponents.Num(); ++CameraOffset)
 	{
 		const int32 NewCameraIndex = (CurrentCameraIndex + CameraOffset) % CurrentCameraComponents.Num();
@@ -102,17 +96,40 @@ void UG2ICameraControllerComponent::RemoveCamera(UCameraComponent* RemovedCamera
 
 void UG2ICameraControllerComponent::BroadcastCameraTypeAfterBlendFinish()
 {
-	OnSetCameraTypeDelegate.Broadcast(CurrentCameraType, EG2ICameraBlendState::Finish);
+	const UCameraComponent *NewCamera = nullptr;
+	if (CurrentCameraComponents.IsValidIndex(CurrentCameraIndex))
+	{
+		NewCamera= CurrentCameraComponents[CurrentCameraIndex];
+	}
+		
+	switch (CurrentCameraType)
+	{
+	case EG2ICameraTypeEnum::ThirdPersonCamera:
+		OnSetThirdPersonCameraTypeDelegate.Broadcast(EG2ICameraBlendState::Finish, NewCamera);
+		break;
+	case EG2ICameraTypeEnum::FixedCamera:
+		OnSetFixedCameraTypeDelegate.Broadcast(EG2ICameraBlendState::Finish, NewCamera, DelayMovementTime);
+		break;
+	}
 }
 
-void UG2ICameraControllerComponent::BroadcastCameraTypeAtBlendStart()
+void UG2ICameraControllerComponent::BroadcastCameraTypeAtBlendStart(const UCameraComponent& NewCamera)
 {
-	OnSetCameraTypeDelegate.Broadcast(CurrentCameraType, EG2ICameraBlendState::Start);
+	switch (CurrentCameraType)
+	{
+	case EG2ICameraTypeEnum::ThirdPersonCamera:
+		OnSetThirdPersonCameraTypeDelegate.Broadcast(EG2ICameraBlendState::Start, &NewCamera);
+		break;
+	case EG2ICameraTypeEnum::FixedCamera:
+		OnSetFixedCameraTypeDelegate.Broadcast(EG2ICameraBlendState::Start, &NewCamera, DelayMovementTime);
+		break;
+	}
+	SetDefaultDelayMovementTime();
 }
 
 bool UG2ICameraControllerComponent::IsOwnerControllable() const
 {
-	if (!Owner)
+	if (!ensure(Owner))
 	{
 		UE_LOG(LogG2I, Error, TEXT("Owner doesn't exist in %s"), *GetName());
 		return false;
@@ -156,11 +173,10 @@ bool UG2ICameraControllerComponent::SetCamera(const UCameraComponent& NewCamera)
 	{
 		CurrentCameraType = EG2ICameraTypeEnum::FixedCamera;
 	}
-	BroadcastCameraTypeAtBlendStart();
-	
+	SetThirdPersonCameraYawRotation();
+	BroadcastCameraTypeAtBlendStart(NewCamera);
 	PlayerController->SetViewTargetWithBlend(OwnerActor, CameraDefaultsParameters->CameraTransitionTime,
 		VTBlend_Linear, 0, true);
-	PlayerController->SetRotationTowardsCamera(NewCamera);
 	
 	return true;
 }
@@ -198,13 +214,6 @@ bool UG2ICameraControllerComponent::SetCurrentCamera(int32 NewCameraIndex)
 
 void UG2ICameraControllerComponent::SetupDefaults()
 {
-	const UWorld *World = GetWorld();
-	if (!ensure(World))
-	{
-		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
-		return;
-	}
-	
 	AActor *OwnerActor = GetOwner();
 	if (!ensure(OwnerActor))
 	{
@@ -216,6 +225,13 @@ void UG2ICameraControllerComponent::SetupDefaults()
 	if (!ensure(Owner))
 	{
 		UE_LOG(LogG2I, Error, TEXT("Owner isn't character in %s"), *GetName());
+		return;
+	}
+	
+	const UWorld *World = GetWorld();
+	if (!ensure(World))
+	{
+		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
 		return;
 	}
 	
@@ -290,6 +306,7 @@ void UG2ICameraControllerComponent::SetupCamerasDefaults()
 	SetupThirdPersonCameras();
 	SetupFixedCameras();
 	
+	bIsInitialized = true;
 	if (!CurrentCameraComponents.IsEmpty())
 	{
 		SetCurrentCameraIndex(CurrentCameraComponents.Num() - 1);
@@ -348,10 +365,16 @@ void UG2ICameraControllerComponent::SetThirdPersonCameraYawRotation()
 
 void UG2ICameraControllerComponent::SetCurrentCameraIndex(const int32 NewCameraIndex)
 {
-	if (CurrentCameraIndex == NewCameraIndex)
+	CurrentCameraIndex = NewCameraIndex;
+}
+
+void UG2ICameraControllerComponent::SetDefaultDelayMovementTime()
+{
+	if (!ensure(CameraDefaultsParameters))
 	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2ICameraDefaultsParameters::StaticClass()->GetName());
 		return;
 	}
-	SetThirdPersonCameraYawRotation();
-	CurrentCameraIndex = NewCameraIndex;
+	DelayMovementTime = CameraDefaultsParameters->PendingTimeAfterSwitchingToControlCharacter;
 }

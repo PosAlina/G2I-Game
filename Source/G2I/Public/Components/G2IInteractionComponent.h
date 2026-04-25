@@ -39,6 +39,7 @@ private:
 	TMap<TObjectPtr<UInputAction>, FName> TagOfInteractionActions;
 
 public:
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	float InteractionBoxLength = 100.f;
 
@@ -50,6 +51,7 @@ public:
 
 	virtual void BeginPlay() override;
 	virtual void OnRegister() override;
+	virtual void OnComponentCreated() override;
 	
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void InteractAction_Implementation(const FName& Tag) override;
@@ -81,4 +83,6 @@ private:
 	void CloseKeyHintByActor(AActor* OtherActor);
 
 	void SetTagOfInteractionActions();
+	
+	bool IsOwnerPlayerControlled() const;
 };

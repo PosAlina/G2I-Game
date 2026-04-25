@@ -7,8 +7,6 @@
 #include "G2ICameraStateEnums.h"
 #include "G2ICharacterInterface.h"
 #include "G2IGameInstance.h"
-#include "G2IOutlineComponent.h"
-#include "G2ITraceableObectInterface.h"
 #include "G2IUIManager.h"
 #include "G2IWidgetNames.h"
 
@@ -118,7 +116,8 @@ void UG2IAimingComponent::BindDelegates()
 	
 	if (UG2ICameraControllerComponent *CameraControllerComponent = Owner->FindComponentByClass<UG2ICameraControllerComponent>())
 	{
-		CameraControllerComponent->OnSetCameraTypeDelegate.AddDynamic(this, &ThisClass::SetAbilityAiming);
+		CameraControllerComponent->OnSetThirdPersonCameraTypeDelegate.AddDynamic(this, &ThisClass::EnableAbilityAiming);
+		CameraControllerComponent->OnSetFixedCameraTypeDelegate.AddDynamic(this, &ThisClass::DisableAbilityAiming);
 	}
 
 	if (UG2ISteamShotComponent *SteamShotComponent = Owner->FindComponentByClass<UG2ISteamShotComponent>())
@@ -141,9 +140,8 @@ void UG2IAimingComponent::StartAimingAction_Implementation()
 			UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
 				*UG2IUIManager::StaticClass()->GetName(), *GetName());
 		}
-		UIManager->OpenWidget(EG2IWidgetNames::Aim);
+		UIManager->OpenWidget(EG2IWidgetNames::Aim, false);
 	}
-	OutlineController(AimTargetActor, true);
 }
 
 void UG2IAimingComponent::StopAimingAction_Implementation()
@@ -161,7 +159,6 @@ void UG2IAimingComponent::StopAimingAction_Implementation()
 		}
 		UIManager->CloseWidget(EG2IWidgetNames::Aim);
 	}
-	OutlineController(AimTargetActor, false);
 }
 
 bool UG2IAimingComponent::IsAiming_Implementation()
@@ -186,9 +183,9 @@ UActorComponent *UG2IAimingComponent::GetCurrentComponentUsingAim_Implementation
 	return nullptr;
 }
 
-void UG2IAimingComponent::SetAbilityAiming(EG2ICameraTypeEnum CurrentCameraType, EG2ICameraBlendState CurrentBlendState)
+void UG2IAimingComponent::EnableAbilityAiming(const EG2ICameraBlendState CurrentBlendState, const UCameraComponent* NewCamera)
 {
-	if (CurrentCameraType == EG2ICameraTypeEnum::ThirdPersonCamera && CurrentBlendState == EG2ICameraBlendState::Finish)
+	if (CurrentBlendState == EG2ICameraBlendState::Finish)
 	{
 		bCanAiming = true;
 		if (bWantsAiming)
@@ -197,8 +194,12 @@ void UG2IAimingComponent::SetAbilityAiming(EG2ICameraTypeEnum CurrentCameraType,
 		}
 		return;
 	}
+}
 
-	if (CurrentCameraType == EG2ICameraTypeEnum::FixedCamera && CurrentBlendState == EG2ICameraBlendState::Start)
+void UG2IAimingComponent::DisableAbilityAiming(const EG2ICameraBlendState CurrentBlendState,
+	const UCameraComponent* NewCamera, const float DelayMovementTime)
+{
+	if (CurrentBlendState == EG2ICameraBlendState::Start)
 	{
 		bCanAiming = false;
 		if (bIsAiming)
@@ -215,7 +216,7 @@ void UG2IAimingComponent::SetAimDistance(const float NewAimDistance)
 	CurrentAimDistance = NewAimDistance;
 }
 
-void UG2IAimingComponent::SetPendingAimType(EG2IAimType NewAimType)
+void UG2IAimingComponent::SetPendingAimType(const EG2IAimType NewAimType)
 {
 	bAimViewIsPending = true;
 
@@ -293,51 +294,7 @@ void UG2IAimingComponent::DetectAimLineHitInfo()
 	
 	if (AimTargetActor != AimLineHitInfo.HitResult.GetActor())
 	{
-		auto PreviousAimTargetActor = AimTargetActor;
 		AimTargetActor = AimLineHitInfo.HitResult.GetActor();
 		SetAimType(AimTargetActor);
-		OutlineController(PreviousAimTargetActor, false);
-		OutlineController(AimTargetActor, true);
 	}
 }
-
-void UG2IAimingComponent::OutlineController(const AActor* ActorToChangeOutline, bool bOutlineMode)
-{
-	TArray<UStaticMeshComponent*> OutlineMeshes;
-	if (ActorToChangeOutline && ActorToChangeOutline->Implements<UG2ITraceableObectInterface>())
-	{
-		ActorToChangeOutline->GetComponents<UStaticMeshComponent>(OutlineMeshes);
-	}
-
-	for (auto OutlineMesh : OutlineMeshes)
-	{
-		if (!OutlineMesh)
-		{
-			UE_LOG(LogG2I, Error, TEXT("OutlineMesh in %s is null"), *ActorToChangeOutline->GetName());
-			return;
-		}
-		
-		OutlineMesh->bDisallowNanite = true;
-		if (bOutlineMode)
-		{
-			OutlineMesh->SetOverlayMaterial(ShootableObjOutlineMaterialInstance);
-		}
-		else
-		{
-			OutlineMesh->SetOverlayMaterial(nullptr);
-		}
-	}
-	
-	UG2IOutlineComponent* OutlineComp = nullptr;
-	
-	if (ActorToChangeOutline)
-	{
-		OutlineComp = ActorToChangeOutline->FindComponentByClass<UG2IOutlineComponent>();
-	}
-
-	if (OutlineComp)
-	{
-		OutlineComp->OutlineController(bOutlineMode);
-	}
-}
-

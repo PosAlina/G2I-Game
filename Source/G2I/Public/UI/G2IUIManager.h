@@ -3,13 +3,15 @@
 #include "CoreMinimal.h"
 #include "G2IUIManager.generated.h"
 
+class UWidget;
+class UG2ICutScenesParameters;
 class UG2IGameInstance;
 enum class EG2IAimType : uint8;
-class UG2IWidgetComponentParameters;
 class UWidgetSwitcher;
 class UPanelWidget;
 class UG2IPropertyRow;
 class UG2INumericalMultiValuePropertyRow;
+class UListView;
 class UG2ITextMultiValuePropertyRow;
 class UInputAction;
 enum class EG2IWidgetNames : uint8;
@@ -46,7 +48,7 @@ private:
 	TObjectPtr<UG2IUIDisplayManager> DisplayManager;
 
 	UPROPERTY()
-	TObjectPtr<UG2IWidgetComponentParameters> WidgetComponentParameters;
+	TObjectPtr<UG2ICutScenesParameters> CutScenesParameters;
 
 	FDelegateHandle StartGameDelegateHandle;
 	
@@ -78,7 +80,7 @@ public:
 	void AddWidgetToPanel(UPanelWidget *Panel, EG2IWidgetNames WidgetName) const;
 	void SwitchWidget(UWidgetSwitcher* Switcher, EG2IWidgetNames WidgetName) const;
 	
-	void OpenWidget(EG2IWidgetNames WidgetName) const;
+	void OpenWidget(EG2IWidgetNames WidgetName, bool bIsFocus = true) const;
 	void CloseWidget(EG2IWidgetNames WidgetName) const;
 
 	void ShowWidget(EG2IWidgetNames WidgetName) const;
@@ -103,15 +105,18 @@ public:
 	
 	// ====================KEY HINT WIDGET ====================
 	void SetKeyByInputAction(UG2IWorldHintWidgetComponent *WidgetComponent, UInputAction* InputAction, const TSubclassOf<APawn>& PawnClass) const;
-	void SetKeyWidgetSize(UG2IWorldHintKeyWidgetComponent *WidgetComponent) const;
 	
 	// ==================== CONFIRMATION WIDGET ====================
 	void SetupConfirmationWidget(const TFunction<void()>& NewConfirmAction, const TFunction<void()>& NewCancelAction,
 		const FString& NewQuestionStringID = {},const FString& NewConfirmStringID = {},
 		const FString& NewCancelStringID = {}) const;
 
-	// ==================== LOADING WIDGET ====================
-	void SetLoadingProgressPercent(float Percent) const;
+	// ==================== CREATORS WIDGET ====================
+	void SetupCreatorsWidget(const TFunction<void()>& NewBackAction) const;
+
+	// ==================== OPTIONS WIDGETS ====================
+	void SetupOptionsWidget(const TFunction<void()>& NewBackAction) const;
+	void SetupControlsWidget(UWidgetSwitcher* CharacterControlsSwitcher) const;
 
 	// ==================== OPTIONS PROPERTIES ====================
 	void SetPropertyRow(UG2ITextMultiValuePropertyRow* PropertySelector, const FString& PropertyNameStringID,
@@ -119,7 +124,21 @@ public:
 	void SetPropertyRow(UG2INumericalMultiValuePropertyRow* PropertySelector, const FString& PropertyNameStringID,
 		float MinValue, float MaxValue, float Step, float DefaultValue, int32 DecimalPlaces) const;
 	void ApplyPropertiesValues(TArray<UG2IPropertyRow*> Properties) const;
-	void SavePropertiesValues(TArray<UG2IPropertyRow*> Properties) const;
+	void CancelUnAppliedPropertiesValues(TArray<UG2IPropertyRow*> Properties) const;
 	void ApplyPropertyValue(const UG2IPropertyRow* PropertyRow) const;
-	void SavePropertyValue(const UG2IPropertyRow* PropertyRow) const;
+	void CancelUnAppliedPropertyValue(const UG2IPropertyRow* PropertyRow) const;
+	void SetActionControl(const FText& ActionName, const FText& KeyName, UListView* ControlsList) const;
+	void ApplyAllOptions(const UWidgetSwitcher* OptionsSubWidgetSwitcher) const;
+	void CancelAllUnAppliedOptions(const UWidgetSwitcher* OptionsSubWidgetSwitcher) const;
+	static void ApplyOptions(UWidget* Widget);
+	static void CancelUnAppliedOptions(UWidget* Widget);
+
+	// ==================== PAUSE WIDGET ====================
+	void SetupPauseWidget(const TFunction<void()>& NewContinueAction) const;
+
+	// ==================== CUT SCENES WIDGETS ====================
+	void CloseCutScene(EG2IWidgetNames WidgetName) const;
+
+	// ==================== GALLERY WIDGETS ====================
+	void SetupGalleryWidget(const TFunction<void()>& NewBackAction) const;
 };

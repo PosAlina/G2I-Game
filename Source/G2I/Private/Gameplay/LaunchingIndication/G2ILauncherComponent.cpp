@@ -60,6 +60,11 @@ bool UG2ILauncherComponent::IsLocked_Implementation()
 
 void UG2ILauncherComponent::SetHintKeyWidget(UG2IWorldHintKeyWidgetComponent* InHintKeyWidget)
 {
+	if (!ensure(InHintKeyWidget))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: Attempt to set null hint widget"), *GetName());
+		return;
+	}
 	HintKeyComp = InHintKeyWidget;
 	HintKeyComp->SetIsLocked_Implementation(bIsLocked);
 }

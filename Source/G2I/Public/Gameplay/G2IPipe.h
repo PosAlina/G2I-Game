@@ -8,11 +8,13 @@
 #include "Gameplay/G2ITechnicalHole.h"
 #include "Gameplay/G2IValve.h"
 #include "SplinesMetadata/G2IPipesSplineMetadata.h"
-#include "Interfaces/G2IAirRecieverInterface.h"
+#include "Interfaces/G2IAirReceiverInterface.h"
 #include "G2IPipe.generated.h"
 
+class UG2ILauncherComponent;
+
 UCLASS(Blueprintable, Placeable)
-class G2I_API AG2IPipe : public AActor, public IG2IAirRecieverInterface
+class G2I_API AG2IPipe : public AActor, public IG2IAirReceiverInterface
 {
 	GENERATED_BODY()
 	
@@ -20,12 +22,12 @@ public:
 	AG2IPipe();
 
 	// Generates Meshes, Interactable Objects & Pipes Connections
-	void OnConstruction(const FTransform& Transform) override;
+	virtual void OnConstruction(const FTransform& Transform) override;
 
-	void BeginPlay() override;
+	virtual void BeginPlay() override;
 
 	// Interface function
-	void RecieveAir_Implementation(AActor* Sender, bool bAirPassed) override;
+	virtual void ReceiveAir_Implementation(AActor* Sender, bool bAirPassed) override;
 
 	UFUNCTION()
 	void OnPipeBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -64,7 +66,7 @@ public:
 	bool GetAir() const;
 
 	UFUNCTION(BlueprintCallable)
-	float GetTestFloatAtSplinePoint(int32 PointIndex);
+	float GetTestFloatAtSplinePoint(int32 PointIndex) const;
 
 	UFUNCTION(BlueprintCallable)
 	bool GetHasPipeAtSplinePoint(int32 PointIndex);
@@ -91,20 +93,28 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool GetReceiveFromOtherPipeAtSplinePoint(int32 PointIndex);
+	
+	UFUNCTION()
+	void SetIsLockedValve(UG2ILauncherComponent* LauncherComponent, AActor* ComponentOwner, bool bIsLocked);
+	void SetIsLockedValve(bool bIsLocked);
 
 private:
-	UG2IPipesBoxComponent* SpawnPipesBoxComponent(int32 PointIndex, bool bRecieves);
+	UG2IPipesBoxComponent* SpawnPipesBoxComponent(int32 PointIndex, bool bReceives);
 	void SpawnTechnicalHole(int32 PointIndex);
 	void SpawnValve(int32 PointIndex);
 	void SpawnInteractableBoxComponent(int32 PointIndex);
 	void GenerateMesh(UStaticMesh* Mesh, int32 PointIndex);
 	void RegenerateMesh(UStaticMesh* Mesh, int32 PointIndex);
-	FVector GetLocationBetweenPoints(int32 Point1, int32 Point2, ESplineCoordinateSpace::Type CoordSpace = ESplineCoordinateSpace::Local);
+	FVector GetLocationBetweenPoints(int32 Point1, int32 Point2, ESplineCoordinateSpace::Type CoordSpace = ESplineCoordinateSpace::Local) const;
 	void ForceOverlaps();
 	void SpawnValves();
 	void SpawnTechnicalHoles();
 
 public:
+	
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UG2ILauncherComponent> LauncherComp;
+	
 	// If I couldn't fix spline metadata to show up in the Editor - use this
 	UPROPERTY(EditAnywhere, Category = "Spline", meta=(ToolTip="Parameters for spline points. DO NOT CHANGE THE SIZE, it updates automatically when spline is edited."))
 	TArray<FG2IPipesSplinePointParams> PointParams;

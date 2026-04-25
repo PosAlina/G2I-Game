@@ -8,6 +8,8 @@
 #include "Components/TimelineComponent.h"
 #include "G2IPressureGaugeValve.generated.h"
 
+class UG2ISoundComponent;
+
 UCLASS()
 class G2I_API AG2IPressureGaugeValve : public AActor, public IG2IAnswerInterface,
 	public IG2IInteractiveObjectInterface, public IG2ILockingInterface
@@ -30,6 +32,9 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
+	TObjectPtr<UG2ISoundComponent> SoundComp;
+
 	UFUNCTION(BlueprintCallable, CallInEditor)
 	void ToggleValve();
 
@@ -66,6 +71,8 @@ protected:
 	bool bIsLocked = false;
 
 private:
+	int32 ValveRotationSoundId = -1;
+
 	bool bIsAState;
 
 	UPROPERTY()

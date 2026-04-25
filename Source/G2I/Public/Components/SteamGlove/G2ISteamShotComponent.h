@@ -9,6 +9,8 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FComponentActivateDelegate, float, ShotDistance);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAimTypeChangedDelegate, EG2IAimType, NewAimType);
 
+class UG2ISoundComponent;
+
 UCLASS(ClassGroup=(SteamGlove), meta=(BlueprintSpawnableComponent))
 class G2I_API UG2ISteamShotComponent : public USceneComponent, public IG2ISteamShotInputInterface,
 	public IG2IMechanicUsingAimInterface
@@ -28,12 +30,17 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ShotDetails)
 	float ShotDistance = 2000.f;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
+	TObjectPtr<UG2ISoundComponent> SoundComponent;
+
 private:
 
 	UPROPERTY()
 	TObjectPtr<UWorld> World;
 	
+	int32 SteamSoundId = -1;
 public:
+
 
 	virtual void BeginPlay() override;
 

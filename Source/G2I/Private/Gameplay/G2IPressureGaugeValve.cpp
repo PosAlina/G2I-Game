@@ -6,6 +6,7 @@
 #include "G2I.h"
 #include "G2IChangingAnglesInterface.h"
 #include "G2IWorldHintKeyWidgetComponent.h"
+#include "Sound/G2ISoundComponent.h"
 
 AG2IPressureGaugeValve::AG2IPressureGaugeValve()
 {
@@ -36,6 +37,12 @@ AG2IPressureGaugeValve::AG2IPressureGaugeValve()
     else
     {
         HintKeyWidgetComp->SetupAttachment(RootComponent);
+    }
+
+    SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("ValveSoundComponent"));
+    if (SoundComp) {
+        SoundComp->SetupAttachment(RootComponent);
+        SoundComp->SetupSounds.Add(TEXT("ValveRotationSound"), FSoundConfig());
     }
 }
 
@@ -121,6 +128,14 @@ void AG2IPressureGaugeValve::BeginPlay()
         return;
     }
     InitialRotation = ValveMesh->GetRelativeRotation();
+
+    if (SoundComp && SoundComp->SetupSounds.Contains(TEXT("ValveRotationSound"))) {
+        ValveRotationSoundId = SoundComp->AddSound(SoundComp->SetupSounds[TEXT("ValveRotationSound")]);
+        if (ValveRotationSoundId == -1)
+        {
+            UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: ValveRotationSoundId (ID == -1)"), *GetName(), *FString(__FUNCTION__));
+        }
+    }
 }
 
 void AG2IPressureGaugeValve::ToggleValve()
@@ -176,7 +191,9 @@ void AG2IPressureGaugeValve::OnTimelineUpdate(const float Value)
         UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't find ValveMesh"), *GetActorNameOrLabel());
         return;
     }
-    
+    if (SoundComp && !SoundComp->IsSoundPlaying(ValveRotationSoundId)) {
+        SoundComp->PlaySound(ValveRotationSoundId);
+    }
     const float Angle = Value * 360.0f;
 
     const FQuat InitialQuat = InitialRotation.Quaternion();
@@ -189,6 +206,9 @@ void AG2IPressureGaugeValve::OnTimelineUpdate(const float Value)
 
 void AG2IPressureGaugeValve::OnTimelineFinished()
 {
+    if (SoundComp) {
+        SoundComp->StopSound(ValveRotationSoundId);
+    }
     bIsRotating = false;
 }
 

@@ -7,7 +7,6 @@
 #include "GameFramework/PlayerController.h"
 #include "G2IAimingComponent.h"
 #include "G2ICameraControllerComponent.h"
-#include "G2ICameraDefaultsParameters.h"
 #include "G2ICameraStateEnums.h"
 #include "G2IPlayerController.h"
 #include "Components/CapsuleComponent.h"
@@ -26,6 +25,8 @@ UG2ICharacterMovementComponent::UG2ICharacterMovementComponent()
 	MinAnalogWalkSpeed = 20.f;
 	BrakingDecelerationWalking = 2000.f;
 	BrakingDecelerationFalling = 1500.0f;
+	MaxSimulationIterations = 10;
+	MaxSimulationTimeStep = 0.06f;
 }
 
 void UG2ICharacterMovementComponent::BeginPlay()
@@ -43,19 +44,11 @@ void UG2ICharacterMovementComponent::SetupDefaults()
 		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
 		return;
 	}
-	AG2IPlayerController *PlayerController = Cast<AG2IPlayerController>(World->GetFirstPlayerController());
+	PlayerController = Cast<AG2IPlayerController>(World->GetFirstPlayerController());
 	if (!ensure(PlayerController))
 	{
-		UE_LOG(LogG2I, Error, TEXT("%s doesn't exist in %s in %s"),
-			*AG2IPlayerController::StaticClass()->GetName(), *GetName(), *Owner->GetActorNameOrLabel());
-		return;
-	}
-
-	CameraDefaultsParameters = PlayerController->GetCameraDefaultsParameters();
-	if (!ensure(CameraDefaultsParameters))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s can not return camera defaults parameters in %s in %s"),
-			*PlayerController->GetName(), *GetName(), *Owner->GetActorNameOrLabel());
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+			*GetName(), *AG2IPlayerController::StaticClass()->GetName());
 		return;
 	}
 }
@@ -177,7 +170,7 @@ void UG2ICharacterMovementComponent::ToggleCrouchAction_Implementation()
 	}
 }
 
-void UG2ICharacterMovementComponent::SetCanPassThroughObject(bool Value)
+void UG2ICharacterMovementComponent::SetCanPassThroughObject(const bool Value)
 {
 	bCanPassThroughObject = Value;
 }
@@ -225,7 +218,7 @@ void UG2ICharacterMovementComponent::ToggleRotation() {
 	bOrientRotationToMovement = !bOrientRotationToMovement;
 }
 
-void UG2ICharacterMovementComponent::ToggleSlow(float SpeedChange)
+void UG2ICharacterMovementComponent::ToggleSlow(const float SpeedChange)
 {
 	if (SpeedChange < 0) {
 		UE_LOG(LogG2I, Log, TEXT("Speed can't be negative"));
@@ -247,7 +240,7 @@ void UG2ICharacterMovementComponent::ToggleSlow(float SpeedChange)
 	}
 }
 
-void UG2ICharacterMovementComponent::HandleMovingInteraction(float SpeedChange)
+void UG2ICharacterMovementComponent::HandleMovingInteraction(const float SpeedChange)
 {
 	ToggleCrouch();
 	ToggleJump();
@@ -258,13 +251,6 @@ void UG2ICharacterMovementComponent::BindingToDelegates()
 {
 	BindingOwnerComponentsDelegates();
 	
-	if (!ensure(World))
-	{
-		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
-		return;
-	}
-
-	const APlayerController *PlayerController = World->GetFirstPlayerController();
 	if (!ensure(PlayerController))
 	{
 		UE_LOG(LogG2I, Error, TEXT("PlayerController doesn't exist in %s"), *GetName());
@@ -304,7 +290,8 @@ void UG2ICharacterMovementComponent::BindingOwnerComponentsDelegates()
 
 	if (UG2ICameraControllerComponent *CameraControllerComponent = Owner->FindComponentByClass<UG2ICameraControllerComponent>())
 	{
-		CameraControllerComponent->OnSetCameraTypeDelegate.AddDynamic(this, &ThisClass::SetAbilityRotationTowardsCamera);
+		CameraControllerComponent->OnSetThirdPersonCameraTypeDelegate.AddDynamic(this, &ThisClass::SetMovementWithThirdPersonCamera);
+		CameraControllerComponent->OnSetFixedCameraTypeDelegate.AddDynamic(this, &ThisClass::SetMovementWithFixedCamera);
 		CameraControllerComponent->OnThirdPersonCameraYawRotationDelegate.AddDynamic(this,
 			&ThisClass::UG2ICharacterMovementComponent::SetCameraPendingYawRotation);
 	}
@@ -503,11 +490,23 @@ void UG2ICharacterMovementComponent::DisableRotationTowardsCamera()
 	Owner->bUseControllerRotationRoll = false;
 }
 
-void UG2ICharacterMovementComponent::SetAbilityRotationTowardsCamera(
-	EG2ICameraTypeEnum CurrentCameraType, EG2ICameraBlendState CurrentBlendState)
+void UG2ICharacterMovementComponent::SetMovementWithThirdPersonCamera(const EG2ICameraBlendState CurrentBlendState,
+	const UCameraComponent* NewCamera)
 {
-	if (CurrentCameraType == EG2ICameraTypeEnum::ThirdPersonCamera && CurrentBlendState == EG2ICameraBlendState::Finish)
+	switch (CurrentBlendState)
 	{
+	case EG2ICameraBlendState::Start:
+		if (!ensure(World))
+		{
+			UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(), *UWorld::StaticClass()->GetName());
+		}
+		else
+		{
+			World->GetTimerManager().ClearTimer(TimerBeforeDisableRotationTowardsCamera);
+		}
+		ResetCameraPendingYawRotation(NewCamera);
+		return;
+	case EG2ICameraBlendState::Finish:
 		bCanRotationTowardsCamera = true;
 		if (bWantsRotationTowardsCamera)
 		{
@@ -515,35 +514,53 @@ void UG2ICharacterMovementComponent::SetAbilityRotationTowardsCamera(
 		}
 		return;
 	}
-	
-	if (CurrentCameraType == EG2ICameraTypeEnum::FixedCamera && CurrentBlendState == EG2ICameraBlendState::Start)
+}
+
+void UG2ICharacterMovementComponent::SetMovementWithFixedCamera(const EG2ICameraBlendState CurrentBlendState,
+	const UCameraComponent* NewCamera, const float DelayMovementTime)
+{
+	if (CurrentBlendState == EG2ICameraBlendState::Start)
 	{
 		bCanRotationTowardsCamera = false;
 		DisableRotationTowardsCamera();
+
+		if (DelayMovementTime <= 0)
+		{
+			ResetCameraPendingYawRotation(NewCamera);
+			return;
+		}
 		
 		if (!ensure(World))
 		{
-			UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
-			ResetCameraPendingYawRotation();
-			return;
-		}
-		if (!ensure(CameraDefaultsParameters))
-		{
-			UE_LOG(LogG2I, Error, TEXT("%s isn't initialized in %s in %s"),
-				*UG2ICameraDefaultsParameters::StaticClass()->GetName(), *GetName(), *Owner->GetActorNameOrLabel());
-			ResetCameraPendingYawRotation();
+			UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(), *UWorld::StaticClass()->GetName());
+			ResetCameraPendingYawRotation(NewCamera);
 			return;
 		}
 		World->GetTimerManager().ClearTimer(TimerBeforeDisableRotationTowardsCamera);
-		World->GetTimerManager().SetTimer(TimerBeforeDisableRotationTowardsCamera,
-			this, &ThisClass::ResetCameraPendingYawRotation,
-			CameraDefaultsParameters->PendingTimeAfterSwitchingToControlCharacter, false);
+		
+		const FTimerDelegate Delegate = FTimerDelegate::CreateUObject(
+			this, &ThisClass::ResetCameraPendingYawRotation, NewCamera);
+		World->GetTimerManager().SetTimer(
+			TimerBeforeDisableRotationTowardsCamera, Delegate, DelayMovementTime, false);
 	}
 }
 
-void UG2ICharacterMovementComponent::ResetCameraPendingYawRotation()
+void UG2ICharacterMovementComponent::ResetCameraPendingYawRotation(const UCameraComponent* NewCamera)
 {
 	CameraPendingYawRotation = 0.;
+	
+	if (!ensure(NewCamera))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: Attempt to set null new camera"), *GetName());
+		return;
+	}
+	if (!ensure(PlayerController))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+			*GetName(), *AG2IPlayerController::StaticClass()->GetName());
+		return;
+	}
+	PlayerController->SetRotationTowardsCamera(*NewCamera);
 }
 
 void UG2ICharacterMovementComponent::SetCameraPendingYawRotation(const double YawValue)

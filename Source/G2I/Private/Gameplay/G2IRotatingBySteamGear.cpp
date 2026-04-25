@@ -1,13 +1,26 @@
 #include "Gameplay/G2IRotatingBySteamGear.h"
 #include "G2I.h"
+#include "G2IOutlineComponent.h"
 #include "Interfaces/G2IMovingByGearObjectInterface.h"
 #include "Components/G2IInventoryComponent.h"
+#include "Sound/G2ISoundComponent.h"
 
 AG2IRotatingBySteamGear::AG2IRotatingBySteamGear()
 {
 	Timeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("SteamForceTimeline"));
 	TimelineValue = 0.0f;
 	TimelineCurve = nullptr;
+
+	SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("SoundComponent"));
+	if (SoundComp) {
+		SoundComp->SetupAttachment(RootComponent);
+		SoundComp->SetupSounds.Add(TEXT("GearRotationSound"), FSoundConfig());
+	}
+	OutlineComponent = CreateDefaultSubobject<UG2IOutlineComponent>(TEXT("OutlineComponent"));
+	if (!ensure(OutlineComponent))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Failed to create Outline Component"), *GetName());
+	}
 }
 
 void AG2IRotatingBySteamGear::BeginPlay()
@@ -27,6 +40,15 @@ void AG2IRotatingBySteamGear::BeginPlay()
 	Timeline->AddInterpFloat(TimelineCurve, TimelineUpdate);
 	Timeline->SetTimelineLengthMode(ETimelineLengthMode::TL_LastKeyFrame);
 	Timeline->SetLooping(false);
+
+	if (SoundComp && SoundComp->SetupSounds.Contains(TEXT("GearRotationSound")))
+	{
+		GearRotationSoundId = SoundComp->AddSound(SoundComp->SetupSounds[TEXT("GearRotationSound")]);
+		if (GearRotationSoundId == -1)
+		{
+			UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: GearRotationSoundId (ID == -1)"), *GetName(), *FString(__FUNCTION__));
+		}
+	}
 }
 
 void AG2IRotatingBySteamGear::OnShoot_Implementation(const FHitResult& HitResult, AActor* Character) {
@@ -37,14 +59,14 @@ void AG2IRotatingBySteamGear::OnShoot_Implementation(const FHitResult& HitResult
 		FVector HitVector = HitResult.ImpactPoint - HitResult.TraceStart;
 		HitVector.X = HitVector.Z;
 		HitVector.Z = 0;
-		FVector RotationNormal = { 1.0f, 0.0f, 0.0f };
-		float CosineValue = FVector::DotProduct(HitVector.GetSafeNormal(), RotationNormal.GetSafeNormal());
+		const FVector RotationNormal = { 1.0f, 0.0f, 0.0f };
+		const float CosineValue = FVector::DotProduct(HitVector.GetSafeNormal(), RotationNormal.GetSafeNormal());
 
 		//Calculating direction based on HitNormal and axis Z
 		FVector HitNormal = HitResult.ImpactNormal;
 		HitNormal.X = 0;
-		FVector AxisZ = { 0.0f, 0.0f, 1.0f };
-		FVector CrossProductResult = FVector::CrossProduct(AxisZ, HitNormal);
+		const FVector AxisZ = { 0.0f, 0.0f, 1.0f };
+		const FVector CrossProductResult = FVector::CrossProduct(AxisZ, HitNormal);
 
 		RotationSign = CrossProductResult.X * CosineValue;
 
@@ -58,7 +80,7 @@ void AG2IRotatingBySteamGear::OnShoot_Implementation(const FHitResult& HitResult
 	}
 }
 
-void AG2IRotatingBySteamGear::OnTimelineUpdate(float Output)
+void AG2IRotatingBySteamGear::OnTimelineUpdate(const float Output)
 {
 	for (const auto& i : MovableObjects) {
 		if (!i) {
@@ -82,6 +104,11 @@ void AG2IRotatingBySteamGear::OnTimelineUpdate(float Output)
 		ActorRotator.Yaw = Output * RotationSpeed * FMath::Sign(RotationSign);
 	}
 	AddActorWorldRotation(ActorRotator);
+	if (SoundComp) {
+		if (!SoundComp->IsSoundPlaying(GearRotationSoundId)) {
+			SoundComp->PlaySound(GearRotationSoundId);
+		}
+	}
 }
 
 void AG2IRotatingBySteamGear::Repair(AActor* Interactor)
