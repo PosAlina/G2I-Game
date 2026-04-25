@@ -11,12 +11,16 @@
 #include "GameFramework/Controller.h"
 #include "Engine/World.h"
 #include "G2I.h"
+#include "G2ICharacterCarryingActorsComponent.h"
 #include "Sound/G2ISoundComponent.h"
 
 AG2ICharacterEngineer::AG2ICharacterEngineer(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UG2ICharacterMovementComponent>(
 		CharacterMovementComponentName))
 {
+	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	SetRootComponent(Root);
+	
 	CollisionComp = CreateDefaultSubobject<UG2ICharacterCollisionComponent>(TEXT("CollisionComp"));
 
 	InteractionComp = CreateDefaultSubobject<UG2IInteractionComponent>(TEXT("InteractionComp"));
@@ -29,6 +33,7 @@ AG2ICharacterEngineer::AG2ICharacterEngineer(const FObjectInitializer& ObjectIni
 	ValveInteractionComp = CreateDefaultSubobject<UG2IValveInteractionComponent>(TEXT("ValveInteractionComp"));
 	HoleInteractionComp = CreateDefaultSubobject<UG2IHoleInteractionComponent>(TEXT("HoleInteractionComp"));
 	SteamGloveComp = CreateDefaultSubobject<UG2ISteamGloveComponent>(TEXT("SteamGloveComp"));
+	CarryingActorsComp = CreateDefaultSubobject<UG2ICharacterCarryingActorsComponent>(TEXT("CarryingActorsComp"));
 
 	SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("SoundComponent"));
 	if (SoundComp) {

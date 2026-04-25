@@ -7,7 +7,9 @@
 #include <Components/CapsuleComponent.h>
 #include "DrawDebugHelpers.h"
 #include "G2I.h"
+#include "G2ICharacterCarryingActorsComponent.h"
 #include "G2IGameInstance.h"
+#include "G2IHandsMovableComponent.h"
 #include "G2IPlayerController.h"
 #include "Public/UI/WidgetComponents/G2IWorldHintKeyWidgetComponent.h"
 
@@ -57,15 +59,11 @@ UG2IInteractionComponent::UG2IInteractionComponent()
 
 void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 {
-	if (!bCanInteract) {
+	if (PutDownHandMovableActorIfNeeded())
+	{
 		return;
 	}
 	
-	if (!ensure(Owner))
-	{
-		UE_LOG(LogG2I, Error, TEXT("Owner isn't character in %s"), *GetName());
-		return;
-	}
 	if (!ensure(InteractionBox))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s doesn't have interaction box component"), *GetName());
@@ -86,10 +84,117 @@ void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 
 	TArray<AActor*> OverlappedActors;
 	InteractionBox->GetOverlappingActors(OverlappedActors);
+	
+	if (InteractWithClosestHandMovableActorInInteractionBox(OverlappedActors))
+	{
+		return;
+	}
+	
+	InteractWithClosestInteractableActorsInInteractionBox(OverlappedActors, Tag);
+}
 
+bool UG2IInteractionComponent::InteractWithClosestHandMovableActorInInteractionBox(
+	const TArray<AActor*>& OverlappedActors) const
+{
+	AActor* ClosestInteractableActor = GetClosestHandMovableActorInInteractionBox(OverlappedActors);
+	if (!ClosestInteractableActor)
+	{
+		return false;
+	}
+	return InteractWithHandMovableActor(*ClosestInteractableActor);
+}
+
+AActor* UG2IInteractionComponent::GetClosestHandMovableActorInInteractionBox(
+	const TArray<AActor*>& OverlappedActors) const
+{
+	if (!ensure(Owner))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find Owner"), *GetName());
+		return nullptr;
+	}
+	if (!ensure(InteractionBox))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s doesn't have interaction box component"), *GetName());
+		return nullptr;
+	}
+	
 	AActor* ClosestInteractableActor = nullptr;
-	float MinDistanceSq = MAX_FLT; 
-	FVector OwnerLocation = Owner->GetActorLocation();
+	float MinDistanceSq = MAX_FLT;
+	const FVector OwnerLocation = Owner->GetActorLocation();
+	const FVector InteractionBoxLocation = InteractionBox->GetComponentLocation();
+	
+	for (AActor* Overlap : OverlappedActors)
+	{
+		if (!Overlap)
+		{
+			continue;
+		}
+		if (!CanInteractWithHandMovableActor(*Overlap))
+		{
+			continue;
+		}
+		const float DistanceSqBox = FVector::DistSquared(InteractionBoxLocation, Overlap->GetActorLocation());
+		const float DistanceSqCharacter = FVector::DistSquared(OwnerLocation, Overlap->GetActorLocation());
+		const float DistanceSq = (DistanceSqBox + DistanceSqCharacter) / 2.f;
+		if (DistanceSq < MinDistanceSq)
+		{
+			MinDistanceSq = DistanceSq;
+			ClosestInteractableActor = Overlap;
+		}
+	}
+	return ClosestInteractableActor;
+}
+
+bool UG2IInteractionComponent::CanInteractWithHandMovableActor(const AActor& OtherActor) const
+{
+	if (!CharacterCarryingActorsComponent)
+	{
+		return false;
+	}
+	UG2IHandsMovableComponent *HandsMovableComponent = OtherActor.FindComponentByClass<UG2IHandsMovableComponent>();
+	if (!HandsMovableComponent || !HandsMovableComponent->CanMove())
+	{
+		return false;
+	}
+	return true;
+}
+
+bool UG2IInteractionComponent::InteractWithHandMovableActor(AActor& OtherActor) const
+{
+	UG2IHandsMovableComponent *HandsMovableComponent = OtherActor.FindComponentByClass<UG2IHandsMovableComponent>();
+	if (!HandsMovableComponent)
+	{
+		return false;
+	}
+	return CharacterCarryingActorsComponent->PickUp(OtherActor, *HandsMovableComponent,
+		HandsMovableComponent->bIsOverrideMass, HandsMovableComponent->OverridenMass,
+		HandsMovableComponent->bIsOverrideLocationInHands, HandsMovableComponent->OverridenLocationInHands,
+		HandsMovableComponent->bIsOverrideRotationInHands, HandsMovableComponent->OverridenRotationInHands);
+}
+
+AActor* UG2IInteractionComponent::GetClosestInteractableActorInInteractionBox(
+	const TArray<AActor*>& OverlappedActors, const FName& Tag) const
+{
+	if (!ensure(Owner))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find Owner"), *GetName());
+		return nullptr;
+	}
+	if (!ensure(InteractionBox))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s doesn't have interaction box component"), *GetName());
+		return nullptr;
+	}
+	
+	if (!bCanInteract)
+	{
+		return nullptr;
+	}
+	
+	AActor* ClosestInteractableActor = nullptr;
+	float MinDistanceSq = MAX_FLT;
+	const FVector OwnerLocation = Owner->GetActorLocation();
+	const FVector InteractionBoxLocation = InteractionBox->GetComponentLocation();
 
 	for (AActor* Overlap : OverlappedActors)
 	{
@@ -98,7 +203,7 @@ void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 			UE_LOG(LogG2I, Log, TEXT("Overlap actor is null!"));
 			continue;
 		}
-
+		
 		if (!Overlap->ActorHasTag(Tag))
 		{
 			UE_LOG(LogG2I, Log, TEXT("Actor %s doesn't have tag %s"), *Overlap->GetName(), *Tag.ToString());
@@ -111,18 +216,9 @@ void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 			continue;
 		}
 
-		if (UG2IWorldHintKeyWidgetComponent* KeyHintComponent = IG2IInteractiveObjectInterface::Execute_GetInteractionKeyHintComponent(Overlap))
+		if (!CanInteractByKeyHint(*Overlap))
 		{
-			if (!ensure(UIManager))
-			{
-				UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"), *UG2IUIManager::StaticClass()->GetName(), *GetName());
-			}
-			else if (!UIManager->CanSeeWorldWidget(KeyHintComponent))
-			{
-				UE_LOG(LogG2I, Log, TEXT("%s can't interact with %s, because it can't see key hint %s"),
-					*Owner->GetActorNameOrLabel(), *Overlap->GetActorNameOrLabel(), *KeyHintComponent->GetName());
-				continue;
-			}
+			continue;
 		}
 
 		if (!IG2IInteractiveObjectInterface::Execute_CanInteract(Overlap, Owner))
@@ -131,7 +227,7 @@ void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 			continue;
 		}
 
-		const float DistanceSqBox = FVector::DistSquared(InteractionBox->GetComponentLocation(), Overlap->GetActorLocation());
+		const float DistanceSqBox = FVector::DistSquared(InteractionBoxLocation, Overlap->GetActorLocation());
 		const float DistanceSqCharacter = FVector::DistSquared(OwnerLocation, Overlap->GetActorLocation());
 		const float DistanceSq = (DistanceSqBox + DistanceSqCharacter) / 2.f;
 		if (DistanceSq < MinDistanceSq)
@@ -140,48 +236,91 @@ void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 			ClosestInteractableActor = Overlap;
 		}
 	}
+	return ClosestInteractableActor;
+}
 
-	if (ClosestInteractableActor)
+bool UG2IInteractionComponent::PutDownHandMovableActorIfNeeded() const
+{
+	if (CharacterCarryingActorsComponent && CharacterCarryingActorsComponent->bHandsAreBusy)
 	{
-		if (ClosestInteractableActor->Implements<UG2IMovingObjectInterface>())
-		{
-			float SpeedChange = IG2IMovingObjectInterface::Execute_GetSpeedChange(ClosestInteractableActor);
-			OnMovingInteractingDelegate.Broadcast(SpeedChange);
-		}
-
-		IG2IInteractiveObjectInterface::Execute_Interact(ClosestInteractableActor, Owner);
-
-		const FString InteractLogMessage = "Player interacted with " + ClosestInteractableActor->GetActorNameOrLabel();
-		G2I::DebugLogMessage(InteractLogMessage);
-
-		// Playing the animation
-		if (InteractAnimMontage)
-		{
-			const ACharacter* Character = Cast<ACharacter>(Owner);
-			if (!Character) {
-				UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't play the animation, Owner is not a Character."), *GetName());
-				return;
-			}
-
-			const USkeletalMeshComponent* Mesh = Character->GetMesh();
-			if (!Mesh) {
-				UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't play the animation, SkeletalMesh Component is null."), *GetName());
-				return;
-			}
-
-			UAnimInstance* AnimInstance = Mesh->GetAnimInstance();
-			if (!AnimInstance) {
-				UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't play the animation, AnimInstance is null."), *GetName());
-				return;
-			}
-
-			AnimInstance->Montage_Play(InteractAnimMontage);
-		}
+		UE_LOG(LogG2I, Log, TEXT("%s: Put down actor"), *GetName());
+		CharacterCarryingActorsComponent->PutDown();
+		return true;
 	}
-	else
+	return false;
+}
+
+void UG2IInteractionComponent::PlayInteractionAnimation() const
+{
+	if (!InteractAnimMontage)
+	{
+		return;
+	}
+	if (!ensure(Owner))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find Owner"), *GetName());
+		return;
+	}
+	
+	const USkeletalMeshComponent* Mesh = Owner->GetMesh();
+	if (!ensure(Mesh))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't play the animation, SkeletalMesh Component is null."), *GetName());
+		return;
+	}
+
+	UAnimInstance* AnimInstance = Mesh->GetAnimInstance();
+	if (!ensure(AnimInstance))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't play the animation, AnimInstance is null."), *GetName());
+		return;
+	}
+
+	AnimInstance->Montage_Play(InteractAnimMontage);
+}
+
+void UG2IInteractionComponent::InteractWithClosestInteractableActorsInInteractionBox(
+	const TArray<AActor*>& OverlappedActors, const FName& Tag) const
+{
+	AActor* ClosestInteractableActor = GetClosestInteractableActorInInteractionBox(OverlappedActors, Tag);
+	if (!ClosestInteractableActor)
 	{
 		UE_LOG(LogG2I, Log, TEXT("No valid interactable actors found nearby."));
+		return;
 	}
+	InteractWithInteractableActor(*ClosestInteractableActor);
+}
+
+void UG2IInteractionComponent::InteractWithInteractableActor(AActor& OtherActor) const
+{
+	IG2IInteractiveObjectInterface::Execute_Interact(&OtherActor, Owner);
+
+	const FString InteractLogMessage = "Player interacted with " + OtherActor.GetActorNameOrLabel();
+	G2I::DebugLogMessage(InteractLogMessage);
+
+	PlayInteractionAnimation();
+}
+
+bool UG2IInteractionComponent::CanInteractByKeyHint(AActor& OtherActor) const
+{
+	UG2IWorldHintKeyWidgetComponent* KeyHintComponent =
+		IG2IInteractiveObjectInterface::Execute_GetInteractionKeyHintComponent(&OtherActor);
+	if (!KeyHintComponent)
+	{
+		return true;
+	}
+	if (!ensure(UIManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"), *UG2IUIManager::StaticClass()->GetName(), *GetName());
+		return true;
+	}
+	if (!UIManager->CanSeeWorldWidget(KeyHintComponent))
+	{
+		UE_LOG(LogG2I, Log, TEXT("%s can't interact with %s, because it can't see key hint %s"),
+			*Owner->GetActorNameOrLabel(), *OtherActor.GetActorNameOrLabel(), *KeyHintComponent->GetName());
+		return false;
+	}
+	return true;
 }
 
 void UG2IInteractionComponent::HandleJumping()
@@ -231,6 +370,14 @@ void UG2IInteractionComponent::OnRegister()
 
 void UG2IInteractionComponent::SetupDefaults()
 {
+	if (!ensure(Owner))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Owner doesn't exist in %s"), *GetName());
+	}
+	else
+	{
+		CharacterCarryingActorsComponent = Owner->FindComponentByClass<UG2ICharacterCarryingActorsComponent>();
+	}
 	const UWorld *World = GetWorld();
 	if (!ensure(World))
 	{

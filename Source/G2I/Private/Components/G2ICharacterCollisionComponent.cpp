@@ -112,6 +112,7 @@ void UG2ICharacterCollisionComponent::PreInitializeDefaults()
 		return;
 	}
 	
+
 	CapsuleComp->InitCapsuleSize(42.f, 96.0f);
 	CollisionComponent = CapsuleComp;
 	if (!ensure(CollisionComponent))
@@ -119,6 +120,9 @@ void UG2ICharacterCollisionComponent::PreInitializeDefaults()
 		UE_LOG(LogG2I, Error, TEXT("Owner hasn't collision component in %s"), *GetName());
 		return;
 	}
-
+	if (!ensure(Owner->GetRootComponent()))
+	{
+		CollisionComponent->AttachToComponent(Owner->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+	}
 	SetupPassingThroughObjectCollision();
 }

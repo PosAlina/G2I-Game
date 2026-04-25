@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "G2IInteractionComponent.generated.h"
 
+class UG2ICharacterCarryingActorsComponent;
 class UInputAction;
 class UBoxComponent;
 
@@ -40,6 +41,9 @@ private:
 
 	UPROPERTY()
 	TMap<TObjectPtr<UInputAction>, FName> TagOfInteractionActions;
+	
+	UPROPERTY()
+	TObjectPtr<UG2ICharacterCarryingActorsComponent> CharacterCarryingActorsComponent;
 
 public:
 
@@ -53,7 +57,6 @@ public:
 	FORCEINLINE class UBoxComponent* GetInteractionSphere() const { return InteractionBox; }
 
 	virtual void BeginPlay() override;
-	virtual void OnRegister() override;
 	virtual void OnComponentCreated() override;
 	
 	UFUNCTION(BlueprintCallable, Category = "Input")
@@ -70,6 +73,8 @@ public:
 	void HandleLanded(const FHitResult& Hit);
 
 protected:
+	
+	virtual void OnRegister() override;
 
 	UFUNCTION()
 	void OnInteractionBoxBeginOverlap(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -82,10 +87,22 @@ private:
 	void SetupDefaults();
 
 	void OpenKeyHintByActor(AActor* OtherActor);
-	
-	void CloseKeyHintByActor(AActor* OtherActor);
+
+	static void CloseKeyHintByActor(AActor* OtherActor);
 
 	void SetTagOfInteractionActions();
 	
 	bool IsOwnerPlayerControlled() const;
+
+	void InteractWithClosestInteractableActorsInInteractionBox(
+		const TArray<AActor*>& OverlappedActors, const FName& Tag) const;
+	void InteractWithInteractableActor(AActor& OtherActor) const;
+	bool CanInteractByKeyHint(AActor& OtherActor) const;
+	bool InteractWithClosestHandMovableActorInInteractionBox(const TArray<AActor*>& OverlappedActors) const;
+	AActor *GetClosestHandMovableActorInInteractionBox(const TArray<AActor*>& OverlappedActors) const;
+	bool CanInteractWithHandMovableActor(const AActor& OtherActor) const;
+	bool InteractWithHandMovableActor(AActor& OtherActor) const;
+	AActor *GetClosestInteractableActorInInteractionBox(const TArray<AActor*>& OverlappedActors, const FName& Tag) const;
+	bool PutDownHandMovableActorIfNeeded() const;
+	void PlayInteractionAnimation() const;
 };

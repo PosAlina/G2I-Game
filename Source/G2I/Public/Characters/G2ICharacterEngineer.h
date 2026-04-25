@@ -8,6 +8,7 @@
 #include "Components/G2IHoleInteractionComponent.h"
 #include "G2ICharacterEngineer.generated.h"
 
+class UG2ICharacterCarryingActorsComponent;
 class UG2ISteamGloveComponent;
 class UG2IFixedCamerasComponent;
 class UG2IThirdPersonCameraComponent;
@@ -27,6 +28,9 @@ class G2I_API AG2ICharacterEngineer : public ACharacter, public IG2ICharacterInt
 	GENERATED_BODY()
 
 public:
+	
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USceneComponent> Root;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Collision, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UG2ICharacterCollisionComponent> CollisionComp;
@@ -58,6 +62,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
 	TObjectPtr<UG2ISoundComponent> SoundComp;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Carrying)
+	TObjectPtr<UG2ICharacterCarryingActorsComponent> CarryingActorsComp;
 
 private:
 
