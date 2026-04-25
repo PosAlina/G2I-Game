@@ -4,6 +4,7 @@
 #include "G2IPlayerCameraManager.h"
 #include "G2IPlayerController.h"
 #include "G2IStringTablesCatalog.h"
+#include "G2IWidgetComponentParameters.h"
 #include "G2IWidgetsCatalog.h"
 #include "G2IWorldHintWidgetComponent.h"
 #include "Blueprint/UserWidget.h"
@@ -69,6 +70,14 @@ void UG2IUIDisplayManager::InitializeDefaults()
 		UE_LOG(LogG2I, Error, TEXT("PlayerController doesn't exist in %s"), *GetName());
 		return;
 	}
+	
+	CameraManager = Cast<AG2IPlayerCameraManager>(PlayerController->PlayerCameraManager);
+	if (!CameraManager)
+	{
+		UE_LOG(LogG2I, Error, TEXT("Camera Manager %s doesn't exist in %s"),
+			*AG2IPlayerCameraManager::StaticClass()->GetName(), *GetName());
+		return;
+	}
 }
 
 void UG2IUIDisplayManager::InitializeGameInstanceDefaults()
@@ -84,6 +93,12 @@ void UG2IUIDisplayManager::InitializeGameInstanceDefaults()
 		UE_LOG(LogG2I, Error, TEXT("Game Instance isn't %s in %s"),
 			*UG2IGameInstance::StaticClass()->GetName(), *GetName());
 		return;
+	}
+	WidgetComponentParameters = GameInstance->GetWidgetComponentParameters();
+	if (!ensure(WidgetComponentParameters))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+			*GetName(), *UG2IWidgetComponentParameters::StaticClass()->GetName());
 	}
 	UG2IWidgetsCatalog *WidgetsCatalog = GameInstance->GetWidgetsCatalog();
 	if (!ensure(WidgetsCatalog))
@@ -122,8 +137,7 @@ void UG2IUIDisplayManager::InitializeGameInstanceDefaults()
 void UG2IUIDisplayManager::BindDelegatesForLevel()
 {
 	PlayerController->OnPossessPawnDelegate.AddDynamic(this, &ThisClass::UpdateBindingDelegatesForChangedPawn);
-	const TObjectPtr<AG2IPlayerCameraManager> CameraManager =
-		Cast<AG2IPlayerCameraManager>(PlayerController->PlayerCameraManager);
+	
 	if (!CameraManager)
 	{
 		UE_LOG(LogG2I, Error, TEXT("Camera Manager %s doesn't exist in %s"),
@@ -152,15 +166,86 @@ void UG2IUIDisplayManager::ReactActiveWidgetComponentsToNewCameraLocation(const 
 		if (const TObjectPtr<UG2IWorldHintWidgetComponent>* WidgetComponentPtr = AllWidgetComponents.Find(WidgetHintID))
 		{
 			UG2IWorldHintWidgetComponent *WidgetComponent = *WidgetComponentPtr;
-			FVector WidgetLocation = WidgetComponent->GetComponentLocation();
-			
-			FHitResult HitResult;
-			const bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult,
-				NewCameraLocation, WidgetLocation, ECC_Visibility,
-				QueryParamsForWorldWidgetsActivate);
-			WidgetComponent->SetVisibility(!bHit);
+			if (!ensure(WidgetComponent))
+			{
+				UE_LOG(LogG2I, Warning, TEXT("%s: ActiveWidgetComponent has null widget"), *GetName());
+				continue;
+			}
+			ReactWidgetComponentToNewCameraLocation(NewCameraLocation, *WidgetComponent);
 		}
 	}
+}
+
+void UG2IUIDisplayManager::ReactWidgetComponentToNewCameraLocation(const FVector& NewCameraLocation,
+	UG2IWorldHintWidgetComponent& WidgetComponent) const
+{
+	ReactVisibilityWidgetComponentToNewCameraLocation(NewCameraLocation, WidgetComponent);
+	ReactScaleWidgetComponentToNewCameraLocation(NewCameraLocation, WidgetComponent);
+}
+
+void UG2IUIDisplayManager::ReactVisibilityWidgetComponentToNewCameraLocation(
+	const FVector& NewCameraLocation, UG2IWorldHintWidgetComponent& WidgetComponent) const
+{
+	if (!WidgetComponent.IsInVisibleZone())
+	{
+		return;
+	}
+
+	const FVector WidgetLocation = WidgetComponent.GetComponentLocation();
+	FHitResult HitResult;
+	const bool bVisibilityHit = GetWorld()->LineTraceSingleByChannel(HitResult,
+		NewCameraLocation, WidgetLocation, ECC_Visibility,
+		QueryParamsForWorldWidgetsActivate);
+	const bool bBlockedCollisionHit = GetWorld()->LineTraceSingleByChannel(HitResult,
+		NewCameraLocation, WidgetLocation, ECC_GameTraceChannel6,
+		QueryParamsForWorldWidgetsActivate);
+	const bool bHit = bVisibilityHit || bBlockedCollisionHit;
+			
+	WidgetComponent.SetVisibility(!bHit);
+}
+
+void UG2IUIDisplayManager::ReactScaleWidgetComponentToNewCameraLocation(
+	const FVector& NewCameraLocation, UG2IWorldHintWidgetComponent& WidgetComponent) const
+{
+	if (!WidgetComponent.IsEnableScaleFromDistance())
+	{
+		return;
+	}
+	if (!ensure(WidgetComponentParameters))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+			*GetName(), *UG2IWidgetComponentParameters::StaticClass()->GetName());
+		return;
+	}
+	
+	const FVector WidgetLocation = WidgetComponent.GetComponentLocation();
+	const double Distance = FVector::Dist(WidgetLocation, NewCameraLocation);
+	
+	const double MinDistance = WidgetComponentParameters->MinDistanceForChangedScale;
+	const double MaxDistance = WidgetComponentParameters->MaxDistanceForChangedScale;
+	
+	const double ClampedDistance = FMath::Clamp(Distance, MinDistance, MaxDistance);
+	
+	const FVector2D WidgetSize = WidgetComponent.GetDefaultDrawSize();
+	
+	const double ScaleForMaxDistance = WidgetComponentParameters->ScaleForMaxDistance;
+	const double ScaleForMinDistance = WidgetComponentParameters->ScaleForMinDistance;
+	
+	double Scale = ScaleForMinDistance;
+	if (MaxDistance != MinDistance)
+	{
+		Scale = FMath::Lerp(ScaleForMinDistance, ScaleForMaxDistance,
+			(ClampedDistance - MinDistance) / (MaxDistance - MinDistance));
+	}
+
+	const FVector2D ScaledWidgetSize = WidgetSize * Scale;
+	if (FMath::IsNearlyZero(ScaledWidgetSize.X) || FMath::IsNearlyZero(ScaledWidgetSize.Y))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: Active WidgetComponent %s tried to set zero size"),
+			*GetName(), *WidgetComponent.GetName());
+		return;
+	}
+	WidgetComponent.SetDrawSize(ScaledWidgetSize);
 }
 
 UG2IUserWidget* UG2IUIDisplayManager::GetWidget(const EG2IWidgetNames WidgetName)
@@ -311,7 +396,15 @@ void UG2IUIDisplayManager::ShowWorldWidget(UG2IWorldHintWidgetComponent& WidgetC
 	}
 	
 	ActiveWidgetComponentsID.Add(WidgetComponentID);
-	WidgetComponent.SetVisibility(true);
+	
+	if (!CameraManager)
+	{
+		UE_LOG(LogG2I, Error, TEXT("Camera Manager %s doesn't exist in %s"),
+			*AG2IPlayerCameraManager::StaticClass()->GetName(), *GetName());
+		return;
+	}
+	const FVector NewCameraLocation = CameraManager->GetCameraCacheView().Location;
+	ReactWidgetComponentToNewCameraLocation(NewCameraLocation, WidgetComponent);
 }
 
 void UG2IUIDisplayManager::HideWorldWidget(UG2IWorldHintWidgetComponent& WidgetComponent)

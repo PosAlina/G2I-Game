@@ -7,7 +7,7 @@
 #include "G2IPressureGauge.generated.h"
 
 class UG2ILauncherComponent;
-
+class UG2ISoundComponent;
 USTRUCT(BlueprintType)
 struct FArrowInfo
 {
@@ -54,6 +54,8 @@ protected:
     void LockedPuzzleActors(UG2ILauncherComponent* LauncherComponent, AActor* ComponentOwner, bool bIsLocked);
     
 public:
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
+    TObjectPtr<UG2ISoundComponent> SoundComp;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     TObjectPtr<UG2ILauncherComponent> LauncherComp;
@@ -76,6 +78,8 @@ public:
     TSet<TObjectPtr<AActor>> PuzzleActors;
 
 private:
+    int32 ArrowRotationSoundId = -1;
+
     void SmoothMoveComponent(USceneComponent* Component, float StartPitch, float TargetPitch, float MoveTime = 1.0f);
 
     UPROPERTY()

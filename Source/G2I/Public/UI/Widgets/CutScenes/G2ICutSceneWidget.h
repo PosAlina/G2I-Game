@@ -72,6 +72,6 @@ protected:
 
 	float GetSkipPercent() const;
 
-	void CloseWidget() const;
+	void CloseWidget();
 	
 };

@@ -5,6 +5,7 @@
 #include "G2IColorZoneComponent.h"
 #include "G2IPlayerController.h"
 #include "G2ISliderLampComponent.h"
+#include "G2ISoundComponent.h"
 #include "G2IWorldHintKeyWidgetComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
@@ -12,12 +13,14 @@
 
 AG2ISlider::AG2ISlider()
 {
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 	SliderBaseSM = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SliderBase"));
 	SliderSM = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Slider"));
 	SliderCol = CreateDefaultSubobject<UBoxComponent>(TEXT("SliderCol"));
 	ViewCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ViewCamera"));
 	LauncherComp = CreateDefaultSubobject<UG2ILauncherComponent>(TEXT("LauncherComp"));
 	HintKeyWidgetComp = CreateDefaultSubobject<UG2IWorldHintKeyWidgetComponent>(TEXT("HintKeyWidget"));
+	SoundComponent = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("SoundComponent"));
 	if (!ensure(HintKeyWidgetComp))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't create %s"), *GetActorNameOrLabel(),
@@ -74,6 +77,11 @@ void AG2ISlider::BeginPlay()
 
 void AG2ISlider::SetupDefaults()
 {
+	if (SliderHelpList)
+	{
+		SliderHelpList->SetActorHiddenInGame(true);
+	}
+	
 	if (!ensure(HintKeyWidgetComp))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't create %s"), *GetActorNameOrLabel(),
@@ -116,6 +124,28 @@ void AG2ISlider::SetupDefaults()
 	FindLamps();
 	CheckErrors();
 	CurrenImpulse = ImpulsePower;
+
+	SliderZStartLocation = SliderSM->GetRelativeLocation().Z;
+
+	if (!ensure(SoundComponent))
+	{
+		UE_LOG(LogG2I, Error, TEXT("SoundComponent doesn't exist in %s"), *GetName());
+		return;
+	}
+
+	const auto* CorrectSoundConf = SoundComponent->SetupSounds.Find(*CorrectSoundName);
+	const auto* ErrorSoundConf = SoundComponent->SetupSounds.Find(*ErrorSoundName);
+
+	if (CorrectSoundConf)
+	{
+		CorrectSoundID = SoundComponent->AddSound(*CorrectSoundConf);
+	}
+
+	if (ErrorSoundConf)
+	{
+		ErrorSoundID = SoundComponent->AddSound(*ErrorSoundConf);
+	}
+	
 }
 
 void AG2ISlider::BindDelegates()
@@ -129,6 +159,65 @@ void AG2ISlider::BindDelegates()
 	EnhancedInputComponent->BindAction(MoveSliderAction, ETriggerEvent::Triggered, this, &ThisClass::MoveSlider);
 	EnhancedInputComponent->BindAction(MoveSliderAction, ETriggerEvent::Completed, this, &ThisClass::MoveSliderImpulse);
 	EnhancedInputComponent->BindAction(SliderExitAction, ETriggerEvent::Started, this, &ThisClass::SliderExit);
+	EnhancedInputComponent->BindAction(SliderPushAction, ETriggerEvent::Started, this, &ThisClass::SelectColor);
+}
+
+void AG2ISlider::SelectColor()
+{
+	bIsSliderPush = true;
+	if (!ensure(World))
+	{
+		UE_LOG(LogG2I, Error, TEXT("World is null in %s"), *GetActorNameOrLabel());
+		return;
+	}
+	World->GetTimerManager().SetTimer(SliderPushTimer, this, &ThisClass::SliderPush, 0.01f, true);
+}
+
+void AG2ISlider::SoundComponentPlay(const int32 SoundID) const
+{
+	if (!ensure(SoundComponent))
+	{
+		UE_LOG(LogG2I, Error, TEXT("SoundComponent doesn't exist in %s"), *GetName());
+		return;
+	}
+	SoundComponent->PlaySound(SoundID);
+}
+
+void AG2ISlider::SliderPush()
+{
+	if (!ensure(World))
+	{
+		UE_LOG(LogG2I, Error, TEXT("World is null in %s"), *GetActorNameOrLabel());
+		return;
+	}
+	
+	if (!ensure(SliderSM))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("SliderSM is null in %s"), *GetActorNameOrLabel());
+		return;
+	}
+
+	switch (SliderPushDirection)
+	{
+		case EG2ISliderDirection::Up:
+			SliderSM->SetRelativeLocation(FVector{SliderSM->GetRelativeLocation().X, SliderSM->GetRelativeLocation().Y, SliderSM->GetRelativeLocation().Z + SliderPushSpeed});
+			if (SliderSM->GetRelativeLocation().Z + SliderPushSpeed > SliderZStartLocation)
+			{
+				SliderPushDirection = EG2ISliderDirection::Down;
+				World->GetTimerManager().ClearTimer(SliderPushTimer);
+				CompareZoneColorToColorInSequence();
+				bIsSliderPush = false;
+			}
+			break;
+		case EG2ISliderDirection::Down:
+			SliderSM->SetRelativeLocation(FVector{SliderSM->GetRelativeLocation().X, SliderSM->GetRelativeLocation().Y, SliderSM->GetRelativeLocation().Z - SliderPushSpeed});
+			if (SliderSM->GetRelativeLocation().Z - SliderPushSpeed < SliderZStartLocation - SliderPushLength)
+			{
+				SliderPushDirection = EG2ISliderDirection::Up;
+			}
+			break;
+		default: ;
+	}
 }
 
 void AG2ISlider::Interact_Implementation(const ACharacter* Interactor)
@@ -159,6 +248,11 @@ void AG2ISlider::Interact_Implementation(const ACharacter* Interactor)
 	else
 	{
 		HintKeyWidgetComp->SetIsLocked_Implementation(true);
+	}
+
+	if (SliderHelpList)
+	{
+		SliderHelpList->SetActorHiddenInGame(false);
 	}
 }
 
@@ -252,7 +346,7 @@ void AG2ISlider::OnSliderBeginOverlap(UPrimitiveComponent* OverlappedComponent,A
 		if (CurrentActivationColorZone)
 		{
 			CurrentLamp->LampMode = 2;
-			GetWorldTimerManager().SetTimer(ActivationZoneTimer, this, &ThisClass::CompareZoneColorToColorInSequence, LampActivationTime, false);
+			//GetWorldTimerManager().SetTimer(ActivationZoneTimer, this, &ThisClass::CompareZoneColorToColorInSequence, LampActivationTime, false);
 			CurrentLamp->SetTimerToIntensity(1);
 		}
 		else
@@ -342,6 +436,7 @@ void AG2ISlider::CompareZoneColorToColorInSequence()
 						Exit();
 						continue;
 					}
+					SoundComponentPlay(CorrectSoundID);
 					Lamp->OnStopFlashingTimer.Unbind();
 					Lamp->OnStopFlashingTimer.BindUObject(this, &ThisClass::Exit);
 					Lamp->SetTimerToFlashing(LampFlashFrequency, LampFlashCount);
@@ -350,13 +445,16 @@ void AG2ISlider::CompareZoneColorToColorInSequence()
 			}
 			else
 			{
+				SoundComponentPlay(CorrectSoundID);
+				CurrentLamp->OnLamp();
 				CurrentLamp->SetTimerToFlashing(LampFlashFrequency, LampFlashCount);
 			}
 		}
 		else
 		{
+			SoundComponentPlay(ErrorSoundID);
 			G2I::DebugLogMessage(GetActorNameOrLabel() + "Wrong lamp, start over", FColor::Purple);
-			CurrentLamp->SetTimerToFlashing(LampErrorTime, 2);
+			CurrentLamp->SetTimerToFlashing(LampErrorTime, LampErrorFlashCount);
 			IndexInCorrectSequence = 0;
 		}
 	}
@@ -364,7 +462,13 @@ void AG2ISlider::CompareZoneColorToColorInSequence()
 
 void AG2ISlider::MoveSlider(const FInputActionValue& Value)
 {
-	if (bIsSliderActive && SliderSM)
+	if (!ensure(SliderSM))
+	{
+		UE_LOG(LogG2I, Error, TEXT("Couldn't find SliderSM in %s"), *GetActorNameOrLabel());
+		return;
+	}
+	
+	if (bIsSliderActive && !bIsSliderPush)
 	{
 		GetWorldTimerManager().ClearTimer(ImpulseTimer);
 		CurrenImpulse = ImpulsePower;
@@ -457,6 +561,11 @@ void AG2ISlider::SliderExit()
 	else
 	{
 		HintKeyWidgetComp->SetIsLocked_Implementation(LauncherComp->IsLocked_Implementation());
+	}
+
+	if (SliderHelpList)
+	{
+		SliderHelpList->SetActorHiddenInGame(true);
 	}
 }
 

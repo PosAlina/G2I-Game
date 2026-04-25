@@ -6,11 +6,15 @@
 #include "G2IButtonActivator.generated.h"
 
 class UG2ILauncherComponent;
+class UG2ISoundComponent;
 
 UCLASS()
 class G2I_API AG2IButtonActivator : public AActor, public IG2IInteractiveObjectInterface
 {
 	GENERATED_BODY()
+
+private:
+	int32 ActivationSoundId = -1;
 
 protected:
 
@@ -20,6 +24,9 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
+	TObjectPtr<UG2ISoundComponent> SoundComp;
+
 	AG2IButtonActivator();
 
 	UPROPERTY(EditAnywhere)

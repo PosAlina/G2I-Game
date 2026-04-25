@@ -41,12 +41,20 @@ void UG2IOptionsWidget::BindDelegates()
 
 	if (ensure(ApplyButton))
 	{
-		ApplyButton->SetIsEnabled(false);
-		// TODO: Add action when would be add save settings
+		ApplyButton->OnClicked.AddDynamic(this, &ThisClass::OnApplyButtonClicked);
 	}
 	else
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find ApplyButton"), *GetName());
+	}
+	
+	if (ensure(CancelButton))
+	{
+		CancelButton->OnClicked.AddDynamic(this, &ThisClass::OnCancelButtonClicked);
+	}
+	else
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find CancelButton"), *GetName());
 	}
 
 	if (ensure(CommonOptionsButton))
@@ -108,7 +116,30 @@ void UG2IOptionsWidget::OnBackButtonClicked()
 			*UG2IUIManager::StaticClass()->GetName());
 		return;
 	}
+	UIManager->CancelAllUnAppliedOptions(OptionsSubWidgetSwitcher);
 	UIManager->CloseWidget(EG2IWidgetNames::Options);
+}
+
+void UG2IOptionsWidget::OnApplyButtonClicked()
+{
+	if (!ensure(UIManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIManager::StaticClass()->GetName());
+		return;
+	}
+	UIManager->ApplyAllOptions(OptionsSubWidgetSwitcher);
+}
+
+void UG2IOptionsWidget::OnCancelButtonClicked()
+{
+	if (!ensure(UIManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIManager::StaticClass()->GetName());
+		return;
+	}
+	UIManager->CancelAllUnAppliedOptions(OptionsSubWidgetSwitcher);
 }
 
 void UG2IOptionsWidget::OnCommonOptionsButtonClicked()

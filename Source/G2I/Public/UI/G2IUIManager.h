@@ -3,10 +3,10 @@
 #include "CoreMinimal.h"
 #include "G2IUIManager.generated.h"
 
+class UWidget;
 class UG2ICutScenesParameters;
 class UG2IGameInstance;
 enum class EG2IAimType : uint8;
-class UG2IWidgetComponentParameters;
 class UWidgetSwitcher;
 class UPanelWidget;
 class UG2IPropertyRow;
@@ -46,9 +46,6 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UG2IUIDisplayManager> DisplayManager;
-
-	UPROPERTY()
-	TObjectPtr<UG2IWidgetComponentParameters> WidgetComponentParameters;
 
 	UPROPERTY()
 	TObjectPtr<UG2ICutScenesParameters> CutScenesParameters;
@@ -114,9 +111,6 @@ public:
 		const FString& NewQuestionStringID = {},const FString& NewConfirmStringID = {},
 		const FString& NewCancelStringID = {}) const;
 
-	// ==================== LOADING WIDGET ====================
-	void SetLoadingProgressPercent(float Percent) const;
-
 	// ==================== CREATORS WIDGET ====================
 	void SetupCreatorsWidget(const TFunction<void()>& NewBackAction) const;
 
@@ -130,10 +124,14 @@ public:
 	void SetPropertyRow(UG2INumericalMultiValuePropertyRow* PropertySelector, const FString& PropertyNameStringID,
 		float MinValue, float MaxValue, float Step, float DefaultValue, int32 DecimalPlaces) const;
 	void ApplyPropertiesValues(TArray<UG2IPropertyRow*> Properties) const;
-	void SavePropertiesValues(TArray<UG2IPropertyRow*> Properties) const;
+	void CancelUnAppliedPropertiesValues(TArray<UG2IPropertyRow*> Properties) const;
 	void ApplyPropertyValue(const UG2IPropertyRow* PropertyRow) const;
-	void SavePropertyValue(const UG2IPropertyRow* PropertyRow) const;
+	void CancelUnAppliedPropertyValue(const UG2IPropertyRow* PropertyRow) const;
 	void SetActionControl(const FText& ActionName, const FText& KeyName, UListView* ControlsList) const;
+	void ApplyAllOptions(const UWidgetSwitcher* OptionsSubWidgetSwitcher) const;
+	void CancelAllUnAppliedOptions(const UWidgetSwitcher* OptionsSubWidgetSwitcher) const;
+	static void ApplyOptions(UWidget* Widget);
+	static void CancelUnAppliedOptions(UWidget* Widget);
 
 	// ==================== PAUSE WIDGET ====================
 	void SetupPauseWidget(const TFunction<void()>& NewContinueAction) const;

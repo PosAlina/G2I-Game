@@ -30,15 +30,25 @@ TObjectPtr<UAudioComponent> UG2IGameSoundManager::GetAudioById(const int32 Sound
 
 UG2IGameSoundManager* UG2IGameSoundManager::Get(const UObject* WorldContextObject)
 {
-	if (!GEngine) {
+	if (!GEngine)
+	{
 		return nullptr;
 	}
 
 	if (const UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull))
 	{
+		if (!World->IsGameWorld())
+		{
+			return nullptr;
+		}
+
 		if (const UGameInstance* GameInstance = World->GetGameInstance())
 		{
 			return GameInstance->GetSubsystem<UG2IGameSoundManager>();
+		}
+		else
+		{
+			UE_LOG(LogG2I, Error, TEXT("SoundManager Get: GameInstance is NULL in Game World for %s!"), *WorldContextObject->GetName());
 		}
 	}
 
@@ -508,7 +518,7 @@ FVector UG2IGameSoundManager::GetSoundLocation(const int32 SoundId) const
 	return FVector::ZeroVector;
 }
 
-TObjectPtr<USceneComponent> UG2IGameSoundManager::GetSoundAttachment(const int32 SoundId) const
+USceneComponent* UG2IGameSoundManager::GetSoundAttachment(const int32 SoundId) const
 {
 	if (const UAudioComponent* Component = GetAudioById(SoundId))
 	{
@@ -574,4 +584,16 @@ bool UG2IGameSoundManager::SetSoundPlayingOneTime(const int32 SoundId, const boo
 	}
 
 	return true;
+}
+
+bool UG2IGameSoundManager::IsSoundPlaying(const int32 SoundId) const
+{
+	if (const TObjectPtr<UAudioComponent>* FoundAudioComp = ActiveSounds.Find(SoundId))
+	{
+		if (*FoundAudioComp)
+		{
+			return (*FoundAudioComp)->IsPlaying();
+		}
+	}
+	return false;
 }

@@ -6,10 +6,10 @@
 #include "G2IConfirmationWidget.h"
 #include "G2ICutScenesParameters.h"
 #include "G2IGameInstance.h"
-#include "G2ILevelLoadingScreen.h"
 #include "G2IPlayerController.h"
 #include "G2IStringTablesTypes.h"
 #include "G2IUIDisplayManager.h"
+#include "G2IUpdateOptions.h"
 #include "G2IWidgetComponentParameters.h"
 #include "G2IWidgetNames.h"
 #include "G2IWorldHintKeyWidgetComponent.h"
@@ -73,13 +73,6 @@ void UG2IUIManager::InitializeInStartLevel()
 
 void UG2IUIManager::InitializeDefaultsInStartGame()
 {
-	WidgetComponentParameters = GameInstance->GetWidgetComponentParameters();
-	if (!ensure(WidgetComponentParameters))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
-			*GetName(), *UG2IWidgetComponentParameters::StaticClass()->GetName());
-	}
-
 	CutScenesParameters = GameInstance->GetCutScenesParameters();
 	if (!ensure(CutScenesParameters))
 	{
@@ -181,26 +174,6 @@ void UG2IUIManager::InitializeNewLevelUI() const
 		if (DisplayManager->GetWidget(EG2IWidgetNames::CutSceneStartBoilerRoom))
 		{
 			OpenWidget(EG2IWidgetNames::CutSceneStartBoilerRoom);
-			return;
-		}
-		OpenHUD();
-		return;
-	}
-	if (LevelName == EG2ILevelName::ChildrenRoom)
-	{
-		if (DisplayManager->GetWidget(EG2IWidgetNames::CutSceneStartChildrenRoom))
-		{
-			OpenWidget(EG2IWidgetNames::CutSceneStartChildrenRoom);
-			return;
-		}
-		OpenHUD();
-		return;
-	}
-	if (LevelName == EG2ILevelName::Hall)
-	{
-		if (DisplayManager->GetWidget(EG2IWidgetNames::CutSceneStartHall))
-		{
-			OpenWidget(EG2IWidgetNames::CutSceneStartHall);
 			return;
 		}
 		OpenHUD();
@@ -537,21 +510,6 @@ void UG2IUIManager::SetupConfirmationWidget(const TFunction<void()>& NewConfirmA
 	}
 }
 
-void UG2IUIManager::SetLoadingProgressPercent(const float Percent) const
-{
-	if (!ensure(DisplayManager))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
-			*UG2IUIDisplayManager::StaticClass()->GetName());
-		return;
-	}
-	if (const UG2ILevelLoadingScreen *Widget = Cast<UG2ILevelLoadingScreen>(
-		DisplayManager->GetWidget(EG2IWidgetNames::LevelLoadingScreen)))
-	{
-		Widget->SetLoadingProgress(Percent);
-	}
-}
-
 void UG2IUIManager::SetupOptionsWidget(const TFunction<void()>& NewBackAction) const
 {
 	if (!ensure(DisplayManager))
@@ -648,7 +606,7 @@ void UG2IUIManager::ApplyPropertiesValues(TArray<UG2IPropertyRow*> Properties) c
 	}
 }
 
-void UG2IUIManager::SavePropertiesValues(TArray<UG2IPropertyRow*> Properties) const
+void UG2IUIManager::CancelUnAppliedPropertiesValues(TArray<UG2IPropertyRow*> Properties) const
 {
 	for (const UG2IPropertyRow *PropertyRow : Properties)
 	{
@@ -659,7 +617,7 @@ void UG2IUIManager::SavePropertiesValues(TArray<UG2IPropertyRow*> Properties) co
 			return;
 		}
 		
-		SavePropertyValue(PropertyRow);
+		CancelUnAppliedPropertyValue(PropertyRow);
 	}
 }
 
@@ -678,7 +636,7 @@ void UG2IUIManager::ApplyPropertyValue(const UG2IPropertyRow* PropertyRow) const
 	}
 }
 
-void UG2IUIManager::SavePropertyValue(const UG2IPropertyRow* PropertyRow) const
+void UG2IUIManager::CancelUnAppliedPropertyValue(const UG2IPropertyRow* PropertyRow) const
 {
 	if (!ensure(PropertyRow))
 	{
@@ -687,9 +645,9 @@ void UG2IUIManager::SavePropertyValue(const UG2IPropertyRow* PropertyRow) const
 		return;
 	}
 
-	if (PropertyRow->OnSavePropertyValue)
+	if (PropertyRow->OnCancelUnAppliedPropertyValue)
 	{
-		PropertyRow->OnSavePropertyValue();
+		PropertyRow->OnCancelUnAppliedPropertyValue();
 	}
 }
 
@@ -723,6 +681,52 @@ void UG2IUIManager::SetActionControl(const FText& ActionName, const FText& KeyNa
 	{
 		ControlsList->SetSelectedItem(ListEntry);
 	}
+}
+
+void UG2IUIManager::ApplyAllOptions(const UWidgetSwitcher* OptionsSubWidgetSwitcher) const
+{
+	if (!ensure(OptionsSubWidgetSwitcher))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("An attempt to change nullptr %s in %s"),
+			*UWidgetSwitcher::StaticClass()->GetName(), *GetName());
+		return;
+	}
+	for (UWidget *OptionsSubWidget : OptionsSubWidgetSwitcher->GetAllChildren())
+	{
+		ApplyOptions(OptionsSubWidget);
+	}
+}
+
+void UG2IUIManager::CancelAllUnAppliedOptions(const UWidgetSwitcher* OptionsSubWidgetSwitcher) const
+{
+	if (!ensure(OptionsSubWidgetSwitcher))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("An attempt to change nullptr %s in %s"),
+			*UWidgetSwitcher::StaticClass()->GetName(), *GetName());
+		return;
+	}
+	for (UWidget *OptionsSubWidget : OptionsSubWidgetSwitcher->GetAllChildren())
+	{
+		CancelUnAppliedOptions(OptionsSubWidget);
+	}
+}
+
+void UG2IUIManager::ApplyOptions(UWidget* Widget)
+{
+	if (!Widget->Implements<UG2IUpdateOptions>())
+	{
+		return;
+	}
+	IG2IUpdateOptions::Execute_ApplyOptions(Widget);
+}
+
+void UG2IUIManager::CancelUnAppliedOptions(UWidget* Widget)
+{
+	if (!Widget->Implements<UG2IUpdateOptions>())
+	{
+		return;
+	}
+	IG2IUpdateOptions::Execute_CancelUnAppliedOptions(Widget);
 }
 
 void UG2IUIManager::SetupPauseWidget(const TFunction<void()>& NewContinueAction) const

@@ -1,6 +1,5 @@
 #include "Gameplay/G2ISliderLampComponent.h"
 #include "G2I.h"
-#include "Components/PointLightComponent.h"
 
 UG2ISliderLampComponent::UG2ISliderLampComponent()
 {
@@ -12,14 +11,6 @@ UG2ISliderLampComponent::UG2ISliderLampComponent()
 		return;
 	}
 	LampMesh->SetupAttachment(this);
-	
-	PointLightComp = CreateDefaultSubobject<UPointLightComponent>("PointLight");
-	if (!ensure(PointLightComp))
-	{
-		UE_LOG(LogG2I, Error, TEXT("PointLight was not created in %s"), *GetName());
-		return;
-	}
-	PointLightComp->SetupAttachment(LampMesh);
 }
 
 void UG2ISliderLampComponent::BeginPlay()
@@ -58,14 +49,6 @@ void UG2ISliderLampComponent::SetupDefaults()
 
 void UG2ISliderLampComponent::SetDefaultValues()
 {
-	if (!ensure(PointLightComp))
-	{
-		UE_LOG(LogG2I, Error, TEXT("PointLight was not created in %s"), *GetName());
-	}
-	else
-	{
-		PointLightComp->SetVisibility(EmissiveInfo.bIsPointLightEnabled);
-	}
 	
 	if (BaseColor != FLinearColor::Transparent)
 	{
@@ -73,6 +56,7 @@ void UG2ISliderLampComponent::SetDefaultValues()
 	}
 	
 	SetEmissiveColor(EmissiveInfo.Color);
+	SetMaxEmissiveIntensity(MaxLightIntensityInActivationColorZone);
 	
 	if (EmissiveInfo.bIsOn)
 	{
@@ -219,10 +203,6 @@ void UG2ISliderLampComponent::SetEmissiveColor(const FLinearColor& NewEmissiveCo
 	{
 		DynamicMaterial->SetVectorParameterValue("Emissive Color", NewEmissiveColor);
 	}
-	if (PointLightComp)
-	{
-		PointLightComp->SetLightColor(NewEmissiveColor);
-	}
 }
 
 void UG2ISliderLampComponent::SetCurrentEmissiveIntensity(const float NewEmissiveIntensity)
@@ -241,10 +221,6 @@ void UG2ISliderLampComponent::SetCurrentEmissiveIntensity(const float NewEmissiv
 	else
 	{
 		DynamicMaterial->SetScalarParameterValue("Emissive Intensity", NewEmissiveIntensity);
-	}
-	if (PointLightComp)
-	{
-		PointLightComp->SetIntensity(NewEmissiveIntensity * EmissiveInfo.MultiplePointLightIntensity);
 	}
 }
 

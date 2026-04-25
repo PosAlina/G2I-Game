@@ -1,14 +1,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "G2IUserWidget.h"
+#include "G2IOptionsBaseSubWidget.h"
 #include "G2IGraphicsOptionsWidget.generated.h"
 
 class UG2IPropertyRow;
 class UG2ITextMultiValuePropertyRow;
 
 UCLASS()
-class G2I_API UG2IGraphicsOptionsWidget : public UG2IUserWidget
+class G2I_API UG2IGraphicsOptionsWidget : public UG2IOptionsBaseSubWidget
 {
 	GENERATED_BODY()
 
@@ -41,8 +41,8 @@ protected:
 
 public:
 
-	void ApplyPropertiesValues() const;
-	void SavePropertiesValues() const;
+	virtual void ApplyOptions_Implementation() override;
+	virtual void CancelUnAppliedOptions_Implementation() override;
 
 protected:
 	

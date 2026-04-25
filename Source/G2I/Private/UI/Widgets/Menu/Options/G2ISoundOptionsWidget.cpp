@@ -71,8 +71,10 @@ void UG2ISoundOptionsWidget::InitializeDefaults() const
 	}
 }
 
-void UG2ISoundOptionsWidget::ApplyPropertiesValues() const
+void UG2ISoundOptionsWidget::ApplyOptions_Implementation()
 {
+	Super::ApplyOptions_Implementation();
+	
 	if (!ensure(UIManager))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
@@ -83,14 +85,16 @@ void UG2ISoundOptionsWidget::ApplyPropertiesValues() const
 		{CommonVolume, MusicVolume, EffectsVolume, DialoguesVolume, Subtitles});
 }
 
-void UG2ISoundOptionsWidget::SavePropertiesValues() const
+void UG2ISoundOptionsWidget::CancelUnAppliedOptions_Implementation()
 {
+	Super::CancelUnAppliedOptions_Implementation();
+	
 	if (!ensure(UIManager))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
 			*UG2IUIManager::StaticClass()->GetName());
 		return;
 	}
-	UIManager->SavePropertiesValues(
+	UIManager->CancelUnAppliedPropertiesValues(
 		{CommonVolume, MusicVolume, EffectsVolume, DialoguesVolume, Subtitles});
 }

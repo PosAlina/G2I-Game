@@ -1,6 +1,7 @@
 #include "Gameplay/G2IAirTab.h"
 #include "Interfaces/G2IActivationInterface.h"
 #include "G2I.h"
+#include "LaunchingIndication/G2ILauncherComponent.h"
 
 AG2IAirTab::AG2IAirTab()
 {
@@ -11,6 +12,13 @@ AG2IAirTab::AG2IAirTab()
 	BoxComponent = CreateDefaultSubobject<UG2IPipesBoxComponent>(TEXT("PipesBoxComponent"));
 	BoxComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	BoxComponent->Owner = this;
+	
+	LauncherComp = CreateDefaultSubobject<UG2ILauncherComponent>(TEXT("LauncherComp"));
+	if (!ensure(LauncherComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't create %s"), *GetActorNameOrLabel(),
+			*UG2ILauncherComponent::StaticClass()->GetName());
+	}
 }
 
 void AG2IAirTab::OnConstruction(const FTransform& Transform)
@@ -22,7 +30,7 @@ void AG2IAirTab::OnConstruction(const FTransform& Transform)
 		BoxComponent->SetRelativeLocation(StaticMeshComponent->GetStaticMesh()->GetBounds().GetBox().GetCenter());
 }
 
-void AG2IAirTab::ReceiveAir_Implementation(AActor* Sender, bool bAirPassed)
+void AG2IAirTab::ReceiveAir_Implementation(AActor* Sender, const bool bAirPassed)
 {
 	if (!(Sender) || (Sender == this))
 		return;
@@ -74,6 +82,16 @@ void AG2IAirTab::ChangeActivated(const bool bNewActivated)
 
 void AG2IAirTab::ActivateActors()
 {
+	if (!ensure(LauncherComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+			*UG2ILauncherComponent::StaticClass()->GetName());
+	}
+	else
+	{
+		LauncherComp->SetIsLaunched(true);
+	}
+	
 	for (const auto& Actor : ActorsToActivate)
 	{
 		if (Actor && Actor->Implements<UG2IActivationInterface>())
