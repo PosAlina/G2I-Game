@@ -6,6 +6,7 @@
 #include "G2ISliderLampComponent.generated.h"
 
 DECLARE_DELEGATE(FStopFlashingTimer)
+class UG2ISoundComponent;
 
 USTRUCT(BlueprintType)
 struct FG2ILampEmissiveInfo
@@ -43,6 +44,7 @@ class G2I_API UG2ISliderLampComponent : public UPrimitiveComponent
 	GENERATED_BODY()
 
 public:
+	static inline const FName CracklingLampSoundName = FName("CracklingLampSound");
 	UG2ISliderLampComponent();
 	//virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
 
@@ -77,6 +79,9 @@ private:
 	void SetupDefaults();
 
 public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
+	TObjectPtr<UG2ISoundComponent> SoundComp;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UStaticMeshComponent> LampMesh;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta=(ToolTip = "Set if mesh doesn't have own material"))
@@ -118,4 +123,6 @@ private:
 
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true, ToolTip = "Set if needed to override material color"))
 	FLinearColor BaseColor = FLinearColor::Transparent;
+
+	int32 CracklingLampSoundId = -1;
 };

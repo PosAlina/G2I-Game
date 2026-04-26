@@ -47,9 +47,7 @@ void UG2IGlovePunchComponent::ActivatePunch()
 	}
 	
 	if (SoundComponent) {
-		if (!SoundComponent->IsSoundPlaying(PunchSoundId)) {
-			SoundComponent->PlaySound(PunchSoundId);
-		}
+		SoundComponent->PlaySound(PunchSoundId);
 	}
 
 	UKismetSystemLibrary::SphereOverlapActors(

@@ -125,9 +125,6 @@ void AG2IPressureGauge::ChangeAngles_Implementation(const TArray<float>& AngleDe
 void AG2IPressureGauge::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-    if (SoundComp && !SoundComp->IsSoundPlaying(ArrowRotationSoundId)) {
-        SoundComp->PlaySound(ArrowRotationSoundId);
-    }
     for (int32 i = ActiveMovements.Num() - 1; i >= 0; --i)
     {
         FActiveMovement& Movement = ActiveMovements[i];
@@ -189,6 +186,10 @@ void AG2IPressureGauge::SmoothMoveComponent(USceneComponent* Component, const fl
     Movement.ElapsedTime = 0.0f;
 
     ActiveMovements.Add(Movement);
+
+    if (SoundComp) {
+        SoundComp->PlaySound(ArrowRotationSoundId);
+    }
 
     SetActorTickEnabled(true);
 }

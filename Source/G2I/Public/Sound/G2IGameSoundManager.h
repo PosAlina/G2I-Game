@@ -32,14 +32,17 @@ struct FSoundConfig
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Attachment", meta = (EditCondition = "!bIs2D", EditConditionHides))
 	EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play", meta = (ClampMin = "0.0", ClampMax = "1.0"))
-	float VolumeMultiplier = 1.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play", meta = (ClampMin = "0.0", ClampMax = "10.0"))
+	float VolumeMultiplier = 10.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play", meta = (ClampMin = "0.1", ClampMax = "2.0"))
 	float PitchMultiplier = 1.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play")
 	bool bIsPlayingOneTime = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play")
+	bool bIsPlayingFromStart = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Lifetime")
 	bool bAutoDestroy = false;
@@ -138,6 +141,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sound Manager")
 	bool SetSoundPlayingOneTime(const int32 SoundId, const bool bNewIsPlayingOneTime);
 
+	UFUNCTION(BlueprintCallable, Category = "Sound Manager")
+	bool SetSoundPlayingFromStart(const int32 SoundId, const bool bNewIsPlayingFromStart);
+
+
+
 	UFUNCTION(BlueprintPure, Category = "Sound Manager")
 	float GetSoundVolume(const int32 SoundId) const;
 
@@ -156,11 +164,20 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Sound Manager")
 	bool GetSoundPlayingOneTime(const int32 SoundId) const;
 
+	UFUNCTION(BlueprintCallable, Category = "Sound Manager")
+	bool GetSoundPlayingFromStart(const int32 SoundId) const;
+
 	UFUNCTION(BlueprintPure, Category = "Sound Manager")
 	bool IsSoundPlaying(const int32 SoundId) const;
 
+
+
+
 	UFUNCTION(BlueprintCallable, Category = "Sound|Global")
 	void InitGlobalAudio(USoundMix* _MainMix, const TMap<EG2ISoundType, USoundClass*>& _SoundClasses);
+
+
+
 
 	UFUNCTION(BlueprintCallable, Category = "Sound|Global")
 	void SetGlobalVolume(const EG2ISoundType SoundType, const float NewVolume);

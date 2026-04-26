@@ -16,6 +16,7 @@ class G2I_API AG2IRotatingBySteamGear : public AActor, public IG2ITraceableObect
 	GENERATED_BODY()
 private:
 	FOnTimelineFloat TimelineUpdate;
+	FOnTimelineEvent TimelineFinished;
 
 	UPROPERTY()
 	TObjectPtr<UTimelineComponent> Timeline;
@@ -38,6 +39,9 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Timeline")
 	void OnTimelineUpdate(float Output);
+
+	UFUNCTION(BlueprintCallable, Category = "Timeline")
+	void OnTimelineFinished();
 
 	UPROPERTY(EditAnywhere, Category = "Data")
 	bool bRotateRoll = false;

@@ -18,6 +18,8 @@ enum class EZoneColor : uint8;
 class UBoxComponent;
 class FTimerManager;
 
+
+
 UENUM(BlueprintType)
 enum class EG2ISliderDirection : uint8
 {
@@ -73,8 +75,13 @@ private:
 	void SelectColor();
 
 	void SoundComponentPlay(const int32 SoundID) const;
+
+	void PlayMovingSliderSound();
+	void StopMovingSliderSound();
 	
 public:
+	static inline const FName SliderMoveSoundName = FName("SliderMoveSound");
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UStaticMeshComponent> SliderBaseSM;
 	
@@ -167,6 +174,7 @@ private:
 	bool bIsLampWithoutZone = false;
 	bool bIsSequenceEmpty = false;
 	int32 StopTimerLampsIndex = -1;
+
 	UPROPERTY()
 	TObjectPtr<AActor> OriginalViewTarget;
 	UPROPERTY()
@@ -184,6 +192,7 @@ private:
 	UPROPERTY()
 	TObjectPtr<UG2IColorZoneComponent> CurrentActivationColorZone;
 	FTimerHandle SliderPushTimer;
-	int32 CorrectSoundID;
-	int32 ErrorSoundID;
+	int32 CorrectSoundID = -1;
+	int32 ErrorSoundID = -1;
+	int32 SliderMovingSoundId = -1;
 };
