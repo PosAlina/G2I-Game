@@ -36,4 +36,6 @@ public:
 	
 	bool ShowNextFrames();
 	
+	void HideAllFrames();
+	
 };
