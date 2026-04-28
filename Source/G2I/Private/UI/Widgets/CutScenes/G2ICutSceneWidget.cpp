@@ -4,7 +4,6 @@
 #include "G2IGameInstance.h"
 #include "G2IUIManager.h"
 #include "Components/Image.h"
-#include "Components/RichTextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "CutScenes/G2ICutSceneSheetWidget.h"
 
@@ -188,4 +187,19 @@ void UG2ICutSceneWidget::CloseWidget()
 	UIManager->CloseCutScene(CurrentWidgetName);
 	bIsSkipPressed = false;
 	SetSkipPercent(0.f);
+	
+	if (!ensure(SheetsSwitcher))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find SheetsSwitcher"), *GetName());
+		return;
+	}
+	SheetsSwitcher->SetActiveWidgetIndex(0);
+	
+	for (UWidget *SheetWidget : SheetsSwitcher->GetAllChildren())
+	{
+		if (UG2ICutSceneSheetWidget *Sheet = Cast<UG2ICutSceneSheetWidget>(SheetWidget))
+		{
+			Sheet->HideAllFrames();
+		}
+	}
 }
