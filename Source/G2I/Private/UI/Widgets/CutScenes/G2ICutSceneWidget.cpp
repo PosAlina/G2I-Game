@@ -49,7 +49,13 @@ void UG2ICutSceneWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
 		SetSkipPercent(NewPercent);
 		if (NewPercent == 1.f)
 		{
-			CloseWidget();
+			if (!ensure(UIManager))
+			{
+				UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+					*UG2IUIManager::StaticClass()->GetName());
+				return;
+			}
+			UIManager->CloseCutScene(CurrentWidgetName);
 		}
 	}
 }
@@ -107,7 +113,13 @@ FReply UG2ICutSceneWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, 
 		if (!ensure(SheetsSwitcher))
 		{
 			UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find SheetsSwitcher"), *GetName());
-			CloseWidget();
+			if (!ensure(UIManager))
+			{
+				UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+					*UG2IUIManager::StaticClass()->GetName());
+				return Reply;
+			}
+			UIManager->CloseCutScene(CurrentWidgetName);
 			return Reply;
 		}
 		
@@ -125,7 +137,13 @@ FReply UG2ICutSceneWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, 
 			return Reply;
 		}
 
-		CloseWidget();
+		if (!ensure(UIManager))
+		{
+			UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+				*UG2IUIManager::StaticClass()->GetName());
+			return Reply;
+		}
+		UIManager->CloseCutScene(CurrentWidgetName);
 	}
 	
 	return Reply;
@@ -178,15 +196,11 @@ float UG2ICutSceneWidget::GetSkipPercent() const
 
 void UG2ICutSceneWidget::CloseWidget()
 {
-	if (!ensure(UIManager))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
-			*UG2IUIManager::StaticClass()->GetName());
-		return;
-	}
-	UIManager->CloseCutScene(CurrentWidgetName);
+	Super::CloseWidget();
+	
 	bIsSkipPressed = false;
 	SetSkipPercent(0.f);
+	bIsEnabled = true;
 	
 	if (!ensure(SheetsSwitcher))
 	{

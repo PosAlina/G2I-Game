@@ -53,6 +53,10 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> SkipBarMaterialInstance;
+	
+public:
+	
+	virtual void CloseWidget() override;
 
 protected:
 
@@ -71,7 +75,5 @@ protected:
 	void SetSkipPercent(float Percent) const;
 
 	float GetSkipPercent() const;
-
-	void CloseWidget();
 	
 };
