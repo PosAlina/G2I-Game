@@ -2,6 +2,7 @@
 #include "G2I.h"
 #include "Kismet/GameplayStatics.h"
 #include "AsyncLoadingScreenLibrary.h"
+#include "G2IOptionsParameters.h"
 #include "G2IUIManager.h"
 #include "G2IWidgetNames.h"
 
@@ -14,6 +15,17 @@ void UG2IGameInstance::Init()
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Main Menu Level isn't set"), *GetName());
 	}
+	if (!ensure(OptionsParameters))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+			*GetName(), *UG2IOptionsParameters::StaticClass()->GetName());
+	}
+	else
+	{
+		OptionsParameters->SetupDefaultParameters();
+		// TODO: Setup Saved Parameters if they exist
+	}
+	
 	OnPlayerControllerInitDelegate.AddUObject(this, &ThisClass::StartLevelInitialize);
 }
 

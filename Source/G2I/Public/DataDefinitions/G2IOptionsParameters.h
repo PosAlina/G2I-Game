@@ -15,16 +15,34 @@ class G2I_API UG2IOptionsParameters : public UDataAsset
 public:
 
 	// ==================== KEYBOARD AND MOUSE ====================
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Keyboard and mouse", meta = (ClampMin = "0.0"))
 	float MouseSensitive = 1.f;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Keyboard and mouse")
 	bool bIsInvertedCameraHorizontalRotation = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Keyboard and mouse")
 	bool bIsInvertedCameraVerticalRotation = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Keyboard and mouse|MouseSensitive", meta = (ClampMin = "0.0"))
+	float DefaultMouseSensitive = 1.f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Keyboard and mouse|MouseSensitive", meta = (ClampMin = "0.0"))
+	float MinMouseSensitive = 0.1f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Keyboard and mouse|MouseSensitive", meta = (ClampMin = "0.0"))
+	float MaxMouseSensitive = 5.f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Keyboard and mouse|MouseSensitive", meta = (ClampMin = "0.0"))
+	float StepMouseSensitive = 0.1f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Keyboard and mouse|Inversion")
+	bool bIsDefaultInvertedCameraHorizontalRotation = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Keyboard and mouse|Inversion")
+	bool bIsDefaultInvertedCameraVerticalRotation = false;
 
 	// ==================== GRAPHICS ====================
 	// ==================== SCREEN ====================
 	// ==================== SOUNDS ====================
+	
+public:
+	
+	void SetupDefaultParameters();
+	
 };
