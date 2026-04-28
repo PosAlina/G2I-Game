@@ -202,7 +202,7 @@ void UG2IUIManager::CloseCutScene(const EG2IWidgetNames WidgetName) const
 	OpenHUD();
 }
 
-void UG2IUIManager::CloseLevelUI()
+void UG2IUIManager::CloseLevelUI() const
 {
 	CloseAllWidgets();
 	ShowAllWidgets(); // For visibility widgets in next level

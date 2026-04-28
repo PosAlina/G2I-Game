@@ -71,7 +71,7 @@ protected:
 	void InitializeNewLevelUI() const;
 	
 	UFUNCTION()
-	void CloseLevelUI();
+	void CloseLevelUI() const;
 
 public:
 
