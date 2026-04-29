@@ -9,6 +9,7 @@
 #include "G2IThirdPersonCameraInputInterface.h"
 #include "Engine/World.h"
 #include "GameFramework/Character.h"
+#include "G2IFixedCameraActor.h"
 
 UG2ICameraControllerComponent::UG2ICameraControllerComponent()
 {
@@ -148,6 +149,7 @@ bool UG2ICameraControllerComponent::IsOwnerControllable() const
 bool UG2ICameraControllerComponent::SetCamera(const UCameraComponent& NewCamera)
 {
 	AActor *OwnerActor = NewCamera.GetOwner();
+
 	if (!OwnerActor)
 	{
 		UE_LOG(LogG2I, Warning, TEXT("%s doesn't have owner"), *NewCamera.GetName());
@@ -168,6 +170,13 @@ bool UG2ICameraControllerComponent::SetCamera(const UCameraComponent& NewCamera)
 	else
 	{
 		CurrentCameraType = EG2ICameraTypeEnum::FixedCamera;
+
+		AG2IFixedCameraActor*  FixedCameraActor = Cast<AG2IFixedCameraActor>(OwnerActor);
+
+		if (FixedCameraActor)
+		{
+			FixedCameraActor->StartFollow();
+		}
 	}
 	SetThirdPersonCameraYawRotation();
 	BroadcastCameraTypeAtBlendStart(NewCamera);
@@ -199,9 +208,21 @@ bool UG2ICameraControllerComponent::SetCurrentCamera(int32 NewCameraIndex)
 		return false;
 	}
 	
+	const UCameraComponent* OldCamera = GetCameraComponent_Implementation();
+
 	if (SetCamera(*NewCameraComponent))
 	{
 		SetCurrentCameraIndex(NewCameraIndex);
+
+		if (OldCamera && OldCamera != NewCameraComponent)
+		{
+
+			if (AG2IFixedCameraActor* FixedActor = Cast<AG2IFixedCameraActor>(OldCamera->GetOwner()))
+			{
+				FixedActor->StopFollow();
+			}
+		}
+
 		return true;
 	}
 	
