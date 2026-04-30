@@ -29,6 +29,10 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UG2IGameInstance> GameInstance;
+	
+public:
+	
+	virtual void CloseWidget() {}
 
 protected:
 

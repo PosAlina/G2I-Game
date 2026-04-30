@@ -5,6 +5,19 @@
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
 
+void UG2IOptionsWidget::CloseWidget()
+{
+	Super::CloseWidget();
+	
+	if (!ensure(UIManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IUIManager::StaticClass()->GetName());
+		return;
+	}
+	UIManager->CancelAllUnAppliedOptions(OptionsSubWidgetSwitcher);
+}
+
 void UG2IOptionsWidget::InitializeAfterManagerLoading()
 {
 	Super::InitializeAfterManagerLoading();
@@ -109,14 +122,6 @@ void UG2IOptionsWidget::OnBackButtonClicked()
 	{
 		UE_LOG(LogG2I, Warning, TEXT("Back function is undefined in %s"), *GetName());
 	}
-	
-	if (!ensure(UIManager))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
-			*UG2IUIManager::StaticClass()->GetName());
-		return;
-	}
-	UIManager->CancelAllUnAppliedOptions(OptionsSubWidgetSwitcher);
 	UIManager->CloseWidget(EG2IWidgetNames::Options);
 }
 

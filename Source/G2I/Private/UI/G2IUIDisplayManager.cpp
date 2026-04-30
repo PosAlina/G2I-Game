@@ -308,6 +308,7 @@ void UG2IUIDisplayManager::CloseWidget(const EG2IWidgetNames WidgetName)
 	{
 		if (UG2IUserWidget *Widget = WidgetInfo->Widget)
 		{
+			Widget->CloseWidget();
 			Widget->RemoveFromParent();
 
 			if (TSet<EG2IWidgetNames> *ActiveWidgetsNamesByType = AllActiveWidgetsNames.Find(WidgetInfo->Type))
@@ -367,6 +368,8 @@ void UG2IUIDisplayManager::CloseAllActiveWidgets()
 	{
 		CloseActiveWidgetsByType(ActiveWidgetsType);
 	}
+	
+	ActiveWidgetComponentsID.Empty();
 }
 
 void UG2IUIDisplayManager::CloseActiveWidgetsByType(const EG2IWidgetTypes WidgetsType)
@@ -379,6 +382,7 @@ void UG2IUIDisplayManager::CloseActiveWidgetsByType(const EG2IWidgetTypes Widget
 			{
 				if (UG2IUserWidget *Widget = WidgetInfo->Widget)
 				{
+					Widget->CloseWidget();
 					Widget->RemoveFromParent();
 				}
 			}
