@@ -11,6 +11,7 @@ class USoundMix;
 class USceneComponent;
 class UAudioComponent;
 class UG2IGameInstance;
+class UG2IOptionsParameters;
 
 USTRUCT(BlueprintType)
 struct FSoundConfig
@@ -66,6 +67,9 @@ class G2I_API UG2IGameSoundManager : public UGameInstanceSubsystem
 	GENERATED_BODY()
 	
 private:
+	UPROPERTY()
+	TObjectPtr<UG2IOptionsParameters> OptionsParameters;
+
 	UPROPERTY()
 	TObjectPtr<UG2IGameInstance> GameInstance;
 

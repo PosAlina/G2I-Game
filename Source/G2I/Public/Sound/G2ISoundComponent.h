@@ -49,12 +49,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Sounds")
 	bool SetSoundAttachmentComponent(const int32 SoundId,
-		USceneComponent* NewAttachemntComponent,
+		USceneComponent* NewAttachmentComponent,
 		const EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Sounds")
 	bool SetSoundAttachmentActor(const int32 SoundId,
-		AActor* NewAttachemntActor,
+		AActor* NewAttachmentActor,
 		const EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Sounds")

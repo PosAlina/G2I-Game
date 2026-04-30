@@ -8,6 +8,7 @@
 #include "Sound/SoundMix.h"
 #include "Kismet/GameplayStatics.h"
 #include "G2IGameInstance.h"
+#include "G2IOptionsParameters.h"
 
 static const FName OneTimeTag("PlayingOneTime");
 static const FName FromStartTag("PlayingFromStart");
@@ -85,6 +86,12 @@ void UG2IGameSoundManager::InitializeInStartGame()
 	}
 	GameInstance->OnStartLevelInitDelegate.Remove(StartGameDelegateHandle);
 
+	OptionsParameters = GameInstance->GetOptionsParameters();
+	if (!OptionsParameters)
+	{
+		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: OptionsParameters is null in GameInstance!"), *GetName(), *FString(__FUNCTION__));
+	}
+
 	InitializeInStartLevel();
 
 	GameInstance->OnCloseLevelDelegate.AddUObject(this, &ThisClass::CloseLevelSound);
@@ -107,7 +114,7 @@ void UG2IGameSoundManager::InitializeInStartLevel()
 					NewWorld,
 					MainSoundMix,
 					TargetClass,
-					Iterator.Value,
+					Iterator.Value / 10.f,
 					1.0f,
 					0.0f,
 					true
@@ -413,7 +420,7 @@ void UG2IGameSoundManager::UpdateStackSize() {
 void UG2IGameSoundManager::InitGlobalAudio(USoundMix* _MainMix, const TMap<EG2ISoundType, USoundClass*>& _SoundClasses)
 {
 	MainSoundMix = _MainMix;
-	
+
 	SoundClasses.Empty();
 	for (auto& Iterator : _SoundClasses)
 	{
@@ -421,10 +428,22 @@ void UG2IGameSoundManager::InitGlobalAudio(USoundMix* _MainMix, const TMap<EG2IS
 	}
 
 	GlobalSoundMultipliers.Empty();
-	GlobalSoundMultipliers.Add(EG2ISoundType::SpeechSound, 1.0f);
-	GlobalSoundMultipliers.Add(EG2ISoundType::MusicSound, 1.0f);
-	GlobalSoundMultipliers.Add(EG2ISoundType::EffectSound, 1.0f);
-	GlobalSoundMultipliers.Add(EG2ISoundType::DefaultSound, 1.0f);
+
+	if (OptionsParameters)
+	{
+		GlobalSoundMultipliers.Add(EG2ISoundType::SpeechSound, OptionsParameters->DialoguesVolume);
+		GlobalSoundMultipliers.Add(EG2ISoundType::MusicSound, OptionsParameters->MusicVolume);
+		GlobalSoundMultipliers.Add(EG2ISoundType::EffectSound, OptionsParameters->EffectsVolume);
+		GlobalSoundMultipliers.Add(EG2ISoundType::DefaultSound, OptionsParameters->CommonVolume);
+	}
+	else
+	{
+		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: OptionsParameters is null! Using default volume 10.0f"), *GetName(), *FString(__FUNCTION__));
+		GlobalSoundMultipliers.Add(EG2ISoundType::SpeechSound, 10.0f);
+		GlobalSoundMultipliers.Add(EG2ISoundType::MusicSound, 10.0f);
+		GlobalSoundMultipliers.Add(EG2ISoundType::EffectSound, 10.0f);
+		GlobalSoundMultipliers.Add(EG2ISoundType::DefaultSound, 10.0f);
+	}
 
 	UWorld* World = GetWorld();
 	if (MainSoundMix && World)
@@ -459,7 +478,33 @@ void UG2IGameSoundManager::SetGlobalVolume(const EG2ISoundType SoundType, const 
 
 	const float ClampedVolume = FMath::Clamp(NewVolume, 0.0f, 10.0f);
 
-	GlobalSoundMultipliers[SoundType] = ClampedVolume;
+	if (float* VolumePtr = GlobalSoundMultipliers.Find(SoundType))
+	{
+		*VolumePtr = ClampedVolume;
+	}
+	else
+	{
+		GlobalSoundMultipliers.Add(SoundType, ClampedVolume);
+	}
+
+	if (OptionsParameters)
+	{
+		switch (SoundType)
+		{
+		case EG2ISoundType::SpeechSound:
+			OptionsParameters->DialoguesVolume = ClampedVolume;
+			break;
+		case EG2ISoundType::MusicSound:
+			OptionsParameters->MusicVolume = ClampedVolume;
+			break;
+		case EG2ISoundType::EffectSound:
+			OptionsParameters->EffectsVolume = ClampedVolume;
+			break;
+		case EG2ISoundType::DefaultSound:
+			OptionsParameters->CommonVolume = ClampedVolume;
+			break;
+		}
+	}
 
 	if (UWorld* World = GetWorld()) {
 		UGameplayStatics::SetSoundMixClassOverride(
