@@ -142,8 +142,12 @@ void UG2IUIManager::InitializeNewLevelUI() const
 	
 	if (GameInstance->IsMainMenuLevel())
 	{
-		OpenWidget(EG2IWidgetNames::MainMenu);
-		return;
+		if (auto* Widget = DisplayManager->GetWidget(EG2IWidgetNames::MainMenu))
+		{
+			OpenWidget(EG2IWidgetNames::MainMenu);
+			Widget->SetFocus();
+			return;
+		}
 	}
 
 	if (!ensure(DisplayManager))
@@ -171,9 +175,10 @@ void UG2IUIManager::InitializeNewLevelUI() const
 	
 	if (LevelName == EG2ILevelName::BoilerRoom)
 	{
-		if (DisplayManager->GetWidget(EG2IWidgetNames::CutSceneStartBoilerRoom))
+		if (auto* Widget = DisplayManager->GetWidget(EG2IWidgetNames::CutSceneStartBoilerRoom))
 		{
 			OpenWidget(EG2IWidgetNames::CutSceneStartBoilerRoom);
+			Widget->SetFocus();
 			return;
 		}
 		OpenHUD();
