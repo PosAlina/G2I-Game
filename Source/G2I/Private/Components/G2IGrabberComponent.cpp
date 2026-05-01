@@ -5,6 +5,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/SceneComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Sound/G2ISoundComponent.h"
 
 UG2IGrabberComponent::UG2IGrabberComponent()
 {
@@ -17,15 +18,23 @@ UG2IGrabberComponent::UG2IGrabberComponent()
 	Anchor = CreateDefaultSubobject<UBoxComponent>(TEXT("AnchorPoint"));
 	if (!ensure(Anchor)) {
 		UE_LOG(LogG2I, Error, TEXT("Can't create BoxComponent in the %s"), *this->GetName());
-		return;
 	}
-	Anchor->SetupAttachment(this);
+	else {
+		Anchor->SetupAttachment(this);
+	}
+	
 
 	Anchor->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	Anchor->SetCollisionResponseToAllChannels(ECR_Overlap);
 	Anchor->SetMobility(EComponentMobility::Movable);
-}
 
+	SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("GrabberSoundComp"));
+	
+	if (SoundComp) {
+		SoundComp->SetupSounds.Add(TEXT("VerticallyMovingSound"), FSoundConfig());
+		SoundComp->SetupSounds.Add(TEXT("GrabbingSound"), FSoundConfig());
+	}
+}
 
 void UG2IGrabberComponent::PlayHookAnimation(UAnimSequence* Animation)
 {
@@ -36,6 +45,9 @@ void UG2IGrabberComponent::PlayHookAnimation(UAnimSequence* Animation)
 
 	SkeletalMeshComp->SetAnimationMode(EAnimationMode::AnimationSingleNode);
 	SkeletalMeshComp->PlayAnimation(Animation, false);
+	if (SoundComp) {
+		SoundComp->PlaySound(GrabbingSoundId);
+	}
 }
 
 void UG2IGrabberComponent::FinishGrab(UPrimitiveComponent* OtherComp, FVector Location, AActor* OtherActor)
@@ -98,9 +110,22 @@ void UG2IGrabberComponent::BeginPlay()
 	{
 		VerticalMovementComp->OnMoveDownFinished.AddDynamic(this, &UG2IGrabberComponent::OnMoveDownFinished);
 	}
+
+	if (SoundComp && SoundComp->SetupSounds.Contains(TEXT("GrabbingSound")))
+	{
+		GrabbingSoundId = SoundComp->AddSound(SoundComp->SetupSounds[TEXT("GrabbingSound")]);
+		if (GrabbingSoundId == -1)
+		{
+			UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: GrabbingSoundId (ID == -1)"), *GetName(), *FString(__FUNCTION__));
+		}
+	}
+
+	if (VerticalMovementComp && SoundComp)
+	{
+		VerticalMovementComp->SharedSoundComp = SoundComp;
+
+	}
 }
-
-
 
 void UG2IGrabberComponent::UpdateSmoothMovement()
 {

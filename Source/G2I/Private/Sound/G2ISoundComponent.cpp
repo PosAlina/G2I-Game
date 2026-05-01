@@ -11,7 +11,7 @@ void UG2ISoundComponent::BeginPlay()
 		return;
 	}
 	SoundManager = UG2IGameSoundManager::Get(World);
-	if (!SoundManager.IsValid()) {
+	if (!SoundManager) {
 		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
 	}
 }
@@ -19,11 +19,16 @@ void UG2ISoundComponent::BeginPlay()
 
 int32 UG2ISoundComponent::AddSound(const FSoundConfig& NewSoundConfig)
 {
-	if (!SoundManager.IsValid()) {
-		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
+	if (!SoundManager)
+	{
+		SoundManager = UG2IGameSoundManager::Get(this);
+	}
+	if (!SoundManager) {
+		UE_LOG(LogG2I, Error, TEXT("[%s][UG2ISoundComponent::AddSound]: Couldn't get the Sound Manager"), *GetName());
 		return -1;
 	}
 
+//todo: check
 	FSoundConfig ConfigToSend = NewSoundConfig;
 	AActor* Owner = GetOwner();
 	if (!ensure(Owner)) {
@@ -45,7 +50,7 @@ int32 UG2ISoundComponent::AddSound(const FSoundConfig& NewSoundConfig)
 
 bool UG2ISoundComponent::PlaySound(const int32 SoundId)
 {
-	if (!SoundManager.IsValid()) {
+	if (!SoundManager) {
 		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
 		return false;
 	}
@@ -54,7 +59,7 @@ bool UG2ISoundComponent::PlaySound(const int32 SoundId)
 
 bool UG2ISoundComponent::StopSound(const int32 SoundId, const float FadeOutTime)
 {
-	if (!SoundManager.IsValid()) {
+	if (!SoundManager) {
 		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
 		return false;
 	}
@@ -63,7 +68,7 @@ bool UG2ISoundComponent::StopSound(const int32 SoundId, const float FadeOutTime)
 
 void UG2ISoundComponent::StopAllSounds()
 {
-	if (!SoundManager.IsValid()) {
+	if (!SoundManager) {
 		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
 		return;
 	}
@@ -72,7 +77,7 @@ void UG2ISoundComponent::StopAllSounds()
 
 bool UG2ISoundComponent::SetSoundVolume(const int32 SoundId, const float NewVolume)
 {
-	if (!SoundManager.IsValid()) {
+	if (!SoundManager) {
 		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
 		return false;
 	}
@@ -81,7 +86,7 @@ bool UG2ISoundComponent::SetSoundVolume(const int32 SoundId, const float NewVolu
 
 bool UG2ISoundComponent::SetSoundPitch(const int32 SoundId, const float NewPitch)
 {
-	if (!SoundManager.IsValid()) {
+	if (!SoundManager) {
 		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
 		return false;
 	}
@@ -90,7 +95,7 @@ bool UG2ISoundComponent::SetSoundPitch(const int32 SoundId, const float NewPitch
 
 bool UG2ISoundComponent::SetSoundLocation(const int32 SoundId, const FVector& NewLocation)
 {
-	if (!SoundManager.IsValid()) {
+	if (!SoundManager) {
 		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
 		return false;
 	}
@@ -101,7 +106,7 @@ bool UG2ISoundComponent::SetSoundAttachmentComponent(const int32 SoundId,
 	USceneComponent* NewAttachmentComponent,
 	const EAttachmentRule AttachmentRules)
 {
-	if (!SoundManager.IsValid()) {
+	if (!SoundManager) {
 		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
 		return false;
 	}
@@ -113,7 +118,7 @@ bool UG2ISoundComponent::SetSoundAttachmentActor(const int32 SoundId,
 	AActor* NewAttachmentActor,
 	const EAttachmentRule AttachmentRules)
 {
-	if (!SoundManager.IsValid()) {
+	if (!SoundManager) {
 		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
 		return false;
 	}
@@ -123,7 +128,7 @@ bool UG2ISoundComponent::SetSoundAttachmentActor(const int32 SoundId,
 
 bool UG2ISoundComponent::RemoveSound(const int32 SoundId)
 {
-	if (!SoundManager.IsValid()) {
+	if (!SoundManager) {
 		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
 		return false;
 	}
@@ -132,7 +137,7 @@ bool UG2ISoundComponent::RemoveSound(const int32 SoundId)
 
 bool UG2ISoundComponent::SetSoundAutoDestroy(const int32 SoundId, const bool bNewAutoDestroy)
 {
-	if (!SoundManager.IsValid()) {
+	if (!SoundManager) {
 		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
 		return false;
 	}
@@ -141,7 +146,7 @@ bool UG2ISoundComponent::SetSoundAutoDestroy(const int32 SoundId, const bool bNe
 
 float UG2ISoundComponent::GetSoundVolume(const int32 SoundId)
 {
-	if (!SoundManager.IsValid()) {
+	if (!SoundManager) {
 		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
 		return 0.0f;
 	}
@@ -150,7 +155,7 @@ float UG2ISoundComponent::GetSoundVolume(const int32 SoundId)
 
 float UG2ISoundComponent::GetSoundPitch(const int32 SoundId)
 {
-	if (!SoundManager.IsValid()) {
+	if (!SoundManager) {
 		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
 		return 1.0f;
 	}
@@ -159,7 +164,7 @@ float UG2ISoundComponent::GetSoundPitch(const int32 SoundId)
 
 FVector UG2ISoundComponent::GetSoundLocation(const int32 SoundId)
 {
-	if (!SoundManager.IsValid()) {
+	if (!SoundManager) {
 		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
 		return FVector::ZeroVector;
 	}
@@ -168,9 +173,18 @@ FVector UG2ISoundComponent::GetSoundLocation(const int32 SoundId)
 
 bool UG2ISoundComponent::GetSoundAutoDestroy(const int32 SoundId)
 {
-	if (!SoundManager.IsValid()) {
+	if (!SoundManager) {
 		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
 		return false;
 	}
 	return SoundManager->GetSoundAutoDestroy(SoundId);
+}
+
+bool UG2ISoundComponent::IsSoundPlaying(const int32 SoundId)
+{
+	if (!SoundManager) {
+		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
+		return false;
+	}
+	return SoundManager->IsSoundPlaying(SoundId);
 }

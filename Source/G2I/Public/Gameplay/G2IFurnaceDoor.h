@@ -5,10 +5,16 @@
 #include "Interfaces/G2IActivationInterface.h"
 #include "G2IFurnaceDoor.generated.h"
 
+
+class UG2ISoundComponent;
+
 UCLASS()
 class G2I_API AG2IFurnaceDoor : public AG2IMovingByGearWithSplineActor, public IG2IActivationInterface
 {
 	GENERATED_BODY()
+private:
+	int32 FurnaceDoorOpenSoundId = -1;
+
 protected:
 	FTimerHandle PushTimerHandle;
 
@@ -22,6 +28,11 @@ protected:
 
 	void PerformTick();
 public:	
+		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
+		TObjectPtr<UG2ISoundComponent> SoundComp;
+
+	AG2IFurnaceDoor();
+	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, Category = "Data|Spline")
 	float Force = 0.1f;

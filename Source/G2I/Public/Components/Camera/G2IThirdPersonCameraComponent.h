@@ -7,6 +7,7 @@
 #include "Components/SceneComponent.h"
 #include "G2IThirdPersonCameraComponent.generated.h"
 
+class UG2IOptionsParameters;
 class UG2ICameraDefaultsParameters;
 class ACharacter;
 class UCameraComponent;
@@ -34,6 +35,9 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UG2ICameraDefaultsParameters> CameraDefaultsParameters;
+	
+	UPROPERTY()
+	TObjectPtr<UG2IOptionsParameters> OptionsParameters;
 	
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, Category="Components", meta = (AllowPrivateAccess = "true"))

@@ -42,7 +42,7 @@ struct FSoundConfig
 	bool bIsPlayingOneTime = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Lifetime")
-	bool bAutoDestroy = true;
+	bool bAutoDestroy = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Location")
 	bool bIs2D = false;
@@ -102,32 +102,62 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
+	UFUNCTION(BlueprintCallable, Category = "Sound Manager")
 	int32 AddSound(const FSoundConfig& NewSoundConfig);
+
+	UFUNCTION(BlueprintCallable, Category = "Sound Manager")
 	bool RemoveSound(const int32 SoundId);
+
+	UFUNCTION(BlueprintCallable, Category = "Sound Manager")
 	void RemoveAllSounds();
 
+	UFUNCTION(BlueprintCallable, Category = "Sound Manager")
 	bool PlaySound(const int32 SoundId, const float FadeInTime = 0.0f);
+
+	UFUNCTION(BlueprintCallable, Category = "Sound Manager")
 	bool StopSound(const int32 SoundId, const float FadeOutTime = 0.0f);
+
+	UFUNCTION(BlueprintCallable, Category = "Sound Manager")
 	void StopAllSounds();
 
+	UFUNCTION(BlueprintCallable, Category = "Sound Manager")
 	bool SetSoundVolume(const int32 SoundId, const float NewVolume);
+
+	UFUNCTION(BlueprintCallable, Category = "Sound Manager")
 	bool SetSoundPitch(const int32 SoundId, const float NewPitch);
+
+	UFUNCTION(BlueprintCallable, Category = "Sound Manager")
 	bool SetSoundLocation(const int32 SoundId, const FVector& NewLocation);
-	bool SetSoundAttachment(const int32 SoundId,
-		USceneComponent* NewAttachemntComponent,
-		const EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget);
-	bool SetSoundAttachment(const int32 SoundId,
-		AActor* NewAttachemntActor,
-		const EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget);
+
+	bool SetSoundAttachment(const int32 SoundId, USceneComponent* NewAttachemntComponent, const EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget);
+	bool SetSoundAttachment(const int32 SoundId, AActor* NewAttachemntActor, const EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget);
+
+	UFUNCTION(BlueprintCallable, Category = "Sound Manager")
 	bool SetSoundAutoDestroy(const int32 SoundId, const bool bNewAutoDestroy);
+
+	UFUNCTION(BlueprintCallable, Category = "Sound Manager")
 	bool SetSoundPlayingOneTime(const int32 SoundId, const bool bNewIsPlayingOneTime);
 
+	UFUNCTION(BlueprintPure, Category = "Sound Manager")
 	float GetSoundVolume(const int32 SoundId) const;
+
+	UFUNCTION(BlueprintPure, Category = "Sound Manager")
 	float GetSoundPitch(const int32 SoundId) const;
+
+	UFUNCTION(BlueprintPure, Category = "Sound Manager")
 	FVector GetSoundLocation(const int32 SoundId) const;
-	TObjectPtr<USceneComponent> GetSoundAttachment(const int32 SoundId) const;
+
+	UFUNCTION(BlueprintPure, Category = "Sound Manager")
+	USceneComponent* GetSoundAttachment(const int32 SoundId) const;
+
+	UFUNCTION(BlueprintPure, Category = "Sound Manager")
 	bool GetSoundAutoDestroy(const int32 SoundId) const;
+
+	UFUNCTION(BlueprintPure, Category = "Sound Manager")
 	bool GetSoundPlayingOneTime(const int32 SoundId) const;
+
+	UFUNCTION(BlueprintPure, Category = "Sound Manager")
+	bool IsSoundPlaying(const int32 SoundId) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Sound|Global")
 	void InitGlobalAudio(USoundMix* _MainMix, const TMap<EG2ISoundType, USoundClass*>& _SoundClasses);

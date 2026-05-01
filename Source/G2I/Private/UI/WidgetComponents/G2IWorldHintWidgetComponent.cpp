@@ -9,6 +9,8 @@
 
 UG2IWorldHintWidgetComponent::UG2IWorldHintWidgetComponent()
 {
+	DefaultDrawSize = GetDrawSize();
+	bEnableScaleFromDistance = true;
 	VisibilityZone = CreateDefaultSubobject<USphereComponent>(TEXT("Visibility zone"));
 	if (!ensure(VisibilityZone))
 	{
@@ -51,7 +53,6 @@ void UG2IWorldHintWidgetComponent::SetupDefaults()
 	InitializationPlayerController();
 	InitializationVisibilityZone();
 
-	SetWidgetSize(WidgetSize);
 	SetWidgetSpace(EWidgetSpace::Screen);
 	SetWidgetByName(CurrentWidgetName);
 }
@@ -142,12 +143,6 @@ void UG2IWorldHintWidgetComponent::SetDefaultsByPlayerPawn(APawn* Pawn)
 		PlayerPawnClass = Pawn->GetClass();
 		ReactWidgetOnOverlappingActors();
 	}
-}
-
-void UG2IWorldHintWidgetComponent::SetWidgetSize(const FVector2D InWidgetSize)
-{
-	WidgetSize = InWidgetSize;
-	SetDrawSize(WidgetSize);
 }
 
 void UG2IWorldHintWidgetComponent::SetWidgetByName(const EG2IWidgetNames WidgetName)
@@ -247,6 +242,21 @@ bool UG2IWorldHintWidgetComponent::IsLocked_Implementation()
 bool UG2IWorldHintWidgetComponent::IsInVisibleZone() const
 {
 	return bIsInVisibleZone;
+}
+
+FVector2D UG2IWorldHintWidgetComponent::GetDefaultDrawSize() const
+{
+	return DefaultDrawSize;
+}
+
+bool UG2IWorldHintWidgetComponent::IsEnableScaleFromDistance() const
+{
+	return bEnableScaleFromDistance;
+}
+
+void UG2IWorldHintWidgetComponent::SetEnableScaleFromDistance(const bool bInEnableScaleFromDistance)
+{
+	bEnableScaleFromDistance = bInEnableScaleFromDistance;
 }
 
 void UG2IWorldHintWidgetComponent::OpenWidget()

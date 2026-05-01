@@ -83,8 +83,10 @@ void UG2IScreenOptionsWidget::InitializeDefaults() const
 	}
 }
 
-void UG2IScreenOptionsWidget::ApplyPropertiesValues() const
+void UG2IScreenOptionsWidget::ApplyOptions_Implementation()
 {
+	Super::ApplyOptions_Implementation();
+	
 	if (!ensure(UIManager))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
@@ -94,13 +96,15 @@ void UG2IScreenOptionsWidget::ApplyPropertiesValues() const
 	UIManager->ApplyPropertiesValues({ScreenMode, ScreenResolution, FrameRate, VSync});
 }
 
-void UG2IScreenOptionsWidget::SavePropertiesValues() const
+void UG2IScreenOptionsWidget::CancelUnAppliedOptions_Implementation()
 {
+	Super::CancelUnAppliedOptions_Implementation();
+	
 	if (!ensure(UIManager))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
 			*UG2IUIManager::StaticClass()->GetName());
 		return;
 	}
-	UIManager->SavePropertiesValues({ScreenMode, ScreenResolution, FrameRate, VSync});
+	UIManager->CancelUnAppliedPropertiesValues({ScreenMode, ScreenResolution, FrameRate, VSync});
 }

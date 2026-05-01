@@ -2,6 +2,7 @@
 #include "Gameplay/G2IPipe.h"
 #include "G2I.h"
 #include "Components/ArrowComponent.h"
+#include "LaunchingIndication/G2ILauncherComponent.h"
 
 // Sets default values
 AG2IPipe::AG2IPipe()
@@ -12,7 +13,16 @@ AG2IPipe::AG2IPipe()
 	if (SplineComponent)
 		SetRootComponent(SplineComponent);
 
-	bRunConstructionScriptOnDrag = false;
+#if WITH_EDITOR
+	bRunConstructionScriptOnDrag = 0;
+#endif
+	
+	LauncherComp = CreateDefaultSubobject<UG2ILauncherComponent>(TEXT("LauncherComp"));
+	if (!ensure(LauncherComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't create %s"), *GetActorNameOrLabel(),
+			*UG2ILauncherComponent::StaticClass()->GetName());
+	}
 }
 
 void AG2IPipe::OnConstruction(const FTransform& Transform)
@@ -30,14 +40,14 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 	//  *** Remove when custom spline metadata gets fixed ***
 	if (PointParams.Num() < SplineComponent->GetNumberOfSplinePoints())
 	{
-		int32 Diff = SplineComponent->GetNumberOfSplinePoints() - PointParams.Num();
+		const int32 Diff = SplineComponent->GetNumberOfSplinePoints() - PointParams.Num();
 		PointParams.Reserve(SplineComponent->GetNumberOfSplinePoints());
 		for (int32 i = 0; i < Diff; i++)
 			PointParams.AddDefaulted();
 	}
 	else if (PointParams.Num() > SplineComponent->GetNumberOfSplinePoints())
 	{
-		int32 Diff = PointParams.Num() - SplineComponent->GetNumberOfSplinePoints();
+		const int32 Diff = PointParams.Num() - SplineComponent->GetNumberOfSplinePoints();
 		PointParams.RemoveAt<int32>(SplineComponent->GetNumberOfSplinePoints(), Diff, EAllowShrinking::Yes);
 	}
 	//  *** End of the custom metadata crutch ***
@@ -50,7 +60,7 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 
 	if (!DefaultMesh)
 	{
-		UE_LOG(LogG2I, Error, TEXT("Default Mesh isn't set in %s"), *GetActorNameOrLabel());
+		UE_LOG(LogG2I, Warning, TEXT("Default Mesh isn't set in %s. Terminating further setup."), *GetActorNameOrLabel());
 		return;
 	}
 
@@ -77,7 +87,7 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 		// *	Valves Check & Spawn Editor arrow for easy-to-see edits
 		if (GetHasValveAtSplinePoint(PointIndex))
 		{
-			UArrowComponent* Arrow = (UArrowComponent*)(AddComponentByClass(UArrowComponent::StaticClass(), false, SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local), false));
+			UArrowComponent* Arrow = Cast<UArrowComponent>(AddComponentByClass(UArrowComponent::StaticClass(), false, SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local), false));
 			Arrow->SetRelativeLocationAndRotation(GetLocationBetweenPoints(PointIndex, PointIndex + 1),
 				FRotator(GetValveRotationAtSplinePoint(PointIndex).Roll, GetValveRotationAtSplinePoint(PointIndex).Yaw - 90., GetValveRotationAtSplinePoint(PointIndex).Pitch));
 			Arrow->SetRelativeScale3D(FVector(0.3));
@@ -94,7 +104,7 @@ void AG2IPipe::OnConstruction(const FTransform& Transform)
 				Mesh = BrokenMesh;
 			}
 			else
-				UE_LOG(LogG2I, Error, TEXT("Broken Mesh isn't set in %s"), *GetActorNameOrLabel());
+				UE_LOG(LogG2I, Warning, TEXT("Broken Mesh isn't set in %s. Technical hole isn't going to spawn at the %i point."), *GetActorNameOrLabel(), PointIndex);
 		}
 		else
 			Mesh = DefaultMesh;
@@ -124,6 +134,17 @@ void AG2IPipe::BeginPlay()
 	// Since Holes and Valves are actors - we spawn them during Runtime
 	SpawnValves();
 	SpawnTechnicalHoles();
+	
+	if (!ensure(LauncherComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't create %s"), *GetActorNameOrLabel(),
+			*UG2ILauncherComponent::StaticClass()->GetName());
+	}
+	else
+	{
+		LauncherComp->GetOnLockedDelegate().AddDynamic(this, &ThisClass::SetIsLockedValve);
+		SetIsLockedValve(LauncherComp->IsLocked_Implementation());
+	}
 	
 	// Checking world on null
 	if (!GetWorld())
@@ -182,6 +203,22 @@ void AG2IPipe::SpawnTechnicalHoles()
 		}
 }
 
+void AG2IPipe::SetIsLockedValve(UG2ILauncherComponent* LauncherComponent, AActor* ComponentOwner, const bool bIsLocked)
+{
+	SetIsLockedValve(bIsLocked);
+}
+
+void AG2IPipe::SetIsLockedValve(const bool bIsLocked)
+{
+	for (auto& [Valve, _] : ValvesMap)
+	{
+		if (Valve)
+		{
+			Valve->SetIsLocked_Implementation(bIsLocked);
+		}
+	}
+}
+
 void AG2IPipe::ReceiveAir_Implementation(AActor* Sender, bool bAirPassed)
 {
 	if (ActorsToSendAirTo.Contains(Sender))
@@ -195,7 +232,7 @@ void AG2IPipe::ReceiveAir_Implementation(AActor* Sender, bool bAirPassed)
 
 	// If at least one sender has air - then this pipe also has air
 	// so we look for TRUE value in our map
-	for (auto& ResievedPair : ReceiveAirMap)
+	for (const auto& ResievedPair : ReceiveAirMap)
 	{
 		if (!ResievedPair.Value)
 			continue;
@@ -268,7 +305,7 @@ void AG2IPipe::ChangeCanAirPass(const bool bNewCanAirPass)
 void AG2IPipe::CheckIfAirCanPass()
 {
 	// Check for pipes with holes
-	for (auto& PointsValue : PointParams)
+	for (const auto& PointsValue : PointParams)
 	{
 		if (!PointsValue.bHasTechnicalHole)
 			continue;
@@ -278,7 +315,7 @@ void AG2IPipe::CheckIfAirCanPass()
 	}
 
 	// If at least one valve is inactive - air is not passing through
-	for (auto& ValvePair : ValvesMap)
+	for (const auto& ValvePair : ValvesMap)
 	{
 		if (ValvePair.Value)
 			continue;
@@ -296,7 +333,7 @@ bool AG2IPipe::GetAir() const
 	return bHasAirPassed && bCanAirPassThrough;
 }
 
-float AG2IPipe::GetTestFloatAtSplinePoint(const int32 PointIndex)
+float AG2IPipe::GetTestFloatAtSplinePoint(const int32 PointIndex) const
 {
 	if (ensure(SplineMetadata))
 	{
@@ -431,7 +468,7 @@ bool AG2IPipe::GetReceiveFromOtherPipeAtSplinePoint(const int32 PointIndex)
 
 UG2IPipesBoxComponent* AG2IPipe::SpawnPipesBoxComponent(const int32 PointIndex, const bool bReceives)
 {
-	UG2IPipesBoxComponent* CollisionBox = (UG2IPipesBoxComponent*)(AddComponentByClass(UG2IPipesBoxComponent::StaticClass(), false, SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local), false));
+	UG2IPipesBoxComponent* CollisionBox = Cast<UG2IPipesBoxComponent>(AddComponentByClass(UG2IPipesBoxComponent::StaticClass(), false, SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local), false));
 	
 	if (ensure(CollisionBox))
 	{
@@ -504,7 +541,7 @@ void AG2IPipe::SpawnValve(const int32 PointIndex)
 
 void AG2IPipe::SpawnInteractableBoxComponent(const int32 PointIndex)
 {
-	UBoxComponent* CollisionBox = (UBoxComponent*)(AddComponentByClass(UBoxComponent::StaticClass(), false, SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local), false));
+	UBoxComponent* CollisionBox = Cast<UBoxComponent>(AddComponentByClass(UBoxComponent::StaticClass(), false, SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local), false));
 	
 	if (ensure(CollisionBox))
 	{
@@ -546,8 +583,8 @@ void AG2IPipe::GenerateMesh(UStaticMesh* Mesh, const int32 PointIndex)
 #if WITH_EDITOR
 		if (bShowDebugUpArrows)
 		{
-			UArrowComponent* Arrow = (UArrowComponent*)(AddComponentByClass(UArrowComponent::StaticClass(), false, SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local), false));
-			if (Arrow)
+			if (UArrowComponent* Arrow = Cast<UArrowComponent>(
+				AddComponentByClass(UArrowComponent::StaticClass(), false, SplineComponent->GetTransformAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local), false)))
 				Arrow->SetRelativeLocationAndRotation(SplineComponent->GetLocationAtSplinePoint(PointIndex, ESplineCoordinateSpace::Local),
 					SplineMesh->GetSplineUpDir().Rotation());
 		}
@@ -559,10 +596,8 @@ void AG2IPipe::RegenerateMesh(UStaticMesh* Mesh, const int32 PointIndex)
 {
 	if (ensure(SplineMeshes.IsValidIndex(PointIndex)))
 	{
-		TObjectPtr<USplineMeshComponent> SplineMesh = SplineMeshes[PointIndex];
-
 		// If Spline has SplineMeshComponent at needed point
-		if (SplineMesh)
+		if (const TObjectPtr<USplineMeshComponent> SplineMesh = SplineMeshes[PointIndex])
 		{
 			if (Mesh) // If Mesh is valid
 				SplineMesh->SetStaticMesh(Mesh); // Switch Static Mesh
@@ -581,7 +616,7 @@ FVector AG2IPipe::GetLocationBetweenPoints(const int32 Point1, const int32 Point
 {
 	if (ensure(SplineComponent))
 	{
-		float PointsMiddle = (SplineComponent->GetDistanceAlongSplineAtSplinePoint(Point1) + SplineComponent->GetDistanceAlongSplineAtSplinePoint(Point2)) / 2.f;
+		const float PointsMiddle = (SplineComponent->GetDistanceAlongSplineAtSplinePoint(Point1) + SplineComponent->GetDistanceAlongSplineAtSplinePoint(Point2)) / 2.f;
 		return SplineComponent->GetLocationAtDistanceAlongSpline(PointsMiddle, CoordSpace);
 	}
 	else

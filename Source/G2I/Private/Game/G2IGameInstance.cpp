@@ -1,16 +1,15 @@
 ﻿#include "G2IGameInstance.h"
 #include "G2I.h"
+#include "Kismet/GameplayStatics.h"
+#include "AsyncLoadingScreenLibrary.h"
 #include "G2IUIManager.h"
 #include "G2IWidgetNames.h"
-#include "Engine/AssetManager.h"
-#include "Engine/StreamableManager.h"
-#include "Kismet/GameplayStatics.h"
 
 void UG2IGameInstance::Init()
 {
 	Super::Init();
 	
-	MainMenuLevelName = MainMenuLevel.GetAssetName();
+	MainMenuLevelName = MainMenuLevelInfo.LevelAsset.GetAssetName();
 	if (!ensure(!MainMenuLevelName.IsEmpty()))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Main Menu Level isn't set"), *GetName());
@@ -72,6 +71,11 @@ UG2ICutScenesParameters* UG2IGameInstance::GetCutScenesParameters()
 	return CutScenesParameters;
 }
 
+UG2IOptionsParameters* UG2IGameInstance::GetOptionsParameters()
+{
+	return OptionsParameters;
+}
+
 FString UG2IGameInstance::GetMainMenuLevelName() const
 {
 	return MainMenuLevelName;
@@ -93,9 +97,9 @@ int32 UG2IGameInstance::GetIndex(const EG2ILevelName& LevelName) const
 
 EG2ILevelName UG2IGameInstance::GetLevelEnum(const FString& LevelName) const
 {
-	for (const auto& [Name, Level] : Levels)
+	for (const auto& [Name, LevelInfo] : LevelsInfo)
 	{
-		if (Level.GetAssetName() == LevelName)
+		if (LevelInfo.LevelAsset.GetAssetName() == LevelName)
 		{
 			return Name;
 		}
@@ -115,8 +119,8 @@ bool UG2IGameInstance::IsMainMenuLevel() const
 
 bool UG2IGameInstance::LoadLevel(const EG2ILevelName& LevelName)
 {
-	const TSoftObjectPtr<UWorld> *Level = Levels.Find(LevelName);
-	if (!ensure(*Level))
+	const FG2ILevelInfo *LevelInfo = LevelsInfo.Find(LevelName);
+	if (!ensure(LevelInfo))
 	{
 		UE_LOG(LogG2I, Log, TEXT("%s: Couldn't find level"), *GetName());
 		return false;
@@ -128,7 +132,7 @@ bool UG2IGameInstance::LoadLevel(const EG2ILevelName& LevelName)
 		return false;
 	}
 	
-	return LoadLevel(*Level, NewLevelIndex);
+	return LoadLevel(*LevelInfo, NewLevelIndex);
 }
 
 bool UG2IGameInstance::LoadLevel(uint32 Index)
@@ -150,17 +154,20 @@ bool UG2IGameInstance::LoadLevel(uint32 Index)
 	const EG2ILevelName& NewLevelName = LevelsNameInOrderInGame[Index];
 #endif
 
-	const TSoftObjectPtr<UWorld> *Level = Levels.Find(NewLevelName);
-	if (!ensure(Level))
+	const FG2ILevelInfo *LevelInfo = LevelsInfo.Find(NewLevelName);
+	if (!ensure(LevelInfo))
 	{
-		UE_LOG(LogG2I, Log, TEXT("%s: Couldn't find %d level"), *GetName(), Index);
+		UE_LOG(LogG2I, Log, TEXT("%s: Couldn't find level"), *GetName());
 		return false;
 	}
-	return LoadLevel(*Level, Index);
+	return LoadLevel(*LevelInfo, Index);
 }
 
-bool UG2IGameInstance::LoadLevel(const TSoftObjectPtr<UWorld>& Level, const uint32 Index)
+bool UG2IGameInstance::LoadLevel(const FG2ILevelInfo& LevelInfo, const uint32 Index)
 {
+	const TSoftObjectPtr<UWorld> Level = LevelInfo.LevelAsset;
+	UAsyncLoadingScreenLibrary::SetDisplayBackgroundIndex(LevelInfo.BackgroundIndex);
+	
 	const int32 OldLevelIndex = CurrentLevelIndex;
 	CurrentLevelIndex = Index;
 	
@@ -199,6 +206,9 @@ bool UG2IGameInstance::LoadMainMenuLevel()
 {
 	const int32 OldLevelIndex = CurrentLevelIndex;
 	SetMainMenuLevelIndex();
+
+	const TSoftObjectPtr<UWorld> MainMenuLevel = MainMenuLevelInfo.LevelAsset;
+	UAsyncLoadingScreenLibrary::SetDisplayBackgroundIndex(MainMenuLevelInfo.BackgroundIndex);
 	
 	if (!OpenLevel(MainMenuLevel))
 	{
@@ -228,135 +238,9 @@ bool UG2IGameInstance::OpenLevel(const TSoftObjectPtr<UWorld>& Level)
 		return false;
 	}
 	OnCloseLevelDelegate.Broadcast();
-
-	//TODO: Loading Screen By Time
-	/*
-	if (LoadScreenLoading())
-	{
-		UE_LOG(LogG2I, Log, TEXT("%s: Create Loading Screen"), *GetName());
-	}
-	else
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Can't create Loading Screen"), *GetName());
-	}
-
-	LoadingLevelStreamingHandle =
-		UAssetManager::GetStreamableManager().RequestAsyncLoad(
-		Level.GetLongPackageName(), FStreamableDelegate());
-
-	const FTimerDelegate Delegate =
-		FTimerDelegate::CreateUObject(
-			this, &ThisClass::UpdateLoadingProgress, FName(Level.GetAssetName()));
-	World->GetTimerManager().SetTimer(LoadingTimerHandle, Delegate, .1f, true);
-	*/
-
+	
 	UGameplayStatics::OpenLevel(World, FName(LevelName));
 	SetCurrentLevelInfo();
+	
 	return true;
-}
-
-bool UG2IGameInstance::LoadScreenLoading() const
-{
-	const UG2IUIManager *UIManager = GetSubsystem<UG2IUIManager>();
-	if (!ensure(UIManager))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
-			*UG2IUIManager::StaticClass()->GetName());
-		return false;
-	}
-	UIManager->OpenWidget(EG2IWidgetNames::LevelLoadingScreen, false);
-	return true;
-}
-
-void UG2IGameInstance::UpdateLoadingProgressFixTime(const FName LevelName)
-{
-	++TimeCount;
-	
-	const UG2IUIManager *UIManager = GetSubsystem<UG2IUIManager>();
-	if (!ensure(UIManager))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
-			*UG2IUIManager::StaticClass()->GetName());
-	}
-	else
-	{
-		if (MaxTimeCount != 0)
-		{
-			const float Percentage = TimeCount / MaxTimeCount;
-			UIManager->SetLoadingProgressPercent(Percentage);
-		}
-	}
-	
-	if (TimeCount >= MaxTimeCount)
-	{
-		const UWorld *World = GetWorld();
-		if (!ensure(World))
-		{
-			UE_LOG(LogG2I, Error, TEXT("%s: World is null"), *GetName());
-			return;
-		}
-		
-		World->GetTimerManager().ClearTimer(LoadingTimerHandle);
-		UGameplayStatics::OpenLevel(World, LevelName);
-		UIManager->CloseWidget(EG2IWidgetNames::LevelLoadingScreen);
-		SetCurrentLevelInfo();
-		TimeCount = 0;
-		return;
-	}
-}
-
-void UG2IGameInstance::UpdateLoadingProgress(const FName LevelName)
-{
-	if (!LoadingLevelStreamingHandle.IsValid())
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Not valid LoadingLevelStreamingHandle"), *GetName());
-		FinishLoading(LevelName);
-		return;
-	}
-	const float LoadingProgress = LoadingLevelStreamingHandle->GetProgress();
-	// TODO: Move UIManager initialization in start game
-	const UG2IUIManager *UIManager = GetSubsystem<UG2IUIManager>();
-	if (!ensure(UIManager))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
-			*UG2IUIManager::StaticClass()->GetName());
-	}
-	else
-	{
-		UIManager->SetLoadingProgressPercent(LoadingProgress);
-	}
-	
-	if (LoadingProgress >= 1.f)
-	{
-		UE_LOG(LogG2I, Log, TEXT("%s: Full progress in Loading"), *GetName());
-		FinishLoading(LevelName);
-		return;
-	}
-}
-
-void UG2IGameInstance::FinishLoading(const FName LevelName)
-{
-	const UWorld *World = GetWorld();
-	if (!ensure(World))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s: World is null"), *GetName());
-		return;
-	}
-	UGameplayStatics::OpenLevel(World, FName(LevelName));
-	World->GetTimerManager().ClearTimer(LoadingTimerHandle);
-
-	if (!ensure(LevelName != NAME_None))
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s: Attempt to open null level"), *GetName());
-		return;
-	}
-
-	if (LoadingLevelStreamingHandle->HasError())
-	{
-		UE_LOG(LogG2I, Error, TEXT("%s: LoadingLevelStreamingHandle has error"), *GetName());
-	}
-	UE_LOG(LogG2I, Log, TEXT("%s: Attempt to open level %s"), *GetName(), *LevelName.ToString());
-	//UGameplayStatics::OpenLevelBySoftObjectPtr(World, LoadingLevelStreamingHandle->GetLoadedAsset());
-	UGameplayStatics::OpenLevel(World, LevelName);
-	SetCurrentLevelInfo();
 }

@@ -177,7 +177,7 @@ float UG2ICutSceneWidget::GetSkipPercent() const
 	return OutValue;
 }
 
-void UG2ICutSceneWidget::CloseWidget() const
+void UG2ICutSceneWidget::CloseWidget()
 {
 	if (!ensure(UIManager))
 	{
@@ -186,4 +186,6 @@ void UG2ICutSceneWidget::CloseWidget() const
 		return;
 	}
 	UIManager->CloseCutScene(CurrentWidgetName);
+	bIsSkipPressed = false;
+	SetSkipPercent(0.f);
 }

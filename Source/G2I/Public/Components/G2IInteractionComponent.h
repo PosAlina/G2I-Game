@@ -39,6 +39,7 @@ private:
 	TMap<TObjectPtr<UInputAction>, FName> TagOfInteractionActions;
 
 public:
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	float InteractionBoxLength = 100.f;
 

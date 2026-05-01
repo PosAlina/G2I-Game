@@ -37,6 +37,9 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> ApplyButton;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> CancelButton;
 
 public:
 
@@ -48,6 +51,12 @@ protected:
 
 	UFUNCTION()
 	void OnBackButtonClicked();
+	
+	UFUNCTION()
+	void OnApplyButtonClicked();
+	
+	UFUNCTION()
+	void OnCancelButtonClicked();
 
 	UFUNCTION()
 	void OnCommonOptionsButtonClicked();

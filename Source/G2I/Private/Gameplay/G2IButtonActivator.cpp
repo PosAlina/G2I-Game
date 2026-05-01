@@ -3,8 +3,7 @@
 #include "G2IWorldHintKeyWidgetComponent.h"
 #include "LaunchingIndication/G2ILauncherComponent.h"
 #include "G2I.h"
-#include "G2IButtonActivator.h"
-
+#include "Sound/G2ISoundComponent.h"
 
 void AG2IButtonActivator::BeginPlay()
 {
@@ -30,6 +29,15 @@ void AG2IButtonActivator::BeginPlay()
 		return;
 	}
 	LauncherComp->SetHintKeyWidget(HintKeyWidgetComp);
+
+	if (SoundComp && SoundComp->SetupSounds.Contains(TEXT("ActivationSound")))
+	{
+		ActivationSoundId = SoundComp->AddSound(SoundComp->SetupSounds[TEXT("ActivationSound")]);
+		if (ActivationSoundId == -1)
+		{
+			UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: ArrowRotationSoundId (ID == -1)"), *GetName(), *FString(__FUNCTION__));
+		}
+	}
 }
 
 AG2IButtonActivator::AG2IButtonActivator()
@@ -67,6 +75,16 @@ AG2IButtonActivator::AG2IButtonActivator()
 		return;
 	}
 	HintKeyWidgetComp->SetupAttachment(StaticMeshComponent);
+	if (LauncherComp)
+	{
+		LauncherComp->SetHintKeyWidget(HintKeyWidgetComp);
+	}
+
+	SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("SoundComponent"));
+	if (SoundComp) {
+		SoundComp->SetupAttachment(RootComponent);
+		SoundComp->SetupSounds.Add(TEXT("ActivationSound"), FSoundConfig());
+	}
 }
 
 bool AG2IButtonActivator::CanInteract_Implementation(const ACharacter* Interactor)
@@ -75,7 +93,7 @@ bool AG2IButtonActivator::CanInteract_Implementation(const ACharacter* Interacto
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
 			*UG2ILauncherComponent::StaticClass()->GetName());
-		return false;
+		return true;
 	}
 	if (LauncherComp->IsLocked_Implementation())
 	{
@@ -86,6 +104,22 @@ bool AG2IButtonActivator::CanInteract_Implementation(const ACharacter* Interacto
 
 void AG2IButtonActivator::Interact_Implementation(const ACharacter* Interactor)
 {
+	if (!ensure(LauncherComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+			*UG2ILauncherComponent::StaticClass()->GetName());
+	}
+	else
+	{
+		LauncherComp->SetIsLaunched(true);
+	}
+	
+	if (SoundComp) {
+		if (!SoundComp->IsSoundPlaying(ActivationSoundId)) {
+			SoundComp->PlaySound(ActivationSoundId);
+		}
+	}
+
 	for (AActor* Actor : ActorsToActivate)
 	{
 		if (!ensure(Actor))

@@ -4,8 +4,8 @@
 #include "Engine/GameInstance.h"
 #include "G2IGameInstance.generated.h"
 
+class UG2IOptionsParameters;
 class UG2ICutScenesParameters;
-struct FStreamableHandle;
 class UG2IWidgetComponentParameters;
 class UG2IStringTablesCatalog;
 class UG2IWidgetsCatalog;
@@ -18,6 +18,18 @@ enum class EG2ILevelName : uint8
 	BoilerRoom,
 	ChildrenRoom,
 	Hall
+};
+
+USTRUCT(BlueprintType)
+struct FG2ILevelInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	TSoftObjectPtr<UWorld> LevelAsset;
+
+	UPROPERTY(EditAnywhere)
+	int32 BackgroundIndex = 0;
 };
 
 DECLARE_MULTICAST_DELEGATE(FPlayerControllerInitDelegate);
@@ -54,21 +66,22 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UG2ICutScenesParameters> CutScenesParameters;
-
-	UPROPERTY(EditAnywhere)
-	TSoftObjectPtr<UWorld> MainMenuLevel;
+	
 	
 	UPROPERTY(EditAnywhere)
-	TMap<EG2ILevelName, TSoftObjectPtr<UWorld>> Levels;
+	TObjectPtr<UG2IOptionsParameters> OptionsParameters;
+
+	UPROPERTY(EditAnywhere)
+	FG2ILevelInfo MainMenuLevelInfo;
+	
+	UPROPERTY(EditAnywhere)
+	TMap<EG2ILevelName, FG2ILevelInfo> LevelsInfo;
 
 	UPROPERTY(EditAnywhere, meta=(ToolTip="List of levels in the editor in order without the main menu"))
 	TArray<EG2ILevelName> LevelsNameInOrderInEditor;
 	
 	UPROPERTY(EditAnywhere, meta=(ToolTip="List of levels in the game in order without the main menu."))
 	TArray<EG2ILevelName> LevelsNameInOrderInGame;
-
-	FTimerHandle LoadingTimerHandle;
-	TSharedPtr<FStreamableHandle> LoadingLevelStreamingHandle;
 	
 private:
 
@@ -76,10 +89,6 @@ private:
 	EG2ILevelName CurrentLevelEnum = EG2ILevelName::None;
 	FString CurrentLevelName = "";
 	FString MainMenuLevelName = "";
-
-	// TODO: Tremp before screen loading
-	float TimeCount = 0.f;
-	const float MaxTimeCount = 5.f;
 
 public:
 
@@ -89,6 +98,7 @@ public:
 	UG2IStringTablesCatalog *GetStringTablesCatalog();
 	UG2IWidgetComponentParameters *GetWidgetComponentParameters();
 	UG2ICutScenesParameters *GetCutScenesParameters();
+	UG2IOptionsParameters *GetOptionsParameters();
 	FString GetMainMenuLevelName() const;
 	FString GetCurrentLevelName() const;
 	int32 GetIndex(const EG2ILevelName& LevelName) const;
@@ -111,10 +121,5 @@ protected:
 	void SetCurrentLevelInfo();
 	
 	bool OpenLevel(const TSoftObjectPtr<UWorld>& Level);
-	bool LoadLevel(const TSoftObjectPtr<UWorld>& Level, uint32 Index);
-
-	bool LoadScreenLoading() const;
-	void UpdateLoadingProgressFixTime(const FName LevelName); //TODO: Change when set LoadingScreen By Time
-	void UpdateLoadingProgress(const FName LevelName);
-	void FinishLoading(FName LevelName);
+	bool LoadLevel(const FG2ILevelInfo& LevelInfo, uint32 Index);
 };

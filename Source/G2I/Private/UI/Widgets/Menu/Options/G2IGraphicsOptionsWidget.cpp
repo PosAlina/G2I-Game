@@ -112,8 +112,10 @@ void UG2IGraphicsOptionsWidget::BindDelegates()
 	}
 }
 
-void UG2IGraphicsOptionsWidget::ApplyPropertiesValues() const
+void UG2IGraphicsOptionsWidget::ApplyOptions_Implementation()
 {
+	Super::ApplyOptions_Implementation();
+	
 	if (!ensure(UIManager))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
@@ -124,15 +126,17 @@ void UG2IGraphicsOptionsWidget::ApplyPropertiesValues() const
 		OverallQuality, TextureQuality, ShadowsQuality, PostProcessingQuality, Antialiasing});
 }
 
-void UG2IGraphicsOptionsWidget::SavePropertiesValues() const
+void UG2IGraphicsOptionsWidget::CancelUnAppliedOptions_Implementation()
 {
+	Super::CancelUnAppliedOptions_Implementation();
+	
 	if (!ensure(UIManager))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
 			*UG2IUIManager::StaticClass()->GetName());
 		return;
 	}
-	UIManager->SavePropertiesValues(
+	UIManager->CancelUnAppliedPropertiesValues(
 		{OverallQuality, TextureQuality, ShadowsQuality, PostProcessingQuality, Antialiasing});
 }
 
