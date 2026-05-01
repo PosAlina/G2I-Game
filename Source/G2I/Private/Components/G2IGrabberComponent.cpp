@@ -52,6 +52,10 @@ void UG2IGrabberComponent::PlayHookAnimation(UAnimSequence* Animation)
 
 void UG2IGrabberComponent::FinishGrab(UPrimitiveComponent* OtherComp, FVector Location, AActor* OtherActor)
 {
+	if (!ensure(OtherActor)) {
+		UE_LOG(LogG2I, Error, TEXT("OtherActor is null for %s"), *GetName());
+		return;
+	}
 	if (!ensure(PhysicsHandleComp)) {
 		UE_LOG(LogG2I, Error, TEXT("PhysicsHandleComp is null for %s"), *GetName());
 		return;
@@ -74,7 +78,6 @@ void UG2IGrabberComponent::FinishGrab(UPrimitiveComponent* OtherComp, FVector Lo
 		UpdateTime,
 		true
 	);
-
 	GrabbedActor = OtherActor;
 }
 
@@ -234,7 +237,9 @@ void UG2IGrabberComponent::Activate_Implementation()
 		else {
 			UE_LOG(LogG2I, Error, TEXT("PhysicsHandleComp is null during release"));
 		}
-
+		if (GrabbedActor) {
+			GrabbedActor->Tags.Remove(FName("NotGrabbedOneTime"));
+		}
 		GrabbedActor = nullptr;
 
 		SetComponentTickEnabled(false);
