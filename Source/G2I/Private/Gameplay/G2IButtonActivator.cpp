@@ -115,9 +115,7 @@ void AG2IButtonActivator::Interact_Implementation(const ACharacter* Interactor)
 	}
 	
 	if (SoundComp) {
-		if (!SoundComp->IsSoundPlaying(ActivationSoundId)) {
-			SoundComp->PlaySound(ActivationSoundId);
-		}
+		SoundComp->PlaySound(ActivationSoundId);
 	}
 
 	for (AActor* Actor : ActorsToActivate)

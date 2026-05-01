@@ -11,6 +11,7 @@ class USoundMix;
 class USceneComponent;
 class UAudioComponent;
 class UG2IGameInstance;
+class UG2IOptionsParameters;
 
 USTRUCT(BlueprintType)
 struct FSoundConfig
@@ -32,14 +33,17 @@ struct FSoundConfig
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Attachment", meta = (EditCondition = "!bIs2D", EditConditionHides))
 	EAttachmentRule AttachmentRules = EAttachmentRule::SnapToTarget;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play", meta = (ClampMin = "0.0", ClampMax = "1.0"))
-	float VolumeMultiplier = 1.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play", meta = (ClampMin = "0.0", ClampMax = "10.0"))
+	float VolumeMultiplier = 10.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play", meta = (ClampMin = "0.1", ClampMax = "2.0"))
 	float PitchMultiplier = 1.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play")
 	bool bIsPlayingOneTime = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play")
+	bool bIsPlayingFromStart = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Lifetime")
 	bool bAutoDestroy = false;
@@ -63,6 +67,9 @@ class G2I_API UG2IGameSoundManager : public UGameInstanceSubsystem
 	GENERATED_BODY()
 	
 private:
+	UPROPERTY()
+	TObjectPtr<UG2IOptionsParameters> OptionsParameters;
+
 	UPROPERTY()
 	TObjectPtr<UG2IGameInstance> GameInstance;
 
@@ -138,6 +145,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sound Manager")
 	bool SetSoundPlayingOneTime(const int32 SoundId, const bool bNewIsPlayingOneTime);
 
+	UFUNCTION(BlueprintCallable, Category = "Sound Manager")
+	bool SetSoundPlayingFromStart(const int32 SoundId, const bool bNewIsPlayingFromStart);
+
+
+
 	UFUNCTION(BlueprintPure, Category = "Sound Manager")
 	float GetSoundVolume(const int32 SoundId) const;
 
@@ -156,11 +168,20 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Sound Manager")
 	bool GetSoundPlayingOneTime(const int32 SoundId) const;
 
+	UFUNCTION(BlueprintCallable, Category = "Sound Manager")
+	bool GetSoundPlayingFromStart(const int32 SoundId) const;
+
 	UFUNCTION(BlueprintPure, Category = "Sound Manager")
 	bool IsSoundPlaying(const int32 SoundId) const;
 
+
+
+
 	UFUNCTION(BlueprintCallable, Category = "Sound|Global")
 	void InitGlobalAudio(USoundMix* _MainMix, const TMap<EG2ISoundType, USoundClass*>& _SoundClasses);
+
+
+
 
 	UFUNCTION(BlueprintCallable, Category = "Sound|Global")
 	void SetGlobalVolume(const EG2ISoundType SoundType, const float NewVolume);

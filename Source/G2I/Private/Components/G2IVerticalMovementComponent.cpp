@@ -96,6 +96,9 @@ void UG2IVerticalMovementComponent::MoveDown()
 
 	bIsMoving = true;
 	bIsMovingUp = false;
+	if (SharedSoundComp) {
+		SharedSoundComp->PlaySound(MovingSoundId);
+	}
 	World->GetTimerManager().SetTimer(
 		MovementTimer,
 		this,
@@ -154,9 +157,7 @@ void UG2IVerticalMovementComponent::UpdateMovement()
 		return;
 	}
 	
-	if (SharedSoundComp && !SharedSoundComp->IsSoundPlaying(MovingSoundId)) {
-		SharedSoundComp->PlaySound(MovingSoundId);
-	}
+	
 
 	const float Step = MovingVerticallySpeed * MovingVerticallyTimerInterval;
 	if (bIsMovingUp)
@@ -178,6 +179,9 @@ void UG2IVerticalMovementComponent::UpdateMovement()
 			Owner->SetActorLocation(TargetLocation);
 			StopMovement();
 			OnMoveDownFinished.Broadcast();
+			if (SharedSoundComp) {
+				SharedSoundComp->StopSound(MovingSoundId);
+			}
 			World->GetTimerManager().SetTimer(
 				MovementTimer,
 				this,
@@ -231,6 +235,9 @@ void UG2IVerticalMovementComponent::MoveUp()
 	DrawDebugLine(World, StartLocation, TargetLocation, FColor::Red, false, 2.0f);
 	#endif
 
+	if (SharedSoundComp) {
+		SharedSoundComp->PlaySound(MovingSoundId);
+	}
 	bIsMovingUp = true;
 	World->GetTimerManager().SetTimer(
 		MovementTimer,
