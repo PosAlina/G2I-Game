@@ -4,6 +4,8 @@
 #include "GameFramework/Actor.h"
 #include "G2ISoundComponent.h"
 
+FName AG2ICoal::GrabbedRemoveTag = FName("NotGrabbedOneTime");
+
 AG2ICoal::AG2ICoal() {
 	SceneRootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 
@@ -28,7 +30,7 @@ AG2ICoal::AG2ICoal() {
 	}
 
 	Tags.AddUnique(FName("Coal"));
-	Tags.AddUnique(FName("NotGrabbedOneTime"));
+	Tags.AddUnique(GrabbedRemoveTag);
 }
 
 void AG2ICoal::Deactivate_Implementation() {
@@ -56,6 +58,8 @@ void AG2ICoal::BeginPlay()
 
 	if (StaticMeshComponent) {
 		StaticMeshComponent->OnComponentHit.AddDynamic(this, &AG2ICoal::OnHit);
+		CoalSpawnLocation = StaticMeshComponent->GetComponentLocation();
+		CoalSpawnRotation = StaticMeshComponent->GetComponentRotation();
 	}
 	if (!ensure(SoundComp))
 	{
@@ -89,7 +93,7 @@ void AG2ICoal::BeginPlay()
 
 void AG2ICoal::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) 
 {
-	if (Tags.Contains(FName("NotGrabbedOneTime")))
+	if (Tags.Contains(GrabbedRemoveTag))
 	{
 		UE_LOG(LogG2I, Verbose, TEXT("%s hasn't been grabbed yet "), *GetName());
 		return;
@@ -132,5 +136,5 @@ void AG2ICoal::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPri
 	StaticMeshComponent->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
 
 	StaticMeshComponent->SetWorldLocationAndRotation(CoalSpawnLocation, CoalSpawnRotation);
-	Tags.AddUnique(FName("NotGrabbedOneTime"));
+	Tags.AddUnique(GrabbedRemoveTag);
 }

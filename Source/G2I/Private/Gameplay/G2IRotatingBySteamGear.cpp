@@ -75,13 +75,23 @@ void AG2IRotatingBySteamGear::OnShoot_Implementation(const FHitResult& HitResult
 			return;
 		}
 
-		Timeline->Stop();
-		Timeline->PlayFromStart();
+		if (!Timeline->IsPlaying())
+		{
+			Timeline->PlayFromStart();
+		}
 	}
 }
 
 void AG2IRotatingBySteamGear::OnTimelineUpdate(const float Output)
 {
+	UWorld* World = GetWorld();
+	if (!ensure(World)) {
+		UE_LOG(LogG2I, Error, TEXT("%s: Can't get the World"), *GetName());
+		return;
+	}
+
+	const float DeltaTime = World->GetDeltaSeconds();
+	const float CurrentRotationStep = Output * RotationSpeed * DeltaTime;
 	for (const auto& i : MovableObjects) {
 		if (!i) {
 			UE_LOG(LogG2I, Error, TEXT("Can't get object to push for %s"), *GetName());
@@ -89,19 +99,19 @@ void AG2IRotatingBySteamGear::OnTimelineUpdate(const float Output)
 		}
 
 		if (i->Implements<UG2IMovingByGearObjectInterface>()) {
-			IG2IMovingByGearObjectInterface::Execute_OnPushing(i, Output * RotationSpeed * RotationSign);
+			IG2IMovingByGearObjectInterface::Execute_OnPushing(i, CurrentRotationStep * RotationSign);
 		}
 	}
 
 	FRotator ActorRotator = { 0.0f, 0.0f, 0.0f };
 	if (bRotateRoll) {
-		ActorRotator.Roll = Output * RotationSpeed * FMath::Sign(RotationSign);
+		ActorRotator.Roll = CurrentRotationStep * FMath::Sign(RotationSign);
 	}
 	if (bRotatePitch) {
-		ActorRotator.Pitch = Output * RotationSpeed * FMath::Sign(RotationSign);
+		ActorRotator.Pitch = CurrentRotationStep * FMath::Sign(RotationSign);
 	}
 	if (bRotateYaw) {
-		ActorRotator.Yaw = Output * RotationSpeed * FMath::Sign(RotationSign);
+		ActorRotator.Yaw = CurrentRotationStep * FMath::Sign(RotationSign);
 	}
 	AddActorWorldRotation(ActorRotator);
 	if (SoundComp) {

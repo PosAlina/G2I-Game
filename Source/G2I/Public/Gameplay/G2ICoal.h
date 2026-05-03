@@ -28,10 +28,13 @@ protected:
 	int32 FurnaceDestroySoundId;
 	int32 VoiceFurnaceSoundId;
 
-public:
-	
+	FVector CoalSpawnLocation;
+	FRotator CoalSpawnRotation;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
+public:
+	static FName GrabbedRemoveTag;
+	
+		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
 	TObjectPtr<UG2ISoundComponent> SoundComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -49,11 +52,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName FurnaceDestroySoundName = FName("FurnaceDestroySound");
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FVector CoalSpawnLocation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FRotator CoalSpawnRotation;
+	
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Data|Components")

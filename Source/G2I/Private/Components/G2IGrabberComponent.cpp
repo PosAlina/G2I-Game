@@ -6,6 +6,7 @@
 #include "Components/SceneComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Sound/G2ISoundComponent.h"
+#include "Gameplay/G2ICoal.h"
 
 UG2IGrabberComponent::UG2IGrabberComponent()
 {
@@ -238,7 +239,7 @@ void UG2IGrabberComponent::Activate_Implementation()
 			UE_LOG(LogG2I, Error, TEXT("PhysicsHandleComp is null during release"));
 		}
 		if (GrabbedActor) {
-			GrabbedActor->Tags.Remove(FName("NotGrabbedOneTime"));
+			GrabbedActor->Tags.Remove(AG2ICoal::GrabbedRemoveTag);
 		}
 		GrabbedActor = nullptr;
 
