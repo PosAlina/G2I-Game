@@ -24,6 +24,7 @@ void AG2IDoor::BeginPlay()
         return;
     }
 
+    StartAngle = DoorBaseComponent->GetRelativeRotation().Yaw;
     DoorBaseComponent->SetMobility(EComponentMobility::Movable);
 
     if (!ensure(DoorCurve))
@@ -69,7 +70,7 @@ void AG2IDoor::RotatingDoor()
 
 void AG2IDoor::OnTimelineUpdate(const float Alpha)
 {
-    const float TargetYaw = UKismetMathLibrary::Lerp(0.0f, OpenAngle, Alpha);
+    const float TargetYaw = StartAngle + UKismetMathLibrary::Lerp(0.0f, OpenAngle, Alpha);
     const FRotator NewRotation(0.0f, TargetYaw, 0.0f);
 
     if (!ensure(DoorBaseComponent))
