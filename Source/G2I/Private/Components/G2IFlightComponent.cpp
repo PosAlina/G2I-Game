@@ -27,18 +27,18 @@ void UG2IFlightComponent::SetupDefaults()
 	}
 }
 
-void UG2IFlightComponent::Fly_Implementation(const int Direction)
+bool UG2IFlightComponent::Fly_Implementation(const int Direction)
 {
 	if (!ensure(Owner))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find character owner"), *GetName());
-		return;
+		return false;
 	}
 	if (!ensure(MovementComponent))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find movement component in %s"), *GetName(),
 			*Owner->GetActorNameOrLabel());
-		return;
+		return false;
 	}
 
 	const FVector ActorLocation = Owner->GetActorLocation();
@@ -67,6 +67,7 @@ void UG2IFlightComponent::Fly_Implementation(const int Direction)
 			MovementComponent->AddForce(FVector(0, 0, Direction * FlightVelocity * VelocityCoef));
 		}
 	}
+	return true;
 }
 
 void UG2IFlightComponent::StopFly_Implementation()

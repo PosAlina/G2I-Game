@@ -55,6 +55,8 @@ struct FG2IInputKeyMapping
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUnPossessPawnDelegate, APawn *, Pawn);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPossessPawnDelegate, APawn *, Pawn);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FToggleFollowAIBehindPlayerDelegate, bool, Value);
+DECLARE_MULTICAST_DELEGATE(FSwitchBetweenCharacterDelegate);
+DECLARE_MULTICAST_DELEGATE(FFlyUpDelegate);
 
 /**
  *  Basic PlayerController class for a third person game
@@ -66,6 +68,10 @@ class G2I_API AG2IPlayerController : public APlayerController
 	GENERATED_BODY()
 
 public:
+	
+	FSwitchBetweenCharacterDelegate OnSwitchBetweenCharacterDelegate;
+	
+	FFlyUpDelegate OnFlyUpDelegate;
 
 	UPROPERTY(BlueprintAssignable)
 	FUnPossessPawnDelegate OnUnPossessPawnDelegate;
@@ -90,10 +96,6 @@ private:
 public:
 
 	AG2IPlayerController();
-
-	virtual void OnPossess(APawn *NewPawn) override;
-
-	virtual void OnUnPossess() override;
 
 	virtual void SetViewTargetWithBlend(AActor* NewViewTarget, float BlendTime = 0,
 		EViewTargetBlendFunction BlendFunc = VTBlend_Linear, float BlendExp = 0, bool bLockOutgoing = false) override;
@@ -123,6 +125,9 @@ public:
 	void RotateCameraTo(float Yaw, float Pitch);
 
 protected:
+	
+	virtual void OnPossess(APawn *NewPawn) override;
+	virtual void OnUnPossess() override;
 
 	void SetupDefaults();
 	void SetupKeyMapping();

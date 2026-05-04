@@ -83,6 +83,8 @@ void AG2IRotatingBySteamGear::OnShoot_Implementation(const FHitResult& HitResult
 
 		Timeline->Stop();
 		Timeline->PlayFromStart();
+		
+		OnStartRotateDelegate.Broadcast(this);
 	}
 }
 

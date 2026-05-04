@@ -21,7 +21,7 @@ class G2I_API IG2IFlightInterface
 
 public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Actions)
-	void Fly(int Direction);
+	bool Fly(int Direction);
 	
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Actions)
 	void StopFly();

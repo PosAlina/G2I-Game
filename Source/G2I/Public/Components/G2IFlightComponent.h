@@ -36,7 +36,7 @@ public:
 	virtual void BeginPlay() override;
 
 	// TODO: MovementComponent should be independent, so these functions should be transferred to it
-	virtual void Fly_Implementation(int Direction) override;
+	virtual bool Fly_Implementation(int Direction) override;
 	virtual void StopFly_Implementation() override;
 
 private:

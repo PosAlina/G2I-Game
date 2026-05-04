@@ -8,9 +8,10 @@
 #include "G2IGameInstance.h"
 #include "G2IPlayerController.h"
 #include "G2IStringTablesTypes.h"
+#include "G2ITasksCatalog.h"
+#include "G2ITasksNames.h"
 #include "G2IUIDisplayManager.h"
 #include "G2IUpdateOptions.h"
-#include "G2IWidgetComponentParameters.h"
 #include "G2IWidgetNames.h"
 #include "G2IWorldHintKeyWidgetComponent.h"
 #include "Components/ListView.h"
@@ -20,6 +21,7 @@
 #include "Components/WidgetSwitcher.h"
 #include "Gameplay/G2IKeyHintWidget.h"
 #include "HUD/G2IAimingWidget.h"
+#include "HUD/Tasks/G2ITasksScreen.h"
 #include "Menu/G2ICreatorsWidget.h"
 #include "Menu/G2IPauseWidget.h"
 #include "Menu/Elements/NumericalRow/G2INumericalMultiValuePropertyRow.h"
@@ -73,11 +75,25 @@ void UG2IUIManager::InitializeInStartLevel()
 
 void UG2IUIManager::InitializeDefaultsInStartGame()
 {
+	if (!ensure(GameInstance))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IGameInstance::StaticClass()->GetName());
+		return;
+	}
+	
 	CutScenesParameters = GameInstance->GetCutScenesParameters();
 	if (!ensure(CutScenesParameters))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
 			*GetName(), *UG2ICutScenesParameters::StaticClass()->GetName());
+	}
+	
+	TasksCatalog = GameInstance->GetTasksCatalog();
+	if (!ensure(TasksCatalog))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+			*GetName(), *UG2ITasksCatalog::StaticClass()->GetName());
 	}
 
 	DisplayManager = NewObject<UG2IUIDisplayManager>(this);
@@ -232,6 +248,7 @@ void UG2IUIManager::OpenHUD() const
 	PlayerController->SetPause(false);
 	
 	OpenWidget(EG2IWidgetNames::TrainingScreen, false);
+	OpenWidget(EG2IWidgetNames::TasksScreen, false);
 }
 
 void UG2IUIManager::OpenWorldWidget(UG2IWorldHintWidgetComponent* WidgetComponent) const
@@ -762,6 +779,64 @@ void UG2IUIManager::SetupGalleryWidget(const TFunction<void()>& NewBackAction) c
 	{
 		Widget->OnBack = NewBackAction;
 	}
+}
+
+void UG2IUIManager::AddTaskInHUD(const EG2ITasksNames TaskName) const
+{
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		return;
+	}
+	if (!ensure(TasksCatalog))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+			*GetName(), *UG2ITasksCatalog::StaticClass()->GetName());
+		return;
+	}
+	
+	if (UG2ITasksScreen *Widget =
+		Cast<UG2ITasksScreen>(DisplayManager->GetWidget(EG2IWidgetNames::TasksScreen)))
+	{
+
+		const FG2ITasksDescriptionsInfo *TaskInfo = TasksCatalog->Tasks.Find(TaskName);
+		if (!ensure(TaskInfo))
+		{
+			UE_LOG(LogG2I, Warning, TEXT("%s: In %s task %s is not setup"), *GetName(),
+				*TasksCatalog->GetName(), *GetTaskNameString(TaskName));
+			return;
+		}
+		Widget->SetRow(TaskInfo->Description, TaskName);
+	}
+}
+
+void UG2IUIManager::RemoveTaskInHUD(const EG2ITasksNames TaskName) const
+{
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		return;
+	}
+	
+	if (UG2ITasksScreen *Widget =
+		Cast<UG2ITasksScreen>(DisplayManager->GetWidget(EG2IWidgetNames::TasksScreen)))
+	{
+		Widget->RemoveRow(TaskName);
+	}
+}
+
+FString UG2IUIManager::GetTaskNameString(EG2ITasksNames TaskName) const
+{
+	const UEnum* TasksNamesEnumPtr = StaticEnum<EG2ITasksNames>();
+	if (!ensure(TasksNamesEnumPtr))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Couldn't find enum TasksNames in %s"),*GetName());
+		return "";
+	}
+
+	return TasksNamesEnumPtr->GetNameStringByValue(static_cast<int64>(TaskName));
 }
 
 void UG2IUIManager::SetupControlsWidget(UWidgetSwitcher* CharacterControlsSwitcher) const

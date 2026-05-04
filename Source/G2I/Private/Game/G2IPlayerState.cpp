@@ -233,12 +233,12 @@ bool AG2IPlayerState::SetupControllerForPawn(const uint32 PawnNumber)
 	return false;
 }
 
-void AG2IPlayerState::SelectNextCharacter()
+bool AG2IPlayerState::SelectNextCharacter()
 {
 	if (!ensure(!PlayableCharactersRowNames.IsEmpty()))
 	{
 		UE_LOG(LogG2I, Warning, TEXT("An attempt to select next character when array of playable characters is empty."));
-		return;
+		return false;
 	}
 
 	for (int32 OffsetRowName = 1; OffsetRowName <= PlayableCharactersRowNames.Num(); ++OffsetRowName)
@@ -248,7 +248,7 @@ void AG2IPlayerState::SelectNextCharacter()
 		if (NewCharacterIndex == NumberCurrentCharacter)
 		{
 			UE_LOG(LogG2I, Log, TEXT("Couldn't switch to the next character."));
-			return;
+			return false;
 		}
 
 		if (SwitchToCharacter(NewCharacterIndex))
@@ -256,6 +256,7 @@ void AG2IPlayerState::SelectNextCharacter()
 			break;
 		}
 	}
+	return true;
 }
 
 void AG2IPlayerState::SetCharacterByClass(const TSubclassOf<ACharacter>& TargetClass)

@@ -10,15 +10,14 @@ void AG2IDestructibleActorBase::DestroySelf_Implementation()
 		return;
 	}
 
-	bIsDestroyed = true;
-
 	const auto* World = GetWorld();
-	
 	if (!ensure(World))
 	{
 		UE_LOG(LogG2I, Error, TEXT("World doesn't exist in %s"), *GetName());
 		return;
 	}
+	
+	bIsDestroyed = true;
 
 	if (!DestroyedMesh)
 	{
@@ -49,13 +48,14 @@ void AG2IDestructibleActorBase::DestroySelf_Implementation()
 	if (!ensure(SoundComponent))
 	{
 		UE_LOG(LogG2I, Error, TEXT("SoundComponent doesn't exist in %s"), *GetName());
-		return;
 	}
-	
-	SoundComponent->PlaySound(SoundID);
+	else
+	{
+		SoundComponent->PlaySound(SoundID);
+	}
 
-	OnDestroyedDelegate.ExecuteIfBound();
-	OnDestroyedDelegate.Unbind();
+	OnDestroyedDelegate.Broadcast();
+	OnDestroyedDelegate.RemoveAll(this);
 }
 
 AG2IDestructibleActorBase::AG2IDestructibleActorBase()
@@ -76,9 +76,7 @@ void AG2IDestructibleActorBase::BeginPlay()
     	return;
     }
 
-	const auto* SoundConf = SoundComponent->SetupSounds.Find(*SoundName);
-
-	if (SoundConf)
+	if (const auto* SoundConf = SoundComponent->SetupSounds.Find(*SoundName))
 	{
 		SoundID = SoundComponent->AddSound(*SoundConf);
 	}

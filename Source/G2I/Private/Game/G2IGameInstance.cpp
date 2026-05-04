@@ -5,6 +5,7 @@
 #include "G2IOptionsParameters.h"
 #include "G2IUIManager.h"
 #include "G2IWidgetNames.h"
+#include "Public/Game/G2ITaskManager.h"
 
 void UG2IGameInstance::Init()
 {
@@ -33,6 +34,17 @@ void UG2IGameInstance::StartLevelInitialize()
 {
 	SetCurrentLevelInfo();
 	OnStartLevelInitDelegate.Broadcast();
+	
+	if (CurrentLevelEnum == EG2ILevelName::BoilerRoom)
+	{
+		UG2ITaskManager *TaskManager = GetSubsystem<UG2ITaskManager>();
+		if (!ensure(TaskManager))
+		{
+			UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(), *UG2ITaskManager::StaticClass()->GetName());
+			return;
+		}
+		TaskManager->CreateTaskSwitchCharacter();
+	}
 }
 
 void UG2IGameInstance::SetCurrentLevelInfo()
@@ -86,6 +98,11 @@ UG2ICutScenesParameters* UG2IGameInstance::GetCutScenesParameters()
 UG2IOptionsParameters* UG2IGameInstance::GetOptionsParameters()
 {
 	return OptionsParameters;
+}
+
+UG2ITasksCatalog* UG2IGameInstance::GetTasksCatalog()
+{
+	return TasksCatalog;
 }
 
 FString UG2IGameInstance::GetMainMenuLevelName() const
