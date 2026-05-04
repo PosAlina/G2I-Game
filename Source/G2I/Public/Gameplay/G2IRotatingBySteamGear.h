@@ -7,13 +7,18 @@
 #include "G2IRotatingBySteamGear.generated.h"
 
 
+class AG2IRotatingBySteamGear;
 class UG2ISoundComponent;
 class UG2IOutlineComponent;
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FStartRotateDelegate, AG2IRotatingBySteamGear*);
 
 UCLASS()
 class G2I_API AG2IRotatingBySteamGear : public AActor, public IG2ITraceableObectInterface
 {
+	
 	GENERATED_BODY()
+	
 private:
 	FOnTimelineFloat TimelineUpdate;
 	FOnTimelineEvent TimelineFinished;
@@ -61,12 +66,14 @@ protected:
 	virtual void BeginPlay() override;
 	
 public:
+	
+	FStartRotateDelegate OnStartRotateDelegate;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
 	TObjectPtr<UG2ISoundComponent> SoundComp;
 
 	virtual void OnShoot_Implementation(const FHitResult& HitResult, AActor* Character) override;
 	AG2IRotatingBySteamGear();
-
 
 	UFUNCTION(BlueprintCallable, Category = "Interaction")
 	void Repair(AActor* Interactor);

@@ -4,6 +4,7 @@
 #include "Engine/GameInstance.h"
 #include "G2IGameInstance.generated.h"
 
+class UG2ITasksCatalog;
 class UG2IOptionsParameters;
 class UG2ICutScenesParameters;
 class UG2IWidgetComponentParameters;
@@ -60,13 +61,15 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UG2IStringTablesCatalog> StringTablesCatalog;
+	
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UG2ITasksCatalog> TasksCatalog;
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UG2IWidgetComponentParameters> WidgetComponentsParameters;
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UG2ICutScenesParameters> CutScenesParameters;
-	
 	
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UG2IOptionsParameters> OptionsParameters;
@@ -99,6 +102,7 @@ public:
 	UG2IWidgetComponentParameters *GetWidgetComponentParameters();
 	UG2ICutScenesParameters *GetCutScenesParameters();
 	UG2IOptionsParameters *GetOptionsParameters();
+	UG2ITasksCatalog *GetTasksCatalog();
 	FString GetMainMenuLevelName() const;
 	FString GetCurrentLevelName() const;
 	int32 GetIndex(const EG2ILevelName& LevelName) const;

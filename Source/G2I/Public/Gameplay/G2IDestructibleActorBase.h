@@ -8,7 +8,7 @@
 class UG2ISoundComponent;
 class UNiagaraSystem;
 
-DECLARE_DELEGATE(FOnDestroyed)
+DECLARE_MULTICAST_DELEGATE(FOnDestroyed);
 
 UCLASS()
 class G2I_API AG2IDestructibleActorBase : public AActor, public IG2IDestructibleActorInterface
