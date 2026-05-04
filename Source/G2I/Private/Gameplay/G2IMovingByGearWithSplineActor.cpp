@@ -91,8 +91,8 @@ void AG2IMovingByGearWithSplineActor::OnPushing_Implementation(float ForceMagnit
 		UE_LOG(LogG2I, Warning, TEXT("SplineComponent is not set for %s"), *GetName());
 		return;
 	}
-	float SplineLength = SplineComponent->GetSplineLength();
-	CurrentSplineDistance += ForceMagnitude * ForceModifier * SplineLength;
+	const float SplineLength = SplineComponent->GetSplineLength();
+	CurrentSplineDistance += ForceMagnitude * ForceModifier;
 	CurrentSplineDistance = FMath::Clamp(CurrentSplineDistance, 0.0f, SplineLength);
 
 	SetLocationAndRotationWithSpline(CurrentSplineDistance);
