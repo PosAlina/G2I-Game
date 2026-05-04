@@ -523,14 +523,13 @@ void AG2IPipe::SpawnValve(const int32 PointIndex)
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	// Spawn Valve Actor
-	if (GetWorld())
+	if (UWorld* World = GetWorld())
 	{
-		AG2IValve* Valve = GetWorld()->SpawnActor<AG2IValve>(ValveClass, GetLocationBetweenPoints(PointIndex, PointIndex + 1, ESplineCoordinateSpace::World), FRotator::ZeroRotator, SpawnParams);
+		AG2IValve* Valve = World->SpawnActor<AG2IValve>(ValveClass, GetLocationBetweenPoints(PointIndex, PointIndex + 1, ESplineCoordinateSpace::World), GetValveRotationAtSplinePoint(PointIndex), SpawnParams);
 
 		if (ensure(Valve))
 		{
 			Valve->OwnerActor = this;
-			Valve->AddRotationToStaticMesh(GetValveRotationAtSplinePoint(PointIndex));
 			Valve->bActivated = GetValveActivatedAtSplinePoint(PointIndex);
 			ValvesMap.Add(Valve, Valve->bActivated);
 
