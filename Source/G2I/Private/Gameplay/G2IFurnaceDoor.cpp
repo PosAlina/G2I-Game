@@ -30,10 +30,6 @@ void AG2IFurnaceDoor::StartTick()
 
 void AG2IFurnaceDoor::PerformTick()
 {
-	if (SoundComp && !SoundComp->IsSoundPlaying(FurnaceDoorOpenSoundId)) {
-		SoundComp->PlaySound(FurnaceDoorOpenSoundId);
-	}
-
 	OnPushing_Implementation(Force);
 
 	CurrentTicks++;
@@ -49,11 +45,18 @@ void AG2IFurnaceDoor::PerformTick()
 		return;
 	}
 
+	if (SoundComp) {
+		SoundComp->StopSound(FurnaceDoorOpenSoundId);
+	}
+
 	World->GetTimerManager().ClearTimer(PushTimerHandle);
 }
 
 void AG2IFurnaceDoor::Activate_Implementation()
 {
+	if (SoundComp) {
+		SoundComp->PlaySound(FurnaceDoorOpenSoundId);
+	}
 	StartTick();
 }
 

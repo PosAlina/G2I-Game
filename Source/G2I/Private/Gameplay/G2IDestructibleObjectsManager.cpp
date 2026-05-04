@@ -14,7 +14,7 @@ void AG2IDestructibleObjectsManager::BeginPlay()
 
 	for (const auto DestructibleObj : DestructibleObjectPool)
 	{
-		DestructibleObj->OnDestroyedDelegate.BindUObject(this, &ThisClass::DestroyedObjectCounter);
+		DestructibleObj->OnDestroyedDelegate.AddUObject(this, &ThisClass::DestroyedObjectCounter);
 	}
 }
 

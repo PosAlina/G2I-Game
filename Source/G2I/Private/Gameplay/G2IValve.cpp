@@ -4,6 +4,8 @@
 #include "Characters/G2ICharacterEngineer.h"
 #include "Components/G2IValveInteractionComponent.h"
 #include "Gameplay/G2IPipe.h"
+#include "Sound/G2ISoundComponent.h"
+
 
 AG2IValve::AG2IValve()
 {
@@ -37,6 +39,15 @@ AG2IValve::AG2IValve()
 	{
 		HintKeyWidgetComp->SetupAttachment(RootComponent);
 	}
+
+	SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("Valve Sound Component"));
+	if (!ensure(SoundComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("SoundComponent doesn't exist in %s"), *GetName());
+	}
+	else {
+		SoundComp->SetupSounds.Add(ValveRotationSoundName, FSoundConfig());
+	}
 }
 
 void AG2IValve::Tick(float DeltaTime)
@@ -58,6 +69,14 @@ void AG2IValve::BeginPlay()
 		return;
 	}
 	HintKeyWidgetComp->SetIsLocked_Implementation(bIsLocked);
+
+	if (SoundComp ) {
+		const auto* ValveRotationConf = SoundComp->SetupSounds.Find(ValveRotationSoundName);
+		if (ValveRotationConf) {
+			ValveRotationSoundId = SoundComp->AddSound(*ValveRotationConf);
+		}
+		
+	}
 }
 
 bool AG2IValve::CanInteract_Implementation(const ACharacter* Interactor)
@@ -134,6 +153,9 @@ void AG2IValve::ApplyLocalRotation()
 	{
 		CurrentRotation = MaxRotation;
 		SetActorTickEnabled(false);
+		if (SoundComp) {
+			SoundComp->StopSound(ValveRotationSoundId);
+		}
 	}
 
 	if (CurrentRotation.Pitch < MinRotation.Pitch ||
@@ -142,6 +164,9 @@ void AG2IValve::ApplyLocalRotation()
 	{
 		CurrentRotation = MinRotation;
 		SetActorTickEnabled(false);
+		if (SoundComp) {
+			SoundComp->StopSound(ValveRotationSoundId);
+		}
 	}
 }
 
@@ -154,5 +179,7 @@ void AG2IValve::ChangeActivation()
 	if (StaticMeshComponent)
 		SetActorTickEnabled(true);
 
-	// TODO: play sound
+	if (SoundComp) {
+		SoundComp->PlaySound(ValveRotationSoundId);
+	}
 }

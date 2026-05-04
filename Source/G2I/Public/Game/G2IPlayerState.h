@@ -35,7 +35,7 @@ public:
 	
 	virtual void BeginPlay() override;
 
-	void SelectNextCharacter();
+	bool SelectNextCharacter();
 
 	void SetCharacterByClass(const TSubclassOf<ACharacter>& TargetClass);
 

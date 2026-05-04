@@ -3,6 +3,8 @@
 #include "CoreMinimal.h"
 #include "G2IUIManager.generated.h"
 
+class UG2ITasksCatalog;
+enum class EG2ITasksNames : uint8;
 class UWidget;
 class UG2ICutScenesParameters;
 class UG2IGameInstance;
@@ -49,6 +51,9 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UG2ICutScenesParameters> CutScenesParameters;
+	
+	UPROPERTY()
+	TObjectPtr<UG2ITasksCatalog> TasksCatalog;
 
 	FDelegateHandle StartGameDelegateHandle;
 	
@@ -141,4 +146,9 @@ public:
 
 	// ==================== GALLERY WIDGETS ====================
 	void SetupGalleryWidget(const TFunction<void()>& NewBackAction) const;
+	
+	// ==================== TRAINING ====================
+	void AddTaskInHUD(const EG2ITasksNames TaskName) const;
+	void RemoveTaskInHUD(const EG2ITasksNames TaskName) const;
+	FString GetTaskNameString(EG2ITasksNames TaskName) const;
 };

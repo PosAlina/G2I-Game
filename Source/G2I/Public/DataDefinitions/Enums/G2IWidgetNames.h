@@ -22,5 +22,6 @@ enum class EG2IWidgetNames : uint8
 	ControlRow UMETA(DisplayName = "Row of control's option"),
 	CutSceneStartBoilerRoom UMETA(DisplayName = "CutScene - in Boiler Room"),
 	CutSceneEndGame UMETA(DisplayName = "CutScene - End Game"),
-	Gallery UMETA(DisplayName = "Gallery widget")
+	Gallery UMETA(DisplayName = "Gallery widget"),
+	TasksScreen UMETA(DisplayName = "Tasks screen")
 };

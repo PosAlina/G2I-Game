@@ -433,7 +433,7 @@ bool UG2IUIDisplayManager::IsVisibleWorldWidget(UG2IWorldHintWidgetComponent& Wi
 	return false;
 }
 
-FText UG2IUIDisplayManager::GetText(EG2IStringTablesTypes StringTableType, const FString& KeyNewText)
+FText UG2IUIDisplayManager::GetText(const EG2IStringTablesTypes StringTableType, const FString& KeyNewText)
 {
 	const FName *StringTableName = StringTablesNames.Find(StringTableType);
 	if (!ensure(StringTableName))

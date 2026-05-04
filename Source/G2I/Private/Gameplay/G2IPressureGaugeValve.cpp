@@ -144,6 +144,14 @@ void AG2IPressureGaugeValve::ToggleValve()
 
     bIsAState = !bIsAState;
 
+    if (!ensure(SoundComp))
+    {
+        UE_LOG(LogG2I, Error, TEXT("SoundComponent doesn't exist in %s"), *GetName());
+    }
+    else {
+        SoundComp->PlaySound(ValveRotationSoundId);
+    }
+
     if (bIsAState)
     {
         OpenValve();
@@ -190,9 +198,6 @@ void AG2IPressureGaugeValve::OnTimelineUpdate(const float Value)
     {
         UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't find ValveMesh"), *GetActorNameOrLabel());
         return;
-    }
-    if (SoundComp && !SoundComp->IsSoundPlaying(ValveRotationSoundId)) {
-        SoundComp->PlaySound(ValveRotationSoundId);
     }
     const float Angle = Value * 360.0f;
 

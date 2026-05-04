@@ -755,7 +755,10 @@ void AG2IPlayerController::Fly(const int Direction) const
 		return;
 	}
 	
-	IG2IFlightInterface::Execute_Fly(FlightComponent, Direction);
+	if (Direction == 1 && IG2IFlightInterface::Execute_Fly(FlightComponent, Direction))
+	{
+		OnFlyUpDelegate.Broadcast();
+	}
 }
 
 void AG2IPlayerController::StopFlight(const FInputActionValue& Value)
@@ -866,7 +869,10 @@ void AG2IPlayerController::SelectNextCharacter(const FInputActionValue& Value)
 {
     if (AG2IPlayerState *CurrentPlayerState = GetPlayerState<AG2IPlayerState>())
     {
-        CurrentPlayerState->SelectNextCharacter();
+        if (CurrentPlayerState->SelectNextCharacter())
+        {
+        	OnSwitchBetweenCharacterDelegate.Broadcast();
+        }
     }
     else
     {

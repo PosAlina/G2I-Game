@@ -1,5 +1,4 @@
 #include "Sound/G2IGameSoundManager.h"
-
 #include "G2I.h"
 #include "Components/AudioComponent.h"
 #include "Components/SceneComponent.h"
@@ -8,24 +7,34 @@
 #include "Sound/SoundMix.h"
 #include "Kismet/GameplayStatics.h"
 #include "G2IGameInstance.h"
+#include "G2IOptionsParameters.h"
+#include "TimerManager.h"
 
-static const FName OneTimeTag("PlayingOneTime");
-constexpr int32 STARTSOUNDSTACKSIZE = 20;
+constexpr int32 START_SOUND_STACK_SIZE = 20;
 
 TObjectPtr<UAudioComponent> UG2IGameSoundManager::GetAudioById(const int32 SoundId) const
 {
-	if (SoundId < 0) {
+	if (SoundId < 0) 
+	{
 		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Wrong SoundId: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
 		return nullptr;
 	}
 
-	const TObjectPtr<UAudioComponent>* FoundAudio = ActiveSounds.Find(SoundId);
-	if (FoundAudio) {
-		return *FoundAudio;
+	if (const FG2IActiveSoundData* SoundData = ActiveSounds.Find(SoundId)) 
+	{
+		if (SoundData->AudioComponent) 
+		{
+			return SoundData->AudioComponent;
+		}
 	}
 
 	UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: SoundId %d not found"), *GetName(), *FString(__FUNCTION__), SoundId);
 	return nullptr;
+}
+
+FG2IActiveSoundData* UG2IGameSoundManager::GetSoundDataById(const int32 SoundId)
+{
+	return ActiveSounds.Find(SoundId);
 }
 
 UG2IGameSoundManager* UG2IGameSoundManager::Get(const UObject* WorldContextObject)
@@ -59,11 +68,11 @@ void UG2IGameSoundManager::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	for (int32 i = 0; i < STARTSOUNDSTACKSIZE; ++i)
+	for (int32 i = 0; i < START_SOUND_STACK_SIZE; ++i)
 	{
 		IdStack.Push(i);
 	}
-	CurrentNumberAvailable = STARTSOUNDSTACKSIZE;
+	CurrentNumberAvailable = START_SOUND_STACK_SIZE;
 
 	GameInstance = Cast<UG2IGameInstance>(GetGameInstance());
 	if (!ensure(GameInstance))
@@ -83,6 +92,12 @@ void UG2IGameSoundManager::InitializeInStartGame()
 		return;
 	}
 	GameInstance->OnStartLevelInitDelegate.Remove(StartGameDelegateHandle);
+
+	OptionsParameters = GameInstance->GetOptionsParameters();
+	if (!OptionsParameters)
+	{
+		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: OptionsParameters is null in GameInstance!"), *GetName(), *FString(__FUNCTION__));
+	}
 
 	InitializeInStartLevel();
 
@@ -106,7 +121,7 @@ void UG2IGameSoundManager::InitializeInStartLevel()
 					NewWorld,
 					MainSoundMix,
 					TargetClass,
-					Iterator.Value,
+					Iterator.Value / 10.f,
 					1.0f,
 					0.0f,
 					true
@@ -120,7 +135,7 @@ void UG2IGameSoundManager::CloseLevelSound()
 {
 	ActiveSounds.Empty();
 	IdStack.Empty();
-	CurrentNumberAvailable = STARTSOUNDSTACKSIZE;
+	CurrentNumberAvailable = START_SOUND_STACK_SIZE;
 
 	for (int32 i = 0; i < CurrentNumberAvailable; ++i) {
 		IdStack.Push(i);
@@ -144,7 +159,7 @@ void UG2IGameSoundManager::Deinitialize()
 
 int32 UG2IGameSoundManager::AddSound(const FSoundConfig& NewSoundConfig)
 {
-	if (!ensure(NewSoundConfig.Sound)) {
+	if (!NewSoundConfig.Sound) {
 		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: The sound manager didn't get sound"), *GetName(), *FString(__FUNCTION__));
 		return -1;
 	}
@@ -194,7 +209,7 @@ int32 UG2IGameSoundManager::AddSound(const FSoundConfig& NewSoundConfig)
 		AudioComponent->bAllowSpatialization = false;
 	}
 
-	AudioComponent->SetVolumeMultiplier(NewSoundConfig.VolumeMultiplier);
+	AudioComponent->SetVolumeMultiplier(NewSoundConfig.VolumeMultiplier / 10.f);
 	AudioComponent->SetPitchMultiplier(NewSoundConfig.PitchMultiplier);
 
 	const bool bAssetIsLooping = NewSoundConfig.Sound->IsLooping();
@@ -206,35 +221,81 @@ int32 UG2IGameSoundManager::AddSound(const FSoundConfig& NewSoundConfig)
 	}
 
 	const int32 NewSoundId = IdStack.Pop();
-	ActiveSounds.Add(NewSoundId, AudioComponent);
-	AudioComponent->OnAudioFinishedNative.AddUObject(this, &UG2IGameSoundManager::OnSoundFinished, NewSoundId);
 
+	FG2IActiveSoundData NewSoundData;
+	NewSoundData.AudioComponent = AudioComponent;
+	NewSoundData.bIsPlayingOneTime = NewSoundConfig.bIsPlayingOneTime;
+	NewSoundData.bIsPlayingFromStart = NewSoundConfig.bIsPlayingFromStart;
+	NewSoundData.bIsPlayed = false;
+	NewSoundData.Delay = NewSoundConfig.Delay;
+
+	ActiveSounds.Add(NewSoundId, NewSoundData);
+	AudioComponent->OnAudioFinishedNative.AddUObject(this, &UG2IGameSoundManager::OnSoundFinished, NewSoundId);
 	return NewSoundId;
 }
 
 bool UG2IGameSoundManager::PlaySound(const int32 SoundId, const float FadeInTime)
 {
-	UAudioComponent* Component = GetAudioById(SoundId);
-	if (!ensure(Component)) {
+	FG2IActiveSoundData* SoundData = ActiveSounds.Find(SoundId);
+	if (!ensure(SoundData) || !ensure(SoundData->AudioComponent)) {
 		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: The sound manager can't get an audio component for ID: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
 		return false;
 	}
+	if (SoundData->bIsPlayingOneTime && SoundData->bIsPlayed) {
+		return false;
+	}
+	if (SoundData->bIsPlayingFromStart || !SoundData->AudioComponent->IsPlaying()) {
+		SoundData->bIsPlayed = true;
+		if (SoundData->Delay > 0.0f)
+		{
+			if (const UWorld* World = GetWorld())
+			{
+				FTimerDelegate TimerDel;
+				TimerDel.BindUObject(this, &UG2IGameSoundManager::ExecuteDelayedPlay, SoundId, FadeInTime);
 
-	Component->FadeIn(FadeInTime, Component->VolumeMultiplier);
+				World->GetTimerManager().SetTimer(SoundData->PlayTimerHandle, TimerDel, SoundData->Delay, false);
+			}
+			else {
+				UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: The sound manager can't get the World for ID: %d, executing default play"), *GetName(), *FString(__FUNCTION__), SoundId);
+				ExecuteDelayedPlay(SoundId, FadeInTime);
+			}
+		}
+		else
+		{
+			ExecuteDelayedPlay(SoundId, FadeInTime);
+		}
+		SoundData->AudioComponent->FadeIn(FadeInTime, SoundData->AudioComponent->VolumeMultiplier);
+		return true;
+	}
 
-	return true;
+	return false;
+}
+
+void UG2IGameSoundManager::ExecuteDelayedPlay(const int32 SoundId, const float FadeInTime)
+{
+	if (FG2IActiveSoundData* SoundData = ActiveSounds.Find(SoundId))
+	{
+		if (SoundData->AudioComponent)
+		{
+			SoundData->AudioComponent->FadeIn(FadeInTime, SoundData->AudioComponent->VolumeMultiplier);
+		}
+		SoundData->PlayTimerHandle.Invalidate();
+	}
 }
 
 bool UG2IGameSoundManager::StopSound(const int32 SoundId, const float FadeOutTime)
 {
-	UAudioComponent* Component = GetAudioById(SoundId);
-	if (!ensure(Component)) {
+	FG2IActiveSoundData* SoundData = ActiveSounds.Find(SoundId);
+	if (!ensure(SoundData) || !ensure(SoundData->AudioComponent)) {
 		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: The sound manager can't get an audio component for ID: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
 		return false;
 	}
 
-	Component->FadeOut(FadeOutTime, 0.0f);
+	if (const UWorld* World = GetWorld()) {
+		World->GetTimerManager().ClearTimer(SoundData->PlayTimerHandle);
+	}
 
+	SoundData->AudioComponent->FadeOut(FadeOutTime, 0.0f);
 	return true;
 }
 
@@ -242,9 +303,9 @@ void UG2IGameSoundManager::StopAllSounds()
 {
 	for (const auto& Pair : ActiveSounds)
 	{
-		if (ensure(Pair.Value))
+		if (ensure(Pair.Value.AudioComponent))
 		{
-			Pair.Value->Stop();
+			Pair.Value.AudioComponent->Stop();
 		}
 	}
 }
@@ -257,8 +318,8 @@ bool UG2IGameSoundManager::SetSoundVolume(const int32 SoundId, float NewVolume)
 		return false;
 	}
 
-	NewVolume = FMath::Clamp(NewVolume, 0.0f, 1.0f);
-	Component->SetVolumeMultiplier(NewVolume);
+	NewVolume = FMath::Clamp(NewVolume, 0.0f, 10.0f);
+	Component->SetVolumeMultiplier(NewVolume / 10.f);
 
 	return true;
 }
@@ -375,18 +436,17 @@ void UG2IGameSoundManager::RemoveAllSounds()
 {
 	for (auto Iterator = ActiveSounds.CreateIterator(); Iterator; ++Iterator)
 	{
-		if (Iterator.Value())
+		if (Iterator.Value().AudioComponent)
 		{
-			Iterator.Value()->OnAudioFinishedNative.RemoveAll(this);
-
-			Iterator.Value()->Stop();
+			Iterator.Value().AudioComponent->OnAudioFinishedNative.RemoveAll(this);
+			Iterator.Value().AudioComponent->Stop();
 			Iterator.RemoveCurrent();
 		}
 	}
 
 	ActiveSounds.Empty();
 	IdStack.Empty();
-	CurrentNumberAvailable = STARTSOUNDSTACKSIZE;
+	CurrentNumberAvailable = START_SOUND_STACK_SIZE;
 	for (int32 i = 0; i < CurrentNumberAvailable; ++i) {
 		IdStack.Push(i);
 	}
@@ -402,7 +462,7 @@ void UG2IGameSoundManager::UpdateStackSize() {
 void UG2IGameSoundManager::InitGlobalAudio(USoundMix* _MainMix, const TMap<EG2ISoundType, USoundClass*>& _SoundClasses)
 {
 	MainSoundMix = _MainMix;
-	
+
 	SoundClasses.Empty();
 	for (auto& Iterator : _SoundClasses)
 	{
@@ -410,10 +470,22 @@ void UG2IGameSoundManager::InitGlobalAudio(USoundMix* _MainMix, const TMap<EG2IS
 	}
 
 	GlobalSoundMultipliers.Empty();
-	GlobalSoundMultipliers.Add(EG2ISoundType::SpeechSound, 1.0f);
-	GlobalSoundMultipliers.Add(EG2ISoundType::MusicSound, 1.0f);
-	GlobalSoundMultipliers.Add(EG2ISoundType::EffectSound, 1.0f);
-	GlobalSoundMultipliers.Add(EG2ISoundType::DefaultSound, 1.0f);
+
+	if (OptionsParameters)
+	{
+		GlobalSoundMultipliers.Add(EG2ISoundType::SpeechSound, OptionsParameters->DialoguesVolume);
+		GlobalSoundMultipliers.Add(EG2ISoundType::MusicSound, OptionsParameters->MusicVolume);
+		GlobalSoundMultipliers.Add(EG2ISoundType::EffectSound, OptionsParameters->EffectsVolume);
+		GlobalSoundMultipliers.Add(EG2ISoundType::DefaultSound, OptionsParameters->CommonVolume);
+	}
+	else
+	{
+		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: OptionsParameters is null! Using default volume 10.0f"), *GetName(), *FString(__FUNCTION__));
+		GlobalSoundMultipliers.Add(EG2ISoundType::SpeechSound, 10.0f);
+		GlobalSoundMultipliers.Add(EG2ISoundType::MusicSound, 10.0f);
+		GlobalSoundMultipliers.Add(EG2ISoundType::EffectSound, 10.0f);
+		GlobalSoundMultipliers.Add(EG2ISoundType::DefaultSound, 10.0f);
+	}
 
 	UWorld* World = GetWorld();
 	if (MainSoundMix && World)
@@ -446,16 +518,42 @@ void UG2IGameSoundManager::SetGlobalVolume(const EG2ISoundType SoundType, const 
 		return;
 	}
 
-	const float ClampedVolume = FMath::Clamp(NewVolume, 0.0f, 1.0f);
+	const float ClampedVolume = FMath::Clamp(NewVolume, 0.0f, 10.0f);
 
-	GlobalSoundMultipliers[SoundType] = ClampedVolume;
+	if (float* VolumePtr = GlobalSoundMultipliers.Find(SoundType))
+	{
+		*VolumePtr = ClampedVolume;
+	}
+	else
+	{
+		GlobalSoundMultipliers.Add(SoundType, ClampedVolume);
+	}
+
+	if (OptionsParameters)
+	{
+		switch (SoundType)
+		{
+		case EG2ISoundType::SpeechSound:
+			OptionsParameters->DialoguesVolume = ClampedVolume;
+			break;
+		case EG2ISoundType::MusicSound:
+			OptionsParameters->MusicVolume = ClampedVolume;
+			break;
+		case EG2ISoundType::EffectSound:
+			OptionsParameters->EffectsVolume = ClampedVolume;
+			break;
+		case EG2ISoundType::DefaultSound:
+			OptionsParameters->CommonVolume = ClampedVolume;
+			break;
+		}
+	}
 
 	if (UWorld* World = GetWorld()) {
 		UGameplayStatics::SetSoundMixClassOverride(
 			World,
 			MainSoundMix,
 			TargetClass,
-			ClampedVolume,
+			ClampedVolume / 10.f,
 			1.0f,
 			0.0f,
 			true
@@ -555,9 +653,9 @@ bool UG2IGameSoundManager::GetSoundAutoDestroy(const int32 SoundId) const
 
 bool UG2IGameSoundManager::GetSoundPlayingOneTime(const int32 SoundId) const
 {
-	if (const UAudioComponent* Component = GetAudioById(SoundId))
+	if (const FG2IActiveSoundData* SoundData = ActiveSounds.Find(SoundId))
 	{
-		return Component->ComponentHasTag(OneTimeTag);
+		return SoundData->bIsPlayingOneTime;
 	}
 
 	UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Invalid SoundId: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
@@ -566,34 +664,71 @@ bool UG2IGameSoundManager::GetSoundPlayingOneTime(const int32 SoundId) const
 
 bool UG2IGameSoundManager::SetSoundPlayingOneTime(const int32 SoundId, const bool bNewIsPlayingOneTime)
 {
-	UAudioComponent* Component = GetAudioById(SoundId);
-	if (!Component)
+	if (FG2IActiveSoundData* SoundData = ActiveSounds.Find(SoundId))
 	{
-		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Invalid SoundId: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
-		return false;
+		SoundData->bIsPlayingOneTime = bNewIsPlayingOneTime;
+		return true;
 	}
 
-	if (bNewIsPlayingOneTime)
-	{
-		Component->ComponentTags.AddUnique(OneTimeTag);
-	}
-	else
-	{
-		Component->ComponentTags.Remove(OneTimeTag);
-
-	}
-
-	return true;
+	UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Invalid SoundId: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
+	return false;
 }
 
 bool UG2IGameSoundManager::IsSoundPlaying(const int32 SoundId) const
 {
-	if (const TObjectPtr<UAudioComponent>* FoundAudioComp = ActiveSounds.Find(SoundId))
+	if (const FG2IActiveSoundData* FoundData = ActiveSounds.Find(SoundId))
 	{
-		if (*FoundAudioComp)
+		if (FoundData->AudioComponent)
 		{
-			return (*FoundAudioComp)->IsPlaying();
+			return FoundData->AudioComponent->IsPlaying();
 		}
 	}
 	return false;
 }
+
+bool UG2IGameSoundManager::GetSoundPlayingFromStart(const int32 SoundId) const
+{
+	if (const FG2IActiveSoundData* SoundData = ActiveSounds.Find(SoundId))
+	{
+		return SoundData->bIsPlayingFromStart;
+	}
+
+	UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Invalid SoundId: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
+	return false;
+}
+
+bool UG2IGameSoundManager::SetSoundPlayingFromStart(const int32 SoundId, const bool bNewIsPlayingFromStart)
+{
+	if (FG2IActiveSoundData* SoundData = ActiveSounds.Find(SoundId))
+	{
+		SoundData->bIsPlayingFromStart = bNewIsPlayingFromStart;
+		return true;
+	}
+
+	UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Invalid SoundId: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
+	return false;
+}
+
+float UG2IGameSoundManager::GetSoundDelay(const int32 SoundId) const
+{
+	if (const FG2IActiveSoundData* SoundData = ActiveSounds.Find(SoundId))
+	{
+		return SoundData->Delay;
+	}
+
+	UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Invalid SoundId: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
+	return false;
+}
+
+bool UG2IGameSoundManager::SetSoundDelay(const int32 SoundId, const float NewDelay)
+{
+	if (FG2IActiveSoundData* SoundData = ActiveSounds.Find(SoundId))
+	{
+		SoundData->Delay = NewDelay;
+		return true;
+	}
+
+	UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: Invalid SoundId: %d"), *GetName(), *FString(__FUNCTION__), SoundId);
+	return false;
+}
+

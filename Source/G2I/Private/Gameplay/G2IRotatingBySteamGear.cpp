@@ -32,13 +32,14 @@ void AG2IRotatingBySteamGear::BeginPlay()
 		return;
 	}
 	TimelineUpdate.BindUFunction(this, FName("OnTimelineUpdate"));
-
+	TimelineFinished.BindUFunction(this, FName("OnTimelineFinished"));
 	if (!Timeline) {
 		UE_LOG(LogG2I, Warning, TEXT("Timeline is not exist for %s"), *GetName());
 		return;
 	}
 	Timeline->AddInterpFloat(TimelineCurve, TimelineUpdate);
 	Timeline->SetTimelineLengthMode(ETimelineLengthMode::TL_LastKeyFrame);
+	Timeline->SetTimelineFinishedFunc(TimelineFinished);
 	Timeline->SetLooping(false);
 
 	if (SoundComp && SoundComp->SetupSounds.Contains(TEXT("GearRotationSound")))
@@ -54,6 +55,11 @@ void AG2IRotatingBySteamGear::BeginPlay()
 void AG2IRotatingBySteamGear::OnShoot_Implementation(const FHitResult& HitResult, AActor* Character) {
 	if (IsActive)
 	{
+		if (SoundComp) {
+			SoundComp->SetSoundVolume(GearRotationSoundId, 1.0f);
+			SoundComp->PlaySound(GearRotationSoundId);
+		}
+
 		//Wrap into pushing with use of all axis
 		//Calculating direction based on trace and rotation normal
 		FVector HitVector = HitResult.ImpactPoint - HitResult.TraceStart;
@@ -79,6 +85,8 @@ void AG2IRotatingBySteamGear::OnShoot_Implementation(const FHitResult& HitResult
 		{
 			Timeline->PlayFromStart();
 		}
+		
+		OnStartRotateDelegate.Broadcast(this);
 	}
 }
 
@@ -113,12 +121,10 @@ void AG2IRotatingBySteamGear::OnTimelineUpdate(const float Output)
 	if (bRotateYaw) {
 		ActorRotator.Yaw = CurrentRotationStep * FMath::Sign(RotationSign);
 	}
-	AddActorWorldRotation(ActorRotator);
 	if (SoundComp) {
-		if (!SoundComp->IsSoundPlaying(GearRotationSoundId)) {
-			SoundComp->PlaySound(GearRotationSoundId);
-		}
+		SoundComp->SetSoundVolume(GearRotationSoundId, Output);
 	}
+	AddActorWorldRotation(ActorRotator);
 }
 
 void AG2IRotatingBySteamGear::Repair(AActor* Interactor)
@@ -136,5 +142,12 @@ void AG2IRotatingBySteamGear::Repair(AActor* Interactor)
 		IsActive = true;
 
 		Inventory->RemoveItemID(RequiredItemID);
+	}
+}
+
+void AG2IRotatingBySteamGear::OnTimelineFinished()
+{
+	if (SoundComp) {
+		SoundComp->StopSound(GearRotationSoundId);
 	}
 }
