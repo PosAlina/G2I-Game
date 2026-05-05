@@ -2,25 +2,18 @@
 #include "G2I.h"
 #include "Sound/G2ISoundComponent.h"
 
-
 UG2ISliderLampComponent::UG2ISliderLampComponent()
 {
 	LampMesh = CreateDefaultSubobject<UStaticMeshComponent>("LampMesh");
-	FString ComponentName = FString::Printf(TEXT("%s_LampSoundComponent"), *GetName());
+	const FString ComponentName = FString::Printf(TEXT("%s_LampSoundComponent"), *GetName());
 	SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(*ComponentName);
 	
 	if (!ensure(LampMesh))
 	{
 		UE_LOG(LogG2I, Error, TEXT("LampMesh was not created in %s"), *GetName());
-		return;
 	}
-	LampMesh->SetupAttachment(this);
-
 	if (!ensure(SoundComp)) {
 		UE_LOG(LogG2I, Error, TEXT("LampSoundComponent was not created in %s"), *GetName());
-	}
-	else {
-		SoundComp->SetupSounds.Add(CracklingLampSoundName);
 	}
 }
 
@@ -38,6 +31,42 @@ void UG2ISliderLampComponent::SetupDefaults()
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(), *UWorld::StaticClass()->GetName());
 	}
+	SetupMaterialDefaults();
+	SetupSoundDefaults();
+	SetDefaultValues();
+}
+
+void UG2ISliderLampComponent::SetupSoundDefaults()
+{
+	if (!ensure(SoundComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("SoundComponent doesn't exist in %s"), *GetName());
+		return;
+	}
+	SoundComp->SetupSounds.Add(CracklingLampSoundName);
+	const auto* CracklingLampConf = SoundComp->SetupSounds.Find(CracklingLampSoundName);
+	if (!ensure(CracklingLampConf))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't find sound by name %s"),
+			*GetName(), *CracklingLampSoundName.ToString());
+		return;
+	}
+	if (CracklingLampConf->Sound) // Exist for slider, optionally for checkers
+	{
+		CracklingLampSoundId = SoundComp->AddSound(*CracklingLampConf);
+		if (!SoundComp->PlaySound(CracklingLampSoundId))
+		{
+			UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't play sound"), *GetName());
+		}
+	}
+	else
+	{
+		CracklingLampSoundId = -1;
+	}
+}
+
+void UG2ISliderLampComponent::SetupMaterialDefaults()
+{
 	if (!ensure(LampMesh))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find LampMesh"), *GetName());
@@ -55,19 +84,6 @@ void UG2ISliderLampComponent::SetupDefaults()
 		UE_LOG(LogG2I, Warning, TEXT("%s: Dynamic material was not created"), *GetName());
 		return;
 	}
-	if (!ensure(SoundComp))
-	{
-		UE_LOG(LogG2I, Error, TEXT("SoundComponent doesn't exist in %s"), *GetName());
-	}
-	else {
-		const auto* CracklingLampConf = SoundComp->SetupSounds.Find(CracklingLampSoundName);
-		if (CracklingLampConf) {
-			CracklingLampSoundId = SoundComp->AddSound(*CracklingLampConf);
-		}
-		SoundComp->PlaySound(CracklingLampSoundId);
-	}
-
-	SetDefaultValues();
 }
 
 void UG2ISliderLampComponent::SetDefaultValues()
@@ -236,9 +252,6 @@ void UG2ISliderLampComponent::SetCurrentEmissiveIntensity(const float NewEmissiv
 	{
 		return;
 	}
-	if (SoundComp) {
-		SoundComp->SetSoundVolume(CracklingLampSoundId, NewEmissiveIntensity);
-	}
 
 	float OutValue;
 	if (!ensure(DynamicMaterial->GetScalarParameterValue(FName("Emissive Intensity"), OutValue)))
@@ -249,11 +262,40 @@ void UG2ISliderLampComponent::SetCurrentEmissiveIntensity(const float NewEmissiv
 	{
 		DynamicMaterial->SetScalarParameterValue("Emissive Intensity", NewEmissiveIntensity);
 	}
+	
+	if (!ensure(SoundComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("SoundComponent doesn't exist in %s"), *GetName());
+		return;
+	}
+	if (CracklingLampSoundId != -1)
+	{
+		if (!SoundComp->SetSoundVolume(CracklingLampSoundId, NewEmissiveIntensity))
+		{
+			UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't set sound with ID %i"), *GetName(), CracklingLampSoundId);
+			return;
+		}
+	}
 }
 
 void UG2ISliderLampComponent::SetMaxEmissiveIntensity(const float NewEmissiveIntensity)
 {
 	EmissiveInfo.MaxIntensity = NewEmissiveIntensity;
+}
+
+void UG2ISliderLampComponent::SetLampEmissiveInfo(const FG2ILampEmissiveInfo& NewLampEmissiveInfo)
+{
+	SetEmissiveColor(NewLampEmissiveInfo.Color);
+	SetCurrentEmissiveIntensity(NewLampEmissiveInfo.IntensityRate);
+	SetMaxEmissiveIntensity(NewLampEmissiveInfo.MaxIntensity);
+	if (NewLampEmissiveInfo.bIsOn)
+	{
+		OnLamp();
+	}
+	else
+	{
+		OffLamp();
+	}
 }
 
 void UG2ISliderLampComponent::OnLamp()
