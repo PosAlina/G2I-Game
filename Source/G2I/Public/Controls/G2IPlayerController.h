@@ -315,6 +315,8 @@ protected:
 	
 	void GlovePunchActivation(const FInputActionInstance& Instance);
 
+	bool isFirstJump = true;
+
 	/** Debug keys for testing saving system */
 
 #if WITH_EDITORONLY_DATA
