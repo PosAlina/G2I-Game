@@ -46,7 +46,6 @@ class G2I_API UG2ISliderLampComponent : public UPrimitiveComponent
 public:
 	static inline const FName CracklingLampSoundName = FName("CracklingLampSound");
 	UG2ISliderLampComponent();
-	//virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
 
 	void SetTimerToIntensity(int32 IntensityChangeDir);
 	void StopTimerToIntensity();
@@ -60,6 +59,7 @@ public:
 	void SetEmissiveColor(const FLinearColor& NewEmissiveColor);
 	void SetCurrentEmissiveIntensity(float NewEmissiveIntensity);
 	void SetMaxEmissiveIntensity(float NewEmissiveIntensity);
+	void SetLampEmissiveInfo(const FG2ILampEmissiveInfo& NewLampEmissiveInfo);
 	
 	void OnLamp();
 	void OffLamp();
@@ -70,13 +70,14 @@ public:
 
 	void ChangeIntensity(int32 IntensityChangeDir);
 
-protected:
 	virtual void BeginPlay() override;
 	
 private:
 	void ChangeIntensity(int32 IntensityChangeDir, float TargetLightIntensity);
 	
 	void SetupDefaults();
+	void SetupSoundDefaults();
+	void SetupMaterialDefaults();
 
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
