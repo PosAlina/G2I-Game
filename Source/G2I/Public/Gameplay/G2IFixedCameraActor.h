@@ -20,20 +20,34 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UCineCameraComponent> FixedCamera;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+	bool bShouldFollow = true;
+
+	UPROPERTY()
+	TObjectPtr<APlayerController> PlayerController;
+
 protected:
 
 	AG2IFixedCameraActor();
+
+	virtual void BeginPlay() override;
 
 public:
 	
 	UBoxComponent *GetFixedCameraZoneTrigger();
 
 	UCameraComponent *GetFixedCamera();
+
+	void StartFollow();
+
+	void StopFollow();
+
+	virtual void Tick(float DeltaTime) override;
 	
 private:
 
 	void InitializeFixedCameraZoneTrigger();
 
 	void InitializeFixedCamera();
-	
+
 };

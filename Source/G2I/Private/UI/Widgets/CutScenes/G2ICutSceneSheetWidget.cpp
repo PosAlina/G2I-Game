@@ -18,3 +18,19 @@ bool UG2ICutSceneSheetWidget::ShowNextFrames()
 	}
 	return false;
 }
+
+void UG2ICutSceneSheetWidget::HideAllFrames()
+{
+	for (const auto& [FramesOneClick] : FrameImages)
+	{
+		for (UImage *Image : FramesOneClick)
+		{
+			if (!Image)
+			{
+				continue;
+			}
+			Image->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+	CurrentFrameIndex = -1;
+}

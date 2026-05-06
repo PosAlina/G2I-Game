@@ -39,10 +39,23 @@ void UG2IKeyboardAndMouseOptionsWidget::InitializeMouseSensitivity() const
 		return;
 	}
 	
-	const float DefaultValue = OptionsParameters->MouseSensitive;
+	const float MinMouseSensitive = FMath::Max(OptionsParameters->MinMouseSensitive, 0.f);
+	OptionsParameters->MinMouseSensitive = MinMouseSensitive;
+	
+	const float MaxMouseSensitive =
+		FMath::Max(OptionsParameters->MaxMouseSensitive, OptionsParameters->MinMouseSensitive);
+	OptionsParameters->MaxMouseSensitive = MaxMouseSensitive;
+	
+	const float MouseSensitive =
+		FMath::Clamp(OptionsParameters->MouseSensitive, MinMouseSensitive, MaxMouseSensitive);
+	OptionsParameters->MouseSensitive = MouseSensitive;
+	
+	const float StepMouseSensitive =
+		FMath::Clamp(OptionsParameters->StepMouseSensitive, MinMouseSensitive, MaxMouseSensitive);
+	OptionsParameters->StepMouseSensitive = StepMouseSensitive;
 	
 	UIManager->SetPropertyRow(MouseSensitivity,"Mouse.Property.Sensitivity",
-	0.f, 5.f, 0.1f, DefaultValue, 1);
+		MinMouseSensitive, MaxMouseSensitive, StepMouseSensitive, MouseSensitive, 1);
 	
 	MouseSensitivity->OnApplyPropertyValue = [this]()
 	{
@@ -63,8 +76,8 @@ void UG2IKeyboardAndMouseOptionsWidget::InitializeMouseSensitivity() const
 				*GetName(), *UG2IOptionsParameters::StaticClass()->GetName());
 			return;
 		}
-		const float DefaultOldValue = OptionsParameters->MouseSensitive;
-		MouseSensitivity->SelectValue(DefaultOldValue);
+		const float OldMouseSensitive = OptionsParameters->MouseSensitive;
+		MouseSensitivity->SelectValue(OldMouseSensitive);
 	};
 }
 
@@ -117,8 +130,8 @@ void UG2IKeyboardAndMouseOptionsWidget::InitializeVerticalMouseInversion() const
 				*GetName(), *UG2IOptionsParameters::StaticClass()->GetName());
 			return;
 		}
-		const int32 DefaultOldValue = OptionsParameters->bIsInvertedCameraVerticalRotation ? 1 : 0;
-		VerticalMouseInversion->SelectValueByIndex(DefaultOldValue);
+		const int32 OldValue = OptionsParameters->bIsInvertedCameraVerticalRotation ? 1 : 0;
+		VerticalMouseInversion->SelectValueByIndex(OldValue);
 	};
 }
 
@@ -171,8 +184,8 @@ void UG2IKeyboardAndMouseOptionsWidget::InitializeHorizontalMouseInversion() con
 				*GetName(), *UG2IOptionsParameters::StaticClass()->GetName());
 			return;
 		}
-		const int32 DefaultOldValue = OptionsParameters->bIsInvertedCameraHorizontalRotation ? 1 : 0;
-		HorizontalMouseInversion->SelectValueByIndex(DefaultOldValue);
+		const int32 OldValue = OptionsParameters->bIsInvertedCameraHorizontalRotation ? 1 : 0;
+		HorizontalMouseInversion->SelectValueByIndex(OldValue);
 	};
 }
 

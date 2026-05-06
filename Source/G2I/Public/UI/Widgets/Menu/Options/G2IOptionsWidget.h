@@ -44,6 +44,8 @@ public:
 public:
 
 	TFunction<void()> OnBack;
+	
+	virtual void CloseWidget() override;
 
 protected:
 
