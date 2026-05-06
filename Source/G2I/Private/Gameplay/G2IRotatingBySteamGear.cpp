@@ -14,7 +14,8 @@ AG2IRotatingBySteamGear::AG2IRotatingBySteamGear()
 	SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("SoundComponent"));
 	if (SoundComp) {
 		SoundComp->SetupAttachment(RootComponent);
-		SoundComp->SetupSounds.Add(TEXT("GearRotationSound"), FSoundConfig());
+		SoundComp->SetupSounds.Add(GearRotationSoundName, FSoundConfig());
+		SoundComp->SetupSounds.Add(ActorMovingWithSplineSoundName, FSoundConfig());
 	}
 	OutlineComponent = CreateDefaultSubobject<UG2IOutlineComponent>(TEXT("OutlineComponent"));
 	if (!ensure(OutlineComponent))
@@ -42,12 +43,26 @@ void AG2IRotatingBySteamGear::BeginPlay()
 	Timeline->SetTimelineFinishedFunc(TimelineFinished);
 	Timeline->SetLooping(false);
 
-	if (SoundComp && SoundComp->SetupSounds.Contains(TEXT("GearRotationSound")))
+	if (!ensure(SoundComp)) {
+		UE_LOG(LogG2I, Warning, TEXT("Sound Component is not set for %s"), *GetName());
+		return;
+	}
+
+	if (SoundComp->SetupSounds.Contains(GearRotationSoundName))
 	{
-		GearRotationSoundId = SoundComp->AddSound(SoundComp->SetupSounds[TEXT("GearRotationSound")]);
+		GearRotationSoundId = SoundComp->AddSound(SoundComp->SetupSounds[GearRotationSoundName]);
 		if (GearRotationSoundId == -1)
 		{
 			UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: GearRotationSoundId (ID == -1)"), *GetName(), *FString(__FUNCTION__));
+		}
+	}
+
+	if (SoundComp->SetupSounds.Contains(ActorMovingWithSplineSoundName))
+	{
+		ActorMovingWithSplineSoundId = SoundComp->AddSound(SoundComp->SetupSounds[ActorMovingWithSplineSoundName]);
+		if (ActorMovingWithSplineSoundId == -1)
+		{
+			UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: ActorMovingWithSplineSoundId (ID == -1)"), *GetName(), *FString(__FUNCTION__));
 		}
 	}
 }
@@ -58,6 +73,7 @@ void AG2IRotatingBySteamGear::OnShoot_Implementation(const FHitResult& HitResult
 		if (SoundComp) {
 			SoundComp->SetSoundVolume(GearRotationSoundId, 1.0f);
 			SoundComp->PlaySound(GearRotationSoundId);
+			SoundComp->PlaySound(ActorMovingWithSplineSoundId);
 		}
 
 		//Wrap into pushing with use of all axis
@@ -149,5 +165,6 @@ void AG2IRotatingBySteamGear::OnTimelineFinished()
 {
 	if (SoundComp) {
 		SoundComp->StopSound(GearRotationSoundId);
+		SoundComp->StopSound(ActorMovingWithSplineSoundId);
 	}
 }

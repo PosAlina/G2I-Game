@@ -29,6 +29,9 @@ public:
 
 	AG2IButtonActivator();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName ActivationSoundName = FName("ActivationSound");
+
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UG2IWorldHintKeyWidgetComponent> HintKeyWidgetComp;
 

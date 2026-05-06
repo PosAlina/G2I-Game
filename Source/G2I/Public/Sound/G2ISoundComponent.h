@@ -22,16 +22,22 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sounds")
 	int32 AddSound(const FSoundConfig& NewSoundConfig);
 
+	static int32 AddSoundSafe(UG2ISoundComponent* SoundComp, const FSoundConfig& NewSoundConfig);
+
 	UFUNCTION(BlueprintCallable, Category = "Sounds")
 	bool RemoveSound(const int32 SoundId) const;
 
 
 
 	UFUNCTION(BlueprintCallable, Category = "Sounds")
-	bool PlaySound(const int32 SoundId) const;
+	bool PlaySound(const int32 SoundId);
+
+	static bool PlaySoundSafe(UG2ISoundComponent* SoundComp, const int32 SoundId);
 
 	UFUNCTION(BlueprintCallable, Category = "Sounds")
-	bool StopSound(const int32 SoundId, const float FadeOutTime = 0.0f) const;
+	bool StopSound(const int32 SoundId, const float FadeOutTime = 0.0f);
+
+	static bool StopSoundSafe(UG2ISoundComponent* SoundComp, const int32 SoundId);
 
 	UFUNCTION(BlueprintCallable, Category = "Sounds")
 	void StopAllSounds() const;

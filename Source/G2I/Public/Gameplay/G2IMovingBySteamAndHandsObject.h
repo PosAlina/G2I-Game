@@ -9,6 +9,7 @@
 #include "G2IMovingBySteamAndHandsObject.generated.h"
 
 class UG2IOutlineComponent;
+class UG2ISoundComponent;
 
 UCLASS()
 class G2I_API AG2IMovingBySteamAndHandsObject : public AActor, public IG2ITraceableObectInterface, public IG2IInteractiveObjectInterface, public IG2IMovingObjectInterface
@@ -48,7 +49,15 @@ protected:
 	void OnTimelineUpdate(float Output);
 
 	virtual void BeginPlay() override;
+
+	int32 BounceSoundId = -1;
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName BounceSoundName = FName("BounceSound");
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
+	TObjectPtr<UG2ISoundComponent> SoundComp;
+
 	virtual bool CanInteract_Implementation(const ACharacter* Interactor) override;
 	virtual void Interact_Implementation(const ACharacter* Interactor) override;
 	virtual void OnShoot_Implementation(const FHitResult& HitResult, AActor* Character) override;
