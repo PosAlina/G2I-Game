@@ -137,6 +137,8 @@ public:
 	
 	void RotateCameraTo(float Yaw, float Pitch);
 
+	bool isNeedToSkipFirstJump = false;
+
 protected:
 	
 	virtual void OnPossess(APawn *NewPawn) override;
@@ -314,8 +316,6 @@ protected:
 	TObjectPtr<UActorComponent> GlovePunchComponent;
 	
 	void GlovePunchActivation(const FInputActionInstance& Instance);
-
-	bool isFirstJump = true;
 
 	/** Debug keys for testing saving system */
 

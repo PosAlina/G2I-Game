@@ -805,9 +805,9 @@ void AG2IPlayerController::StopFlight(const FInputActionValue& Value)
 
 void AG2IPlayerController::Jump(const FInputActionValue& Value)
 {
-	if (isFirstJump)
+	if (isNeedToSkipFirstJump)
 	{
-		isFirstJump = false;
+		isNeedToSkipFirstJump = false;
 		return;
 	}
 	if (!ensure(MovementComponent))

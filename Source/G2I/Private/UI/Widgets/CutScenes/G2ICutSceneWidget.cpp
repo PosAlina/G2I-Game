@@ -2,6 +2,7 @@
 #include "G2I.h"
 #include "G2ICutScenesParameters.h"
 #include "G2IGameInstance.h"
+#include "G2IPlayerController.h"
 #include "G2IUIManager.h"
 #include "Components/Image.h"
 #include "Components/WidgetSwitcher.h"
@@ -49,6 +50,15 @@ void UG2ICutSceneWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
 		SetSkipPercent(NewPercent);
 		if (NewPercent == 1.f)
 		{
+			if (PlayerController)
+			{
+				PlayerController->isNeedToSkipFirstJump = true;
+			}
+			else
+			{
+				UE_LOG(LogG2I, Warning, TEXT("PlayerController is null in %s"), *GetName());
+			}
+			
 			if (!ensure(UIManager))
 			{
 				UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
