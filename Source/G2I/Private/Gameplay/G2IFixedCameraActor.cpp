@@ -25,11 +25,6 @@ void AG2IFixedCameraActor::BeginPlay()
 	}
 
 	PlayerController = GetWorld()->GetFirstPlayerController();
-
-	if (!bShouldFollow)
-	{
-		return;
-	}
 }
 
 UBoxComponent *AG2IFixedCameraActor::GetFixedCameraZoneTrigger()
@@ -73,6 +68,11 @@ void AG2IFixedCameraActor::InitializeFixedCamera()
 
 void AG2IFixedCameraActor::StartFollow()
 {
+	if (!bShouldFollow)
+	{
+		return;
+	}
+
 	SetActorTickEnabled(true);
 }
 
