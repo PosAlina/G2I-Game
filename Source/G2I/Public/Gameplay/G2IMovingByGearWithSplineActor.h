@@ -15,6 +15,7 @@ enum class EG2IRotationType : uint8
 
 class USplineComponent;
 class UBoxComponent;
+class UG2ISoundComponent;
 
 UCLASS()
 class G2I_API AG2IMovingByGearWithSplineActor : public AActor, public IG2IMovingByGearObjectInterface
