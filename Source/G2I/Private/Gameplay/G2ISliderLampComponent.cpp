@@ -1,9 +1,13 @@
 #include "Gameplay/G2ISliderLampComponent.h"
 #include "G2I.h"
+#include "Sound/G2ISoundComponent.h"
+
 
 UG2ISliderLampComponent::UG2ISliderLampComponent()
 {
 	LampMesh = CreateDefaultSubobject<UStaticMeshComponent>("LampMesh");
+	FString ComponentName = FString::Printf(TEXT("%s_LampSoundComponent"), *GetName());
+	SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(*ComponentName);
 	
 	if (!ensure(LampMesh))
 	{
@@ -11,6 +15,13 @@ UG2ISliderLampComponent::UG2ISliderLampComponent()
 		return;
 	}
 	LampMesh->SetupAttachment(this);
+
+	if (!ensure(SoundComp)) {
+		UE_LOG(LogG2I, Error, TEXT("LampSoundComponent was not created in %s"), *GetName());
+	}
+	else {
+		SoundComp->SetupSounds.Add(CracklingLampSoundName);
+	}
 }
 
 void UG2ISliderLampComponent::BeginPlay()
@@ -44,6 +55,18 @@ void UG2ISliderLampComponent::SetupDefaults()
 		UE_LOG(LogG2I, Warning, TEXT("%s: Dynamic material was not created"), *GetName());
 		return;
 	}
+	if (!ensure(SoundComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("SoundComponent doesn't exist in %s"), *GetName());
+	}
+	else {
+		const auto* CracklingLampConf = SoundComp->SetupSounds.Find(CracklingLampSoundName);
+		if (CracklingLampConf) {
+			CracklingLampSoundId = SoundComp->AddSound(*CracklingLampConf);
+		}
+		SoundComp->PlaySound(CracklingLampSoundId);
+	}
+
 	SetDefaultValues();
 }
 
@@ -213,6 +236,10 @@ void UG2ISliderLampComponent::SetCurrentEmissiveIntensity(const float NewEmissiv
 	{
 		return;
 	}
+	if (SoundComp) {
+		SoundComp->SetSoundVolume(CracklingLampSoundId, NewEmissiveIntensity);
+	}
+
 	float OutValue;
 	if (!ensure(DynamicMaterial->GetScalarParameterValue(FName("Emissive Intensity"), OutValue)))
 	{

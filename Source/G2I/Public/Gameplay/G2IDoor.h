@@ -22,6 +22,8 @@ public:
 protected:
     virtual void BeginPlay() override;
 
+    float StartAngle;
+
 public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Door")
     TObjectPtr<UStaticMeshComponent> DoorBaseComponent;

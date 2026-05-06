@@ -7,12 +7,16 @@
 #include "Interfaces/G2IInteractiveObjectInterface.h"
 #include "G2IValve.generated.h"
 
+class UG2ISoundComponent;
+
 UCLASS()
 class G2I_API AG2IValve : public AActor, public IG2IInteractiveObjectInterface, public IG2ILockingInterface
 {
 	GENERATED_BODY()
 	
 public:	
+	static inline const FName ValveRotationSoundName = FName("SliderMoveSound");
+
 	AG2IValve();
 
 	virtual void Tick(float DeltaTime) override;
@@ -45,6 +49,9 @@ protected:
 	virtual void ChangeActivation();
 
 public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
+	TObjectPtr<UG2ISoundComponent> SoundComp;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Valve")
 	bool bActivated;
 
@@ -79,4 +86,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsLocked = false;
+	
+	int32 ValveRotationSoundId = -1;
 };

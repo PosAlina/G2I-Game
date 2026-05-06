@@ -21,6 +21,15 @@ AG2ISlider::AG2ISlider()
 	LauncherComp = CreateDefaultSubobject<UG2ILauncherComponent>(TEXT("LauncherComp"));
 	HintKeyWidgetComp = CreateDefaultSubobject<UG2IWorldHintKeyWidgetComponent>(TEXT("HintKeyWidget"));
 	SoundComponent = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("SoundComponent"));
+	
+	if (!ensure(SoundComponent)) {
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't create %s"), *GetActorNameOrLabel(),
+			*UG2ISoundComponent::StaticClass()->GetName());
+	}
+	else {
+		SoundComponent->SetupSounds.Add(SliderMoveSoundName, FSoundConfig());
+	}
+
 	if (!ensure(HintKeyWidgetComp))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't create %s"), *GetActorNameOrLabel(),
@@ -132,6 +141,11 @@ void AG2ISlider::SetupDefaults()
 		UE_LOG(LogG2I, Error, TEXT("SoundComponent doesn't exist in %s"), *GetName());
 		return;
 	}
+	const auto* SliderMovingConf = SoundComponent->SetupSounds.Find(SliderMoveSoundName);
+	if (SliderMovingConf) {
+			SliderMovingSoundId = SoundComponent->AddSound(*SliderMovingConf);
+	}
+	
 
 	const auto* CorrectSoundConf = SoundComponent->SetupSounds.Find(*CorrectSoundName);
 	const auto* ErrorSoundConf = SoundComponent->SetupSounds.Find(*ErrorSoundName);
@@ -145,6 +159,7 @@ void AG2ISlider::SetupDefaults()
 	{
 		ErrorSoundID = SoundComponent->AddSound(*ErrorSoundConf);
 	}
+
 	
 }
 
@@ -157,7 +172,9 @@ void AG2ISlider::BindDelegates()
 		return;
 	}
 	EnhancedInputComponent->BindAction(MoveSliderAction, ETriggerEvent::Triggered, this, &ThisClass::MoveSlider);
+	EnhancedInputComponent->BindAction(MoveSliderAction, ETriggerEvent::Started, this, &ThisClass::PlayMovingSliderSound);
 	EnhancedInputComponent->BindAction(MoveSliderAction, ETriggerEvent::Completed, this, &ThisClass::MoveSliderImpulse);
+	EnhancedInputComponent->BindAction(MoveSliderAction, ETriggerEvent::Completed, this, &ThisClass::StopMovingSliderSound);
 	EnhancedInputComponent->BindAction(SliderExitAction, ETriggerEvent::Started, this, &ThisClass::SliderExit);
 	EnhancedInputComponent->BindAction(SliderPushAction, ETriggerEvent::Started, this, &ThisClass::SelectColor);
 }
@@ -470,6 +487,7 @@ void AG2ISlider::MoveSlider(const FInputActionValue& Value)
 	
 	if (bIsSliderActive && !bIsSliderPush)
 	{
+		SoundComponentPlay(SliderMovingSoundId);
 		GetWorldTimerManager().ClearTimer(ImpulseTimer);
 		CurrenImpulse = ImpulsePower;
 		MoveDir = Value.Get<float>();
@@ -617,4 +635,17 @@ void AG2ISlider::SetImpulse()
 			CurrenImpulse = ImpulsePower;
 		}
 	}
+}
+
+void AG2ISlider::PlayMovingSliderSound() {
+	SoundComponentPlay(SliderMovingSoundId);
+}
+
+void AG2ISlider::StopMovingSliderSound() {
+	if (!ensure(SoundComponent))
+	{
+		UE_LOG(LogG2I, Error, TEXT("SoundComponent doesn't exist in %s"), *GetName());
+		return;
+	}
+	SoundComponent->StopSound(SliderMovingSoundId);
 }

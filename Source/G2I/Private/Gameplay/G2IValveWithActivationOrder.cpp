@@ -3,6 +3,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/CapsuleComponent.h"
 #include "G2I.h"
+#include "Sound/G2ISoundComponent.h"
 
 AG2IValveWithActivationOrder::AG2IValveWithActivationOrder()
 {
@@ -59,7 +60,9 @@ void AG2IValveWithActivationOrder::ApplyLocalRotation()
 	{
 		CurrentRotation = MaxRotation * (ActivationsNum + !bActivated);
 		SetActorTickEnabled(false);
-
+		if (SoundComp) {
+			SoundComp->StopSound(ValveRotationSoundId);
+		}
 		if (GetWorld() && GetWorldTimerManager().IsTimerActive(DeactivationTimer))
 		{
 			GetWorldTimerManager().ClearTimer(DeactivationTimer);
@@ -73,7 +76,9 @@ void AG2IValveWithActivationOrder::ApplyLocalRotation()
 	{
 		CurrentRotation = MinRotation * (ActivationsNum - bActivated);
 		SetActorTickEnabled(false);
-
+		if (SoundComp) {
+			SoundComp->StopSound(ValveRotationSoundId);
+		}
 		if (GetWorld() && GetWorldTimerManager().IsTimerActive(DeactivationTimer))
 		{
 			GetWorldTimerManager().ClearTimer(DeactivationTimer);

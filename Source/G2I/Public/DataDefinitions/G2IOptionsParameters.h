@@ -40,6 +40,17 @@ public:
 	// ==================== GRAPHICS ====================
 	// ==================== SCREEN ====================
 	// ==================== SOUNDS ====================
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound", meta = (ClampMin = "0.0", ClampMax = "10.0"))
+	float CommonVolume = 10.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound", meta = (ClampMin = "0.0", ClampMax = "10.0"))
+	float MusicVolume = 10.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound", meta = (ClampMin = "0.0", ClampMax = "10.0"))
+	float EffectsVolume = 10.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound", meta = (ClampMin = "0.0", ClampMax = "10.0"))
+	float DialoguesVolume = 10.f;
 	
 public:
 	

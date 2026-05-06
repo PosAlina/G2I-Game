@@ -49,9 +49,7 @@ void UG2ISteamShotComponent::ShootAction_Implementation(const FG2IHitInfo Target
 
 	if (SoundComponent)
 	{
-		if (!SoundComponent->IsSoundPlaying(SteamSoundId)) {
-			SoundComponent->PlaySound(SteamSoundId);
-		}
+		SoundComponent->PlaySound(SteamSoundId);
 	}
 
 	if (TargetHitInfo.HitSuccess)
