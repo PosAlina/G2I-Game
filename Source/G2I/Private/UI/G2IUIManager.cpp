@@ -247,7 +247,6 @@ void UG2IUIManager::OpenHUD() const
 	PlayerController->bShowMouseCursor = false;
 	PlayerController->SetPause(false);
 	
-	OpenWidget(EG2IWidgetNames::TrainingScreen, false);
 	OpenWidget(EG2IWidgetNames::TasksScreen, false);
 }
 
