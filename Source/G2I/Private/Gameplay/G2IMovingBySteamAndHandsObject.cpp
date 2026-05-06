@@ -59,35 +59,36 @@ void AG2IMovingBySteamAndHandsObject::BeginPlay()
 void AG2IMovingBySteamAndHandsObject::OnTimelineUpdate(const float Output)
 {
 	UStaticMeshComponent* SM = this->GetComponentByClass<UStaticMeshComponent>();
-	if (!SM) {
+	if (!ensure(SM)) {
 		UE_LOG(LogG2I, Warning, TEXT("Actor %s don't have static mesh"), *GetName());
 		Timeline->Stop();
 		return;
 	}
 
-	FVector DeltaVector = ForwardVector * Output * SteamPushForce * Multiplier;
-	DeltaVector += SM->GetComponentLocation();
-	FVector SmallAxisZ = { 0.0f, 0.0f, 0.1f };
-	DeltaVector += SmallAxisZ;
+	const FVector MoveDelta = ForwardVector * Output * SteamPushForce * Multiplier;
+	const FVector TargetLocation = SM->GetComponentLocation() + MoveDelta + FVector(0.f, 0.f, 0.001f);
 
 	FHitResult SweepResult;
-	SM->SetWorldLocation(DeltaVector, true, &SweepResult);
+	SM->SetWorldLocation(TargetLocation, true, &SweepResult);
 
 	if (!SweepResult.bBlockingHit) {
 		return;
 	}
 
-	SweepResult.ImpactNormal.Normalize();
-	SmallAxisZ.Normalize();
+	const FVector ImpactNormal = SweepResult.ImpactNormal.GetSafeNormal();
 
-	if (SweepResult.ImpactNormal.Z * SmallAxisZ.Z >= 0.9f) {
+	if (ImpactNormal.Z >= 0.9f) {
 		return;
 	}
+	ForwardVector = FMath::GetReflectionVector(ForwardVector, ImpactNormal);
+	ForwardVector.Normalize(); 
 
-	Multiplier *= -1 * BounceMultiplier;
-	DeltaVector = ForwardVector * 10.0f * SteamPushForce * Multiplier;
-	DeltaVector += SM->GetComponentLocation();
-	SM->SetWorldLocation(DeltaVector, false, &SweepResult);
+	Multiplier *= BounceMultiplier;
+
+	const FVector BounceOffset = ForwardVector;
+	const FVector NewLocation = SM->GetComponentLocation() + BounceOffset;
+
+	SM->SetWorldLocation(NewLocation, false);
 	UG2ISoundComponent::PlaySoundSafe(SoundComp, BounceSoundId);
 }
 
