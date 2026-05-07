@@ -137,7 +137,7 @@ public:
 	
 	void RotateCameraTo(float Yaw, float Pitch);
 
-	bool isNeedToSkipFirstJump = false;
+	bool bIsNeedToSkipFirstJump = false;
 
 protected:
 	

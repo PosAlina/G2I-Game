@@ -50,13 +50,10 @@ void UG2ICutSceneWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
 		SetSkipPercent(NewPercent);
 		if (NewPercent == 1.f)
 		{
-			if (PlayerController)
+			if (!ensure(PlayerController))
 			{
-				PlayerController->isNeedToSkipFirstJump = true;
-			}
-			else
-			{
-				UE_LOG(LogG2I, Warning, TEXT("PlayerController is null in %s"), *GetName());
+				UE_LOG(LogG2I, Error, TEXT("PlayerController is null in %s"), *GetName());
+				return;
 			}
 			
 			if (!ensure(UIManager))
@@ -65,6 +62,7 @@ void UG2ICutSceneWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
 					*UG2IUIManager::StaticClass()->GetName());
 				return;
 			}
+			PlayerController->bIsNeedToSkipFirstJump = true;
 			UIManager->CloseCutScene(CurrentWidgetName);
 		}
 	}
