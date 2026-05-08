@@ -42,6 +42,9 @@ protected:
 	UPROPERTY()
 	TSubclassOf<APawn> PlayerPawnClass;
 	
+	UPROPERTY()
+	TObjectPtr<AActor> Owner;
+	
 private:
 	
 	bool bIsInVisibleZone = false;
@@ -63,6 +66,8 @@ public:
 	FVector2D GetDefaultDrawSize() const;
 	bool IsEnableScaleFromDistance() const;
 	void SetEnableScaleFromDistance(bool bInEnableScaleFromDistance);
+
+	bool SetVisibleForActor(AActor* Actor);
 
 protected:
 

@@ -2,10 +2,12 @@
 #include "G2I.h"
 #include "G2ICharacterCollisionComponent.h"
 #include "G2IGameInstance.h"
+#include "G2IInteractiveObjectInterface.h"
 #include "G2IPlayerController.h"
 #include "G2IUIManager.h"
 #include "G2IUserWidget.h"
 #include "Components/SphereComponent.h"
+#include "GameFramework/Character.h"
 
 UG2IWorldHintWidgetComponent::UG2IWorldHintWidgetComponent()
 {
@@ -81,6 +83,12 @@ void UG2IWorldHintWidgetComponent::InitializationUIManager()
 
 void UG2IWorldHintWidgetComponent::InitializationPlayerController()
 {
+	Owner = GetOwner();
+	if (!ensure(Owner))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find Owner"), *GetName());
+		return;
+	}
 	const UWorld *World = GetWorld();
 	if (!ensure(World))
 	{
@@ -180,10 +188,8 @@ void UG2IWorldHintWidgetComponent::ReactWidgetOnOverlappingActors()
 	VisibilityZone->GetOverlappingActors(OverlappingActors);
 	for (AActor *OverlappingActor : OverlappingActors)
 	{
-		if (OverlappingActor == PlayerPawn)
+		if (SetVisibleForActor(OverlappingActor))
 		{
-			bIsInVisibleZone = true;
-			OpenWidget();
 			return;
 		}
 	}
@@ -194,11 +200,7 @@ void UG2IWorldHintWidgetComponent::OnVisibilityZoneBeginOverlap(UPrimitiveCompon
 	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
 	const FHitResult& SweepResult)
 {
-	if (OtherActor == PlayerPawn)
-	{
-		bIsInVisibleZone = true;
-		OpenWidget();
-	}
+	SetVisibleForActor(OtherActor);
 }
 
 void UG2IWorldHintWidgetComponent::OnVisibilityZoneEndOverlap(UPrimitiveComponent* OverlappedComponent,
@@ -257,6 +259,22 @@ bool UG2IWorldHintWidgetComponent::IsEnableScaleFromDistance() const
 void UG2IWorldHintWidgetComponent::SetEnableScaleFromDistance(const bool bInEnableScaleFromDistance)
 {
 	bEnableScaleFromDistance = bInEnableScaleFromDistance;
+}
+
+bool UG2IWorldHintWidgetComponent::SetVisibleForActor(AActor* Actor)
+{
+	if (Actor != PlayerPawn)
+	{
+		return false;
+	}
+	if (Owner->Implements<UG2IInteractiveObjectInterface>() &&
+		!IG2IInteractiveObjectInterface::Execute_CanInteract(Owner, Cast<ACharacter>(PlayerPawn)))
+	{
+		return false;
+	}
+	bIsInVisibleZone = true;
+	OpenWidget();
+	return true;
 }
 
 void UG2IWorldHintWidgetComponent::OpenWidget()
