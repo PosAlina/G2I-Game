@@ -70,7 +70,17 @@ bool AG2ITransitBetweenLevelThroughInteraction::CanInteract_Implementation(const
 			*UG2ILauncherComponent::StaticClass()->GetName());
 		return false;
 	}
+	if (!ensure(TransitComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't create %s"), *GetActorNameOrLabel(),
+			*UG2ITransitBetweenLevelsComponent::StaticClass()->GetName());
+		return false;
+	}
 	if (LauncherComp->IsLocked_Implementation())
+	{
+		return false;
+	}
+	if (TransitComp->BanCharacters.Contains(Interactor))
 	{
 		return false;
 	}

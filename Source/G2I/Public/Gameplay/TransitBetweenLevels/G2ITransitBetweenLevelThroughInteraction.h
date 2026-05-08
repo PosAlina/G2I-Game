@@ -31,11 +31,12 @@ public:
 
 	AG2ITransitBetweenLevelThroughInteraction();
 
+	virtual bool CanInteract_Implementation(const ACharacter* Interactor) override;
+	virtual void Interact_Implementation(const ACharacter* Interactor) override;
+	virtual UG2IWorldHintKeyWidgetComponent *GetInteractionKeyHintComponent_Implementation() override;
+	
 protected:
 	
 	virtual void BeginPlay() override;
 	
-	virtual bool CanInteract_Implementation(const ACharacter* Interactor) override;
-	virtual void Interact_Implementation(const ACharacter* Interactor) override;
-	virtual UG2IWorldHintKeyWidgetComponent *GetInteractionKeyHintComponent_Implementation() override;
 };
