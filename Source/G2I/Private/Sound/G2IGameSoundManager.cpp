@@ -264,7 +264,6 @@ bool UG2IGameSoundManager::PlaySound(const int32 SoundId, const float FadeInTime
 		{
 			ExecuteDelayedPlay(SoundId, FadeInTime);
 		}
-		SoundData->AudioComponent->FadeIn(FadeInTime, SoundData->AudioComponent->VolumeMultiplier);
 		return true;
 	}
 

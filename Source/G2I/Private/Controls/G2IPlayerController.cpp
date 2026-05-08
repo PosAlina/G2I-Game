@@ -1055,3 +1055,18 @@ void AG2IPlayerController::RotateCameraTo(const float Yaw, const float Pitch)
 	}
 }
 
+void AG2IPlayerController::GetAudioListenerPosition(FVector& OutLocation, FVector& OutFrontDir, FVector& OutRightDir) const
+{
+	if (const APawn* CurrentPawn = GetPawn())
+	{
+		OutLocation = CurrentPawn->GetActorLocation();
+
+		const FRotator ViewRotation = GetControlRotation();
+		OutFrontDir = ViewRotation.Vector();
+		OutRightDir = FRotationMatrix(ViewRotation).GetScaledAxis(EAxis::Y);
+	}
+	else
+	{
+		Super::GetAudioListenerPosition(OutLocation, OutFrontDir, OutRightDir);
+	}
+}

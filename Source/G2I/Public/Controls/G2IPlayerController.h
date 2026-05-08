@@ -143,6 +143,7 @@ protected:
 	
 	virtual void OnPossess(APawn *NewPawn) override;
 	virtual void OnUnPossess() override;
+	virtual void GetAudioListenerPosition(FVector& OutLocation, FVector& OutFrontDir, FVector& OutRightDir) const override;
 
 	void SetupDefaults();
 	void SetupKeyMapping();
