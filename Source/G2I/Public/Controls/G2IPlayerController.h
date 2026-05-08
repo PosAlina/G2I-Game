@@ -119,7 +119,8 @@ public:
 	TSubclassOf<APawn> GetPawnClass(const APawn* NewPawn) const;
 	TSubclassOf<APawn> GetCurrentPawnClass() const;
 	UG2IAimingComponent *GetAimingComponent() const;
-
+	TMap<TSubclassOf<APawn>, FG2IInputKeyMapping>& GetInputKeyMapping();
+	
 	bool IsCurrentPawnClass(const TSubclassOf<APawn>& PawnClass) const;
 	
 	void RotateCameraTo(float Yaw, float Pitch);

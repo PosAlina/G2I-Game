@@ -55,9 +55,6 @@ void AG2IPlayerController::SetupInputComponent()
 	bAutoManageActiveCameraTarget = false;
 	
 	SetupDefaults();
-	SetupKeyMapping();
-	SetupCommonInput();
-	BindEnhancedDelegates();
 }
 
 void AG2IPlayerController::SetupDefaults()
@@ -80,6 +77,11 @@ void AG2IPlayerController::SetupDefaults()
 		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
 			*UG2IUIManager::StaticClass()->GetName(), *GetActorNameOrLabel());
 	}
+	
+	SetupKeyMapping();
+	SetupCommonInput();
+	BindEnhancedDelegates();
+	
 	GameInstance->OnPlayerControllerInitDelegate.Broadcast();
 }
 
@@ -252,6 +254,11 @@ TSubclassOf<APawn> AG2IPlayerController::GetCurrentPawnClass() const
 UG2IAimingComponent* AG2IPlayerController::GetAimingComponent() const
 {
 	return Cast<UG2IAimingComponent>(AimingComponent);
+}
+
+TMap<TSubclassOf<APawn>, FG2IInputKeyMapping>& AG2IPlayerController::GetInputKeyMapping()
+{
+	return InputKeyMappings;
 }
 
 bool AG2IPlayerController::IsCurrentPawnClass(const TSubclassOf<APawn>& PawnClass) const
@@ -755,7 +762,7 @@ void AG2IPlayerController::Fly(const int Direction) const
 		return;
 	}
 	
-	if (IG2IFlightInterface::Execute_Fly(FlightComponent, Direction) && Direction == 1)
+	if (Direction == 1 && IG2IFlightInterface::Execute_Fly(FlightComponent, Direction))
 	{
 		OnFlyUpDelegate.Broadcast();
 	}

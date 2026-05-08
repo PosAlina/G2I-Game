@@ -28,8 +28,8 @@ protected:
 
 private:
 
-	void InitializeDefaults();
-	void SetCharacterControls();
+	void InitializeDefaults() const;
+	void SetCharacterControls() const;
 
 	void SetRow(const FText& ActionName, const FText& KeyName) const;
 	
