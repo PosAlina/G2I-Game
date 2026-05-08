@@ -109,12 +109,13 @@ void AG2IButtonActivator::Interact_Implementation(const ACharacter* Interactor)
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
 			*UG2ILauncherComponent::StaticClass()->GetName());
 	}
-	else
+	else if (bLockOnInteraction)
 	{
 		LauncherComp->SetIsLaunched(true);
 	}
 	
-	if (SoundComp) {
+	if (SoundComp)
+	{
 		SoundComp->PlaySound(ActivationSoundId);
 	}
 

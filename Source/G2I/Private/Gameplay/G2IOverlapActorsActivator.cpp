@@ -1,7 +1,7 @@
 #include "G2IOverlapActorsActivator.h"
 #include "G2I.h"
 #include "G2IActivationInterface.h"
-#include "LaunchingIndication/G2ILauncherComponent.h"
+#include "LaunchingIndication/G2IActivationLauncherComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 void AG2IOverlapActorsActivator::NotifyActorBeginOverlap(AActor* OtherActor)
@@ -27,7 +27,7 @@ void AG2IOverlapActorsActivator::NotifyActorBeginOverlap(AActor* OtherActor)
 			}
 			else
 			{
-				LauncherComp->SetIsLaunched(true);
+				LauncherComp->CallActivation();
 			}
 
 			const FString DebugMessage = GetActorNameOrLabel() + " in " + OtherActor->GetActorNameOrLabel() + " activated";
@@ -111,7 +111,7 @@ void AG2IOverlapActorsActivator::BeginPlay()
 				}
 				else
 				{
-					LauncherComp->SetIsLaunched(true);
+					LauncherComp->CallActivation();
 				}
 
 				const FString DebugMessage = GetActorNameOrLabel() + " in " + OtherActor->GetActorNameOrLabel() + " activated";
@@ -122,7 +122,7 @@ void AG2IOverlapActorsActivator::BeginPlay()
 }
 
 AG2IOverlapActorsActivator::AG2IOverlapActorsActivator() {
-	LauncherComp = CreateDefaultSubobject<UG2ILauncherComponent>(TEXT("LauncherComp"));
+	LauncherComp = CreateDefaultSubobject<UG2IActivationLauncherComponent>(TEXT("LauncherComp"));
 	if (!ensure(LauncherComp))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't create %s"), *GetActorNameOrLabel(),
