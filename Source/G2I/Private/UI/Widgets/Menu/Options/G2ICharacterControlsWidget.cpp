@@ -1,6 +1,7 @@
 #include "Menu/Options/G2ICharacterControlsWidget.h"
 #include "G2I.h"
 #include "G2IPlayerController.h"
+#include "G2IUIManager.h"
 #include "Components/ListView.h"
 #include "GameFramework/Character.h"
 #include "Menu/Elements/G2IControlListItem.h"
@@ -50,10 +51,50 @@ void UG2ICharacterControlsWidget::SetCharacterControls() const
 		return;
 	}
 	TArray<FEnhancedActionKeyMapping> EnhancedActionKeyMappings = InputKeyMappingForCharacter.Mappings;
+	int32 MoveActionNumber = 0;
 	for (FEnhancedActionKeyMapping EnhancedActionKeyMapping : EnhancedActionKeyMappings)
 	{
-		SetRow(EnhancedActionKeyMapping.Action->ActionDescription, EnhancedActionKeyMapping.Key.GetDisplayName());
+		if (SetMoveActionName(EnhancedActionKeyMapping.Action, MoveActionNumber, EnhancedActionKeyMapping.Key.GetDisplayName()))
+		{
+			continue;
+		}
+		TObjectPtr<const UInputAction> Action = EnhancedActionKeyMapping.Action;
+		if (!ensure(Action))
+		{
+			UE_LOG(LogG2I, Warning, TEXT("%s: EnhancedActionKeyMapping contains null action"), *GetName());
+			continue;
+		}
+		SetRow(Action->ActionDescription, EnhancedActionKeyMapping.Key.GetDisplayName());
 	}
+}
+
+bool UG2ICharacterControlsWidget::SetMoveActionName(
+	const TObjectPtr<const UInputAction> Action, int32& ActionNumber, const FText& KeyName) const
+{
+	if (Action != PlayerController->GetMoveAction())
+	{
+		return false;
+	}
+	FText ActionName;
+	switch (ActionNumber)
+	{
+	case 0:
+		ActionName = UIManager->GetControlActionName("Move.Up");
+		break;
+	case 1:
+		ActionName = UIManager->GetControlActionName("Move.Down");
+		break;
+	case 2:
+		ActionName = UIManager->GetControlActionName("Move.Left");
+		break;
+	case 3:
+		ActionName = UIManager->GetControlActionName("Move.Right");
+		break;
+	default: ;
+	}
+	++ActionNumber;
+	SetRow(ActionName, KeyName);
+	return true;
 }
 
 void UG2ICharacterControlsWidget::SetRow(const FText& ActionName, const FText& KeyName) const

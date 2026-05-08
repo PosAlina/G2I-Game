@@ -87,17 +87,9 @@ void AG2IPlayerController::SetupDefaults()
 
 void AG2IPlayerController::SetupKeyMapping()
 {
-	for (const auto& [PawnClass, ContextsInfo] : InputMappingContextsByPawn)
+	for (const auto& [PawnClass, _] : InputMappingContextsByPawn)
 	{
 		InputKeyMappings.Add(PawnClass);
-		for (const UInputMappingContext *Context : ContextsInfo.Contexts)
-		{
-			if (!Context)
-			{
-				continue;
-			}
-			InputKeyMappings[PawnClass].Mappings.Append(Context->GetMappings());
-		}
 	}
 	for (const auto& [_,ContextsInfo] : CommonInputMappingContexts)
 	{
@@ -111,6 +103,17 @@ void AG2IPlayerController::SetupKeyMapping()
 			{
 				Mapping.Mappings.Append(Context->GetMappings());
 			}
+		}
+	}
+	for (const auto& [PawnClass, ContextsInfo] : InputMappingContextsByPawn)
+	{
+		for (const UInputMappingContext *Context : ContextsInfo.Contexts)
+		{
+			if (!Context)
+			{
+				continue;
+			}
+			InputKeyMappings[PawnClass].Mappings.Append(Context->GetMappings());
 		}
 	}
 }
@@ -259,6 +262,16 @@ UG2IAimingComponent* AG2IPlayerController::GetAimingComponent() const
 TMap<TSubclassOf<APawn>, FG2IInputKeyMapping>& AG2IPlayerController::GetInputKeyMapping()
 {
 	return InputKeyMappings;
+}
+
+UInputAction* AG2IPlayerController::GetMoveAction()
+{
+	return MoveAction;
+}
+
+UInputAction* AG2IPlayerController::GetMoveSliderAction()
+{
+	return MoveSliderAction;
 }
 
 bool AG2IPlayerController::IsCurrentPawnClass(const TSubclassOf<APawn>& PawnClass) const
@@ -565,6 +578,11 @@ void AG2IPlayerController::StopOverrideInputMappingContext()
 	RemovedInputIfPawnClassIsCurrent(PawnClass);
 	InputMappingContextsForOverridingByPawn.Remove(PawnClass);
 	SetupInputIfPawnClassIsCurrent(PawnClass);
+}
+
+void AG2IPlayerController::OverrideInputMappingContextToSlider()
+{
+	OverrideInputMappingContext({SliderInputMappingContext});
 }
 
 void AG2IPlayerController::SetupCharacterActorComponents()
