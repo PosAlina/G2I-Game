@@ -866,3 +866,14 @@ void UG2IUIManager::SetupControlsWidget(UWidgetSwitcher* CharacterControlsSwitch
 		CharacterControlsSwitcher->AddChild(Widget);
 	}
 }
+
+FText UG2IUIManager::GetControlActionName(const FString& ActionNameInTable) const
+{
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		return FText::GetEmpty();
+	}
+	return DisplayManager->GetText(EG2IStringTablesTypes::InputActionsWithSomeNames, ActionNameInTable);
+}

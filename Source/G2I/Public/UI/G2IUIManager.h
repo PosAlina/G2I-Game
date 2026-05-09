@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "G2IUIManager.generated.h"
 
+enum class EG2IInputActionsWithSomeNames : uint8;
 class UG2ITasksCatalog;
 enum class EG2ITasksNames : uint8;
 class UWidget;
@@ -122,6 +123,7 @@ public:
 	// ==================== OPTIONS WIDGETS ====================
 	void SetupOptionsWidget(const TFunction<void()>& NewBackAction) const;
 	void SetupControlsWidget(UWidgetSwitcher* CharacterControlsSwitcher) const;
+	FText GetControlActionName(const FString& ActionNameInTable) const;
 
 	// ==================== OPTIONS PROPERTIES ====================
 	void SetPropertyRow(UG2ITextMultiValuePropertyRow* PropertySelector, const FString& PropertyNameStringID,

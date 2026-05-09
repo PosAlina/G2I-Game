@@ -85,6 +85,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
 	bool bIsFollowingAIBehindPlayer = true;
 	
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> MoveSliderAction;
+	
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> SliderExitAction;
+	
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> SliderPushAction;
+	
 private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
@@ -114,12 +123,16 @@ public:
 
 	void OverrideInputMappingContext(const TArray<TObjectPtr<UInputMappingContext>>& ContextsForOverride);
 	void StopOverrideInputMappingContext();
+	void OverrideInputMappingContextToSlider();
 
 	UEnhancedInputLocalPlayerSubsystem *GetSubsystem() const;
 	TSubclassOf<APawn> GetPawnClass(const APawn* NewPawn) const;
 	TSubclassOf<APawn> GetCurrentPawnClass() const;
 	UG2IAimingComponent *GetAimingComponent() const;
-
+	TMap<TSubclassOf<APawn>, FG2IInputKeyMapping>& GetInputKeyMapping();
+	UInputAction *GetMoveAction();
+	UInputAction *GetMoveSliderAction();
+	
 	bool IsCurrentPawnClass(const TSubclassOf<APawn>& PawnClass) const;
 	
 	void RotateCameraTo(float Yaw, float Pitch);
@@ -157,6 +170,9 @@ protected:
 
 	UPROPERTY()
 	TMap<TSubclassOf<APawn>, FG2IInputMappingContexts> InputMappingContextsForOverridingByPawn;
+	
+	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
+	TObjectPtr<UInputMappingContext> SliderInputMappingContext;
 
 #if WITH_EDITORONLY_DATA
 	UPROPERTY(EditAnywhere, Category ="Input|Debug|Input Mappings")
