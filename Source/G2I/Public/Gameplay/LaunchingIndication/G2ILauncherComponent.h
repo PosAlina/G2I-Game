@@ -38,6 +38,9 @@ private:
 	
 public:
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bLockAfterLaunch = true;
+
 	UFUNCTION(BlueprintCallable)
 	virtual void SetIsLaunched(bool bNewIsLaunched);
 

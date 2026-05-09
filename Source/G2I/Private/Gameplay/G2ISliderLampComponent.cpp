@@ -15,6 +15,7 @@ UG2ISliderLampComponent::UG2ISliderLampComponent()
 	if (!ensure(SoundComp)) {
 		UE_LOG(LogG2I, Error, TEXT("LampSoundComponent was not created in %s"), *GetName());
 	}
+	SoundComp->SetupSounds.Add(CracklingLampSoundName, FSoundConfig());
 }
 
 void UG2ISliderLampComponent::BeginPlay()
@@ -31,8 +32,9 @@ void UG2ISliderLampComponent::SetupDefaults()
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(), *UWorld::StaticClass()->GetName());
 	}
-	SetupMaterialDefaults();
+
 	SetupSoundDefaults();
+	SetupMaterialDefaults();
 	SetDefaultValues();
 }
 
@@ -43,7 +45,6 @@ void UG2ISliderLampComponent::SetupSoundDefaults()
 		UE_LOG(LogG2I, Error, TEXT("SoundComponent doesn't exist in %s"), *GetName());
 		return;
 	}
-	SoundComp->SetupSounds.Add(CracklingLampSoundName);
 	const auto* CracklingLampConf = SoundComp->SetupSounds.Find(CracklingLampSoundName);
 	if (!ensure(CracklingLampConf))
 	{
@@ -54,15 +55,13 @@ void UG2ISliderLampComponent::SetupSoundDefaults()
 	if (CracklingLampConf->Sound) // Exist for slider, optionally for checkers
 	{
 		CracklingLampSoundId = SoundComp->AddSound(*CracklingLampConf);
-		if (!SoundComp->PlaySound(CracklingLampSoundId))
-		{
-			UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't play sound"), *GetName());
-		}
 	}
 	else
 	{
 		CracklingLampSoundId = -1;
 	}
+
+	UG2ISoundComponent::PlaySoundSafe(SoundComp, CracklingLampSoundId);
 }
 
 void UG2ISliderLampComponent::SetupMaterialDefaults()
@@ -270,11 +269,7 @@ void UG2ISliderLampComponent::SetCurrentEmissiveIntensity(const float NewEmissiv
 	}
 	if (CracklingLampSoundId != -1)
 	{
-		if (!SoundComp->SetSoundVolume(CracklingLampSoundId, NewEmissiveIntensity))
-		{
-			UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't set sound with ID %i"), *GetName(), CracklingLampSoundId);
-			return;
-		}
+		SetLampSoundVolume(NewEmissiveIntensity * SoundScale);
 	}
 }
 
@@ -305,6 +300,8 @@ void UG2ISliderLampComponent::OnLamp()
 	EmissiveInfo.bIsOn = true;
 	SetCurrentEmissiveIntensity(EmissiveInfo.MaxIntensity);
 	bLampFlashState = true;
+
+	
 }
 
 void UG2ISliderLampComponent::OffLamp()
@@ -378,5 +375,13 @@ void UG2ISliderLampComponent::ChangeIntensity(const int32 IntensityChangeDir)
 		break;
 	default:
 		ChangeIntensity(IntensityChangeDir, 0);
+	}
+}
+
+void UG2ISliderLampComponent::SetLampSoundVolume(const float Volume) {
+	if (!SoundComp->SetSoundVolume(CracklingLampSoundId, Volume))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't set sound with ID %i"), *GetName(), CracklingLampSoundId);
+		return;
 	}
 }

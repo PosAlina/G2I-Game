@@ -7,6 +7,7 @@
 
 class USplineComponent;
 class UBoxComponent;
+
 UCLASS()
 class G2I_API AG2IMovingByGearWithSplineActor : public AActor, public IG2IMovingByGearObjectInterface
 {
@@ -14,7 +15,9 @@ class G2I_API AG2IMovingByGearWithSplineActor : public AActor, public IG2IMoving
 
 private:
 	void SetLocationAndRotationWithSpline(float SplineDistance);
+
 public:
+
 	UPROPERTY(EditAnywhere, Category = "Data|Spline")
 	TObjectPtr<USplineComponent> SplineComponent;
 

@@ -32,7 +32,7 @@ public:
 	TObjectPtr<UNiagaraSystem> NiagaraSystem;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FString SoundName;
+	FName SoundName = FName("DestructSound");
 	
 	FOnDestroyed OnDestroyedDelegate;
 
@@ -41,5 +41,5 @@ protected:
 	
 private:
 	bool bIsDestroyed = false;
-	int32 SoundID;
+	int32 SoundID = -1;
 };

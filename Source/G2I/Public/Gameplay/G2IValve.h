@@ -15,7 +15,8 @@ class G2I_API AG2IValve : public AActor, public IG2IInteractiveObjectInterface, 
 	GENERATED_BODY()
 	
 public:	
-	static inline const FName ValveRotationSoundName = FName("SliderMoveSound");
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName ValveRotationSoundName = FName("ValveRotationSound");
 
 	AG2IValve();
 

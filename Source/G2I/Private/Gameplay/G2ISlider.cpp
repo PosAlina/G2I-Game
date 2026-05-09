@@ -28,6 +28,8 @@ AG2ISlider::AG2ISlider()
 	}
 	else {
 		SoundComponent->SetupSounds.Add(SliderMoveSoundName, FSoundConfig());
+		SoundComponent->SetupSounds.Add(CorrectSoundName, FSoundConfig());
+		SoundComponent->SetupSounds.Add(ErrorSoundName, FSoundConfig());
 	}
 
 	if (!ensure(HintKeyWidgetComp))
@@ -147,8 +149,8 @@ void AG2ISlider::SetupDefaults()
 	}
 	
 
-	const auto* CorrectSoundConf = SoundComponent->SetupSounds.Find(*CorrectSoundName);
-	const auto* ErrorSoundConf = SoundComponent->SetupSounds.Find(*ErrorSoundName);
+	const auto* CorrectSoundConf = SoundComponent->SetupSounds.Find(CorrectSoundName);
+	const auto* ErrorSoundConf = SoundComponent->SetupSounds.Find(ErrorSoundName);
 
 	if (CorrectSoundConf)
 	{
@@ -463,6 +465,7 @@ void AG2ISlider::CompareZoneColorToColorInSequence()
 					Lamp->OnStopFlashingTimer.Unbind();
 					Lamp->OnStopFlashingTimer.BindUObject(this, &ThisClass::Exit);
 					Lamp->SetTimerToFlashing(LampFlashFrequency, LampFlashCount);
+					Lamp->SetLampSoundVolume(Lamp->SoundScaleAfterSolve);
 				}
 				Exit();
 			}

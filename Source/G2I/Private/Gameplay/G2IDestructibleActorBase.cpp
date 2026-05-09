@@ -64,6 +64,9 @@ AG2IDestructibleActorBase::AG2IDestructibleActorBase()
 	DestructibleMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 
 	SetRootComponent(DestructibleMeshComponent);
+	if (SoundComponent) {
+		SoundComponent->SetupSounds.Add(SoundName, FSoundConfig());
+	}
 }
 
 void AG2IDestructibleActorBase::BeginPlay()
@@ -76,7 +79,7 @@ void AG2IDestructibleActorBase::BeginPlay()
     	return;
     }
 
-	if (const auto* SoundConf = SoundComponent->SetupSounds.Find(*SoundName))
+	if (const auto* SoundConf = SoundComponent->SetupSounds.Find(SoundName))
 	{
 		SoundID = SoundComponent->AddSound(*SoundConf);
 	}

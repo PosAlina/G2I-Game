@@ -44,7 +44,8 @@ class G2I_API UG2ISliderLampComponent : public UPrimitiveComponent
 	GENERATED_BODY()
 
 public:
-	static inline const FName CracklingLampSoundName = FName("CracklingLampSound");
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	FName CracklingLampSoundName = FName("CracklingLampSound");
 	UG2ISliderLampComponent();
 
 	void SetTimerToIntensity(int32 IntensityChangeDir);
@@ -60,6 +61,8 @@ public:
 	void SetCurrentEmissiveIntensity(float NewEmissiveIntensity);
 	void SetMaxEmissiveIntensity(float NewEmissiveIntensity);
 	void SetLampEmissiveInfo(const FG2ILampEmissiveInfo& NewLampEmissiveInfo);
+
+	void SetLampSoundVolume(const float Volume);
 	
 	void OnLamp();
 	void OffLamp();
@@ -96,7 +99,10 @@ public:
 	float MaxLightIntensityInActivationColorZone = 1.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float IntensityIncreaseFrequency = 0.05f;
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SoundScale = 10.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SoundScaleAfterSolve = 10.0f;
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> DynamicMaterial;
 	bool bIsLampFlashing = false;
