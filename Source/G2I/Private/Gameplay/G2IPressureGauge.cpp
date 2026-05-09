@@ -2,7 +2,7 @@
 #include "Components/SceneComponent.h"
 #include "G2I.h"
 #include "G2IAnswerInterface.h"
-#include "LaunchingIndication/G2ILauncherComponent.h"
+#include "LaunchingIndication/G2IActivationLauncherComponent.h"
 #include "Sound/G2ISoundComponent.h"
 
 AG2IPressureGauge::AG2IPressureGauge()
@@ -10,11 +10,11 @@ AG2IPressureGauge::AG2IPressureGauge()
     PrimaryActorTick.bCanEverTick = true;
     PrimaryActorTick.bStartWithTickEnabled = false;
 
-    LauncherComp = CreateDefaultSubobject<UG2ILauncherComponent>(TEXT("LauncherComp"));
+    LauncherComp = CreateDefaultSubobject<UG2IActivationLauncherComponent>(TEXT("LauncherComp"));
     if (!ensure(LauncherComp))
     {
         UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
-            *UG2ILauncherComponent::StaticClass()->GetName());
+            *UG2IActivationLauncherComponent::StaticClass()->GetName());
     }
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("DefaultSceneRoot"));
     SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("GaugeSoundComponent"));
@@ -117,7 +117,7 @@ void AG2IPressureGauge::ChangeAngles_Implementation(const TArray<float>& AngleDe
         }
         else
         {
-            LauncherComp->SetIsLaunched(true);
+            LauncherComp->CallActivation();
         }
     }
 }

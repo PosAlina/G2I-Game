@@ -39,7 +39,7 @@ private:
 public:
 
 	UFUNCTION(BlueprintCallable)
-	void SetIsLaunched(bool bNewIsLaunched);
+	virtual void SetIsLaunched(bool bNewIsLaunched);
 
 	UFUNCTION(BlueprintCallable)
 	bool IsLaunched() const;

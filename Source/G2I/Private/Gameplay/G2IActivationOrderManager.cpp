@@ -1,6 +1,6 @@
 #include "Gameplay/G2IActivationOrderManager.h"
 #include "G2I.h"
-#include "LaunchingIndication/G2ILauncherComponent.h"
+#include "LaunchingIndication/G2IActivationLauncherComponent.h"
 
 AG2IActivationOrderManager::AG2IActivationOrderManager()
 {
@@ -9,7 +9,7 @@ AG2IActivationOrderManager::AG2IActivationOrderManager()
 	if (RootSceneComponent)
 		SetRootComponent(RootSceneComponent);
 
-	LauncherComp = CreateDefaultSubobject<UG2ILauncherComponent>(TEXT("LauncherComp"));
+	LauncherComp = CreateDefaultSubobject<UG2IActivationLauncherComponent>(TEXT("LauncherComp"));
 	if (!ensure(LauncherComp))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
@@ -27,7 +27,7 @@ void AG2IActivationOrderManager::OrderCompleted()
 	}
 	else
 	{
-		LauncherComp->SetIsLaunched(true);
+		LauncherComp->CallActivation();
 	}
 	
 	UnbindToAllDelegates();
