@@ -70,6 +70,9 @@ protected:
 	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName RotationTag = FName("RotatingActor");
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName GearRotationSoundName = FName("GearRotationSound");
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
