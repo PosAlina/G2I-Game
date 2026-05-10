@@ -137,6 +137,8 @@ public:
 	
 	void RotateCameraTo(float Yaw, float Pitch);
 
+	bool bIsNeedToSkipFirstJump = false;
+
 protected:
 	
 	virtual void OnPossess(APawn *NewPawn) override;

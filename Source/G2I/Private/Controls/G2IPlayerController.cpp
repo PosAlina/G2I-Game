@@ -805,6 +805,11 @@ void AG2IPlayerController::StopFlight(const FInputActionValue& Value)
 
 void AG2IPlayerController::Jump(const FInputActionValue& Value)
 {
+	if (bIsNeedToSkipFirstJump)
+	{
+		bIsNeedToSkipFirstJump = false;
+		return;
+	}
 	if (!ensure(MovementComponent))
 	{
 		UE_LOG(LogG2I, Warning, TEXT("Pawn doesn't have movement component in %s"), *GetName());
