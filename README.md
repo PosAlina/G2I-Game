@@ -9,11 +9,11 @@
 ## Ссылка на текущий билд
 (другие релизные билды ниже)
 
-* v4.1.0
+* v4.2.0
 * 3 уровня - предрелизное состояние
-* Дата создания: 05.05.2026
-* Дата последнего изменения: 05.05.2026
-https://drive.google.com/file/d/1KYXjEWZMEOpoSh9EjqK36qneWM29q5df/view?usp=sharing
+* Дата создания: 11.05.2026
+* Дата последнего изменения: 11.05.2026
+https://drive.google.com/file/d/1hDjIGRNqiPYrvyFKzt8K6Be_ZyJzK-FW/view?usp=sharing
 
 * Shipping - для игры (пробный)
 * Development - для тестирования (играть в него)
