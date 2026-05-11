@@ -779,8 +779,10 @@ void AG2IPlayerController::Fly(const int Direction) const
 			*FlightComponent->GetName());
 		return;
 	}
+
+	bool bIsFlightSuccess = IG2IFlightInterface::Execute_Fly(FlightComponent, Direction);
 	
-	if (Direction == 1 && IG2IFlightInterface::Execute_Fly(FlightComponent, Direction))
+	if (Direction == 1 && bIsFlightSuccess)
 	{
 		OnFlyUpDelegate.Broadcast();
 	}
