@@ -21,6 +21,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Data|Activation")
 	TSet<TObjectPtr<AActor>> ActorsToActivate;
 
+	UPROPERTY(EditAnywhere, Category = "Data")
+	bool bLockOnInteraction = true;
+
 	virtual void BeginPlay() override;
 
 public:	
@@ -28,6 +31,9 @@ public:
 	TObjectPtr<UG2ISoundComponent> SoundComp;
 
 	AG2IButtonActivator();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName ActivationSoundName = FName("ActivationSound");
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UG2IWorldHintKeyWidgetComponent> HintKeyWidgetComp;

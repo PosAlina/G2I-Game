@@ -20,6 +20,11 @@ UCLASS()
 class G2I_API UG2ITransitBetweenLevelsComponent : public UActorComponent
 {
 	GENERATED_BODY()
+	
+public:
+	
+	UPROPERTY(EditAnywhere)
+	TSet<TObjectPtr<APawn>> BanCharacters;
 
 protected:
 
@@ -37,11 +42,12 @@ private:
 	UPROPERTY()
 	TObjectPtr<UG2IGameInstance> GameInstance;
 	
+	UPROPERTY()
+	TObjectPtr<APlayerController> PlayerController;
+	
 public:
 
 	bool Transit() const;
-
-protected:
 	
 	virtual void BeginPlay() override;
 };

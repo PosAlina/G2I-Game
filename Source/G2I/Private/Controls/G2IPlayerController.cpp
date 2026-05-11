@@ -55,9 +55,6 @@ void AG2IPlayerController::SetupInputComponent()
 	bAutoManageActiveCameraTarget = false;
 	
 	SetupDefaults();
-	SetupKeyMapping();
-	SetupCommonInput();
-	BindEnhancedDelegates();
 }
 
 void AG2IPlayerController::SetupDefaults()
@@ -80,22 +77,19 @@ void AG2IPlayerController::SetupDefaults()
 		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
 			*UG2IUIManager::StaticClass()->GetName(), *GetActorNameOrLabel());
 	}
+	
+	SetupKeyMapping();
+	SetupCommonInput();
+	BindEnhancedDelegates();
+	
 	GameInstance->OnPlayerControllerInitDelegate.Broadcast();
 }
 
 void AG2IPlayerController::SetupKeyMapping()
 {
-	for (const auto& [PawnClass, ContextsInfo] : InputMappingContextsByPawn)
+	for (const auto& [PawnClass, _] : InputMappingContextsByPawn)
 	{
 		InputKeyMappings.Add(PawnClass);
-		for (const UInputMappingContext *Context : ContextsInfo.Contexts)
-		{
-			if (!Context)
-			{
-				continue;
-			}
-			InputKeyMappings[PawnClass].Mappings.Append(Context->GetMappings());
-		}
 	}
 	for (const auto& [_,ContextsInfo] : CommonInputMappingContexts)
 	{
@@ -109,6 +103,17 @@ void AG2IPlayerController::SetupKeyMapping()
 			{
 				Mapping.Mappings.Append(Context->GetMappings());
 			}
+		}
+	}
+	for (const auto& [PawnClass, ContextsInfo] : InputMappingContextsByPawn)
+	{
+		for (const UInputMappingContext *Context : ContextsInfo.Contexts)
+		{
+			if (!Context)
+			{
+				continue;
+			}
+			InputKeyMappings[PawnClass].Mappings.Append(Context->GetMappings());
 		}
 	}
 }
@@ -252,6 +257,21 @@ TSubclassOf<APawn> AG2IPlayerController::GetCurrentPawnClass() const
 UG2IAimingComponent* AG2IPlayerController::GetAimingComponent() const
 {
 	return Cast<UG2IAimingComponent>(AimingComponent);
+}
+
+TMap<TSubclassOf<APawn>, FG2IInputKeyMapping>& AG2IPlayerController::GetInputKeyMapping()
+{
+	return InputKeyMappings;
+}
+
+UInputAction* AG2IPlayerController::GetMoveAction()
+{
+	return MoveAction;
+}
+
+UInputAction* AG2IPlayerController::GetMoveSliderAction()
+{
+	return MoveSliderAction;
 }
 
 bool AG2IPlayerController::IsCurrentPawnClass(const TSubclassOf<APawn>& PawnClass) const
@@ -560,6 +580,11 @@ void AG2IPlayerController::StopOverrideInputMappingContext()
 	SetupInputIfPawnClassIsCurrent(PawnClass);
 }
 
+void AG2IPlayerController::OverrideInputMappingContextToSlider()
+{
+	OverrideInputMappingContext({SliderInputMappingContext});
+}
+
 void AG2IPlayerController::SetupCharacterActorComponents()
 {
 	ThirdPersonCameraComponents.Empty();
@@ -780,6 +805,11 @@ void AG2IPlayerController::StopFlight(const FInputActionValue& Value)
 
 void AG2IPlayerController::Jump(const FInputActionValue& Value)
 {
+	if (bIsNeedToSkipFirstJump)
+	{
+		bIsNeedToSkipFirstJump = false;
+		return;
+	}
 	if (!ensure(MovementComponent))
 	{
 		UE_LOG(LogG2I, Warning, TEXT("Pawn doesn't have movement component in %s"), *GetName());

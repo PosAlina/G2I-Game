@@ -87,6 +87,10 @@ void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 	TArray<AActor*> OverlappedActors;
 	InteractionBox->GetOverlappingActors(OverlappedActors);
 
+	AActor* ClosestInteractableActor = nullptr;
+	float MinDistanceSq = MAX_FLT; 
+	FVector OwnerLocation = Owner->GetActorLocation();
+
 	for (AActor* Overlap : OverlappedActors)
 	{
 		if (!Overlap)
@@ -95,61 +99,64 @@ void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 			continue;
 		}
 
-		if (Overlap->ActorHasTag(Tag))
-		{
-
-			if (Overlap->Implements<UG2IInteractiveObjectInterface>())
-			{
-				if (UG2IWorldHintKeyWidgetComponent *KeyHintComponent =
-					IG2IInteractiveObjectInterface::Execute_GetInteractionKeyHintComponent(Overlap))
-				{
-					if (!ensure(UIManager))
-					{
-						UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
-							*UG2IUIManager::StaticClass()->GetName(), *GetName());
-					}
-					else
-					{
-						if (!UIManager->CanSeeWorldWidget(KeyHintComponent))
-						{
-							UE_LOG(LogG2I, Log, TEXT("%s can't interact with %s, because it can't see key hint %s"),
-								*Owner->GetActorNameOrLabel(), *Overlap->GetActorNameOrLabel(),
-								*KeyHintComponent->GetName());
-							continue;
-						}
-					}
-				}
-				
-				if (IG2IInteractiveObjectInterface::Execute_CanInteract(Overlap, Owner))
-				{
-					if (Overlap->Implements<UG2IMovingObjectInterface>()) {
-						float SpeedChange = IG2IMovingObjectInterface::Execute_GetSpeedChange(Overlap);
-						OnMovingInteractingDelegate.Broadcast(SpeedChange);
-					}
-					IG2IInteractiveObjectInterface::Execute_Interact(Overlap, Owner);
-					const FString InteractLogMessage = "Player interacted with " + Overlap->GetActorNameOrLabel();
-#if WITH_EDITOR
-					if (GEngine)
-					{
-						GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, InteractLogMessage);
-					}
-#endif
-					UE_LOG(LogG2I, Log, TEXT("%s"), *InteractLogMessage);
-				}
-				else
-				{
-					UE_LOG(LogG2I, Log, TEXT("Actor %s can't interact"), *Overlap->GetName());
-				}
-			}
-			else
-			{
-				UE_LOG(LogG2I, Log, TEXT("Actor %s doesn't implement Interactive Object Interface"), *Overlap->GetName());
-			}
-		}
-		else
+		if (!Overlap->ActorHasTag(Tag))
 		{
 			UE_LOG(LogG2I, Log, TEXT("Actor %s doesn't have tag %s"), *Overlap->GetName(), *Tag.ToString());
+			continue;
 		}
+
+		if (!Overlap->Implements<UG2IInteractiveObjectInterface>())
+		{
+			UE_LOG(LogG2I, Log, TEXT("Actor %s doesn't implement Interactive Object Interface"), *Overlap->GetName());
+			continue;
+		}
+
+		if (UG2IWorldHintKeyWidgetComponent* KeyHintComponent = IG2IInteractiveObjectInterface::Execute_GetInteractionKeyHintComponent(Overlap))
+		{
+			if (!ensure(UIManager))
+			{
+				UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"), *UG2IUIManager::StaticClass()->GetName(), *GetName());
+			}
+			else if (!UIManager->CanSeeWorldWidget(KeyHintComponent))
+			{
+				UE_LOG(LogG2I, Log, TEXT("%s can't interact with %s, because it can't see key hint %s"),
+					*Owner->GetActorNameOrLabel(), *Overlap->GetActorNameOrLabel(), *KeyHintComponent->GetName());
+				continue;
+			}
+		}
+
+		if (!IG2IInteractiveObjectInterface::Execute_CanInteract(Overlap, Owner))
+		{
+			UE_LOG(LogG2I, Log, TEXT("Actor %s can't interact"), *Overlap->GetName());
+			continue;
+		}
+
+		const float DistanceSqBox = FVector::DistSquared(InteractionBox->GetComponentLocation(), Overlap->GetActorLocation());
+		const float DistanceSqCharacter = FVector::DistSquared(OwnerLocation, Overlap->GetActorLocation());
+		const float DistanceSq = (DistanceSqBox + DistanceSqCharacter) / 2.f;
+		if (DistanceSq < MinDistanceSq)
+		{
+			MinDistanceSq = DistanceSq;
+			ClosestInteractableActor = Overlap;
+		}
+	}
+
+	if (ClosestInteractableActor)
+	{
+		if (ClosestInteractableActor->Implements<UG2IMovingObjectInterface>())
+		{
+			float SpeedChange = IG2IMovingObjectInterface::Execute_GetSpeedChange(ClosestInteractableActor);
+			OnMovingInteractingDelegate.Broadcast(SpeedChange);
+		}
+
+		IG2IInteractiveObjectInterface::Execute_Interact(ClosestInteractableActor, Owner);
+
+		const FString InteractLogMessage = "Player interacted with " + ClosestInteractableActor->GetActorNameOrLabel();
+		G2I::DebugLogMessage(InteractLogMessage);
+	}
+	else
+	{
+		UE_LOG(LogG2I, Log, TEXT("No valid interactable actors found nearby."));
 	}
 }
 

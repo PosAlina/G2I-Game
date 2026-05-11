@@ -1,9 +1,9 @@
 #include "Menu/Options/G2ICharacterControlsWidget.h"
-
 #include "G2I.h"
-#include "G2ICharacterDaughter.h"
-#include "G2ICharacterEngineer.h"
+#include "G2IPlayerController.h"
+#include "G2IUIManager.h"
 #include "Components/ListView.h"
+#include "GameFramework/Character.h"
 #include "Menu/Elements/G2IControlListItem.h"
 #include "Menu/Elements/G2IControlRow.h"
 
@@ -14,33 +14,87 @@ void UG2ICharacterControlsWidget::InitializeAfterManagerLoading()
 	InitializeDefaults();
 }
 
-void UG2ICharacterControlsWidget::InitializeDefaults()
+void UG2ICharacterControlsWidget::InitializeDefaults() const
 {
 	SetCharacterControls();
 }
 
-void UG2ICharacterControlsWidget::SetCharacterControls()
+void UG2ICharacterControlsWidget::SetCharacterControls() const
 {
-	// TODO: Set real controls. For-loop for target input mapping contexts. Save array of mapping contexts by characters
-	// Example:
-	// PlayerController->GetInputMappingContexts(Character) or from User Settings of Character
-	
-	SetRow(FText::FromString("CommonAction1"), FText::FromString("Key1"));
-	SetRow(FText::FromString("CommonAction2"), FText::FromString("Key2"));
-	SetRow(FText::FromString("CommonAction3"), FText::FromString("Key3"));
-	
-	if (Character && Character->IsChildOf(AG2ICharacterEngineer::StaticClass()))
+	if (!Character)
 	{
-		SetRow(FText::FromString("EngineerAction1"), FText::FromString("Key4"));
-		SetRow(FText::FromString("EngineerAction2"), FText::FromString("Key5"));
-		SetRow(FText::FromString("EngineerAction3"), FText::FromString("Key6"));
+		UE_LOG(LogG2I, Warning, TEXT("%s: Character for controls is NULL"), *GetName());
+		return;
 	}
-	if (Character && Character->IsChildOf(AG2ICharacterDaughter::StaticClass()))
+	if (!ensure(PlayerController))
 	{
-		SetRow(FText::FromString("DaughterAction1"), FText::FromString("Key7"));
-		SetRow(FText::FromString("DaughterAction2"), FText::FromString("Key8"));
-		SetRow(FText::FromString("DaughterAction3"), FText::FromString("Key9"));
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(), *AG2IPlayerController::StaticClass()->GetName());
+		return;
 	}
+	
+	TMap<TSubclassOf<APawn>, FG2IInputKeyMapping> InputKeyMappings = PlayerController->GetInputKeyMapping();
+
+	FG2IInputKeyMapping InputKeyMappingForCharacter;
+	bool bIsFindInputMapping = false;
+	for (auto& [PawnClass, InputKeyMapping] :InputKeyMappings)
+	{
+		if (PawnClass->IsChildOf(Character))
+		{
+			InputKeyMappingForCharacter = InputKeyMapping;
+			bIsFindInputMapping = true;
+			break;
+		}
+	}
+	if (!ensure(bIsFindInputMapping))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s:Couldn't find %s in InputKeyMappings"), *GetName(), *Character->GetName());
+		return;
+	}
+	TArray<FEnhancedActionKeyMapping> EnhancedActionKeyMappings = InputKeyMappingForCharacter.Mappings;
+	int32 MoveActionNumber = 0;
+	for (FEnhancedActionKeyMapping EnhancedActionKeyMapping : EnhancedActionKeyMappings)
+	{
+		if (SetMoveActionName(EnhancedActionKeyMapping.Action, MoveActionNumber, EnhancedActionKeyMapping.Key.GetDisplayName()))
+		{
+			continue;
+		}
+		TObjectPtr<const UInputAction> Action = EnhancedActionKeyMapping.Action;
+		if (!ensure(Action))
+		{
+			UE_LOG(LogG2I, Warning, TEXT("%s: EnhancedActionKeyMapping contains null action"), *GetName());
+			continue;
+		}
+		SetRow(Action->ActionDescription, EnhancedActionKeyMapping.Key.GetDisplayName());
+	}
+}
+
+bool UG2ICharacterControlsWidget::SetMoveActionName(
+	const TObjectPtr<const UInputAction> Action, int32& ActionNumber, const FText& KeyName) const
+{
+	if (Action != PlayerController->GetMoveAction())
+	{
+		return false;
+	}
+	FText ActionName;
+	switch (ActionNumber)
+	{
+	case 0:
+		ActionName = UIManager->GetControlActionName("Move.Up");
+		break;
+	case 1:
+		ActionName = UIManager->GetControlActionName("Move.Down");
+		break;
+	case 2:
+		ActionName = UIManager->GetControlActionName("Move.Left");
+		break;
+	case 3:
+		ActionName = UIManager->GetControlActionName("Move.Right");
+		break;
+	default: ;
+	}
+	++ActionNumber;
+	SetRow(ActionName, KeyName);
+	return true;
 }
 
 void UG2ICharacterControlsWidget::SetRow(const FText& ActionName, const FText& KeyName) const

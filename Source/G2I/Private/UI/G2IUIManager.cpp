@@ -247,7 +247,6 @@ void UG2IUIManager::OpenHUD() const
 	PlayerController->bShowMouseCursor = false;
 	PlayerController->SetPause(false);
 	
-	OpenWidget(EG2IWidgetNames::TrainingScreen, false);
 	OpenWidget(EG2IWidgetNames::TasksScreen, false);
 }
 
@@ -866,4 +865,15 @@ void UG2IUIManager::SetupControlsWidget(UWidgetSwitcher* CharacterControlsSwitch
 		Widget->Character = AG2ICharacterDaughter::StaticClass();
 		CharacterControlsSwitcher->AddChild(Widget);
 	}
+}
+
+FText UG2IUIManager::GetControlActionName(const FString& ActionNameInTable) const
+{
+	if (!ensure(DisplayManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+			*UG2IUIDisplayManager::StaticClass()->GetName(), *GetName());
+		return FText::GetEmpty();
+	}
+	return DisplayManager->GetText(EG2IStringTablesTypes::InputActionsWithSomeNames, ActionNameInTable);
 }

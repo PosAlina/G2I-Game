@@ -30,9 +30,14 @@ void AG2IButtonActivator::BeginPlay()
 	}
 	LauncherComp->SetHintKeyWidget(HintKeyWidgetComp);
 
-	if (SoundComp && SoundComp->SetupSounds.Contains(TEXT("ActivationSound")))
+	if (!ensure(SoundComp)) {
+		UE_LOG(LogG2I, Warning, TEXT("Sound Component is not set for %s"), *GetName());
+		return;
+	}
+
+	if (SoundComp->SetupSounds.Contains(ActivationSoundName))
 	{
-		ActivationSoundId = SoundComp->AddSound(SoundComp->SetupSounds[TEXT("ActivationSound")]);
+		ActivationSoundId = SoundComp->AddSound(SoundComp->SetupSounds[ActivationSoundName]);
 		if (ActivationSoundId == -1)
 		{
 			UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: ArrowRotationSoundId (ID == -1)"), *GetName(), *FString(__FUNCTION__));
@@ -83,7 +88,7 @@ AG2IButtonActivator::AG2IButtonActivator()
 	SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("SoundComponent"));
 	if (SoundComp) {
 		SoundComp->SetupAttachment(RootComponent);
-		SoundComp->SetupSounds.Add(TEXT("ActivationSound"), FSoundConfig());
+		SoundComp->SetupSounds.Add(ActivationSoundName, FSoundConfig());
 	}
 }
 
@@ -109,12 +114,13 @@ void AG2IButtonActivator::Interact_Implementation(const ACharacter* Interactor)
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
 			*UG2ILauncherComponent::StaticClass()->GetName());
 	}
-	else
+	else if (bLockOnInteraction)
 	{
 		LauncherComp->SetIsLaunched(true);
 	}
 	
-	if (SoundComp) {
+	if (SoundComp)
+	{
 		SoundComp->PlaySound(ActivationSoundId);
 	}
 

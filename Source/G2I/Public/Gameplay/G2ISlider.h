@@ -80,7 +80,8 @@ private:
 	void StopMovingSliderSound();
 	
 public:
-	static inline const FName SliderMoveSoundName = FName("SliderMoveSound");
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	FName SliderMoveSoundName = FName("SliderMoveSound");
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UStaticMeshComponent> SliderBaseSM;
@@ -107,16 +108,6 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UCameraComponent> ViewCamera;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TObjectPtr<UInputMappingContext> SliderIMC;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TObjectPtr<UInputAction> MoveSliderAction;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TObjectPtr<UInputAction> SliderExitAction;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TObjectPtr<UInputAction> SliderPushAction;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float LampActivationTime = 1.5f;
@@ -149,10 +140,10 @@ public:
 	TObjectPtr<UG2ISoundComponent> SoundComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FString CorrectSoundName;
+	FName CorrectSoundName = FName("CorrectSound");
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FString ErrorSoundName;
+	FName ErrorSoundName = FName("ErrorSound");
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<AActor> SliderHelpList;

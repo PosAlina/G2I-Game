@@ -28,6 +28,8 @@ AG2ISlider::AG2ISlider()
 	}
 	else {
 		SoundComponent->SetupSounds.Add(SliderMoveSoundName, FSoundConfig());
+		SoundComponent->SetupSounds.Add(CorrectSoundName, FSoundConfig());
+		SoundComponent->SetupSounds.Add(ErrorSoundName, FSoundConfig());
 	}
 
 	if (!ensure(HintKeyWidgetComp))
@@ -147,8 +149,8 @@ void AG2ISlider::SetupDefaults()
 	}
 	
 
-	const auto* CorrectSoundConf = SoundComponent->SetupSounds.Find(*CorrectSoundName);
-	const auto* ErrorSoundConf = SoundComponent->SetupSounds.Find(*ErrorSoundName);
+	const auto* CorrectSoundConf = SoundComponent->SetupSounds.Find(CorrectSoundName);
+	const auto* ErrorSoundConf = SoundComponent->SetupSounds.Find(ErrorSoundName);
 
 	if (CorrectSoundConf)
 	{
@@ -171,12 +173,18 @@ void AG2ISlider::BindDelegates()
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find Enhanced Input Component"), *GetActorNameOrLabel());
 		return;
 	}
-	EnhancedInputComponent->BindAction(MoveSliderAction, ETriggerEvent::Triggered, this, &ThisClass::MoveSlider);
-	EnhancedInputComponent->BindAction(MoveSliderAction, ETriggerEvent::Started, this, &ThisClass::PlayMovingSliderSound);
-	EnhancedInputComponent->BindAction(MoveSliderAction, ETriggerEvent::Completed, this, &ThisClass::MoveSliderImpulse);
-	EnhancedInputComponent->BindAction(MoveSliderAction, ETriggerEvent::Completed, this, &ThisClass::StopMovingSliderSound);
-	EnhancedInputComponent->BindAction(SliderExitAction, ETriggerEvent::Started, this, &ThisClass::SliderExit);
-	EnhancedInputComponent->BindAction(SliderPushAction, ETriggerEvent::Started, this, &ThisClass::SelectColor);
+	if (!ensure(PlayerController))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetActorNameOrLabel(),
+			*AG2IPlayerController::StaticClass()->GetName());
+		return;
+	}
+	EnhancedInputComponent->BindAction(PlayerController->MoveSliderAction, ETriggerEvent::Triggered, this, &ThisClass::MoveSlider);
+	EnhancedInputComponent->BindAction(PlayerController->MoveSliderAction, ETriggerEvent::Started, this, &ThisClass::PlayMovingSliderSound);
+	EnhancedInputComponent->BindAction(PlayerController->MoveSliderAction, ETriggerEvent::Completed, this, &ThisClass::MoveSliderImpulse);
+	EnhancedInputComponent->BindAction(PlayerController->MoveSliderAction, ETriggerEvent::Completed, this, &ThisClass::StopMovingSliderSound);
+	EnhancedInputComponent->BindAction(PlayerController->SliderExitAction, ETriggerEvent::Started, this, &ThisClass::SliderExit);
+	EnhancedInputComponent->BindAction(PlayerController->SliderPushAction, ETriggerEvent::Started, this, &ThisClass::SelectColor);
 }
 
 void AG2ISlider::SelectColor()
@@ -255,7 +263,7 @@ void AG2ISlider::Interact_Implementation(const ACharacter* Interactor)
 	OriginalViewTarget = PlayerController->GetViewTarget();
 	PlayerController->SetViewTargetWithBlend(this, BlendTime);
 	bIsSliderActive = true;
-	PlayerController->OverrideInputMappingContext({SliderIMC});
+	PlayerController->OverrideInputMappingContextToSlider();
 
 	if (!ensure(HintKeyWidgetComp))
 	{
@@ -457,6 +465,7 @@ void AG2ISlider::CompareZoneColorToColorInSequence()
 					Lamp->OnStopFlashingTimer.Unbind();
 					Lamp->OnStopFlashingTimer.BindUObject(this, &ThisClass::Exit);
 					Lamp->SetTimerToFlashing(LampFlashFrequency, LampFlashCount);
+					Lamp->SetLampSoundVolume(Lamp->SoundScaleAfterSolve);
 				}
 				Exit();
 			}

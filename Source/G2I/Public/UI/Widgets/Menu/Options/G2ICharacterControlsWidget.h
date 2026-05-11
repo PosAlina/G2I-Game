@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "G2IUserWidget.h"
+#include "InputAction.h"
 #include "G2ICharacterControlsWidget.generated.h"
 
 class UListView;
@@ -28,8 +29,9 @@ protected:
 
 private:
 
-	void InitializeDefaults();
-	void SetCharacterControls();
+	void InitializeDefaults() const;
+	void SetCharacterControls() const;
+	bool SetMoveActionName(TObjectPtr<const UInputAction> Action, int32& ActionNumber, const FText& KeyName) const;
 
 	void SetRow(const FText& ActionName, const FText& KeyName) const;
 	

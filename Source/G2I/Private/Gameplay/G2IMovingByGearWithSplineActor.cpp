@@ -27,7 +27,7 @@ void AG2IMovingByGearWithSplineActor::SetLocationAndRotationWithSpline(float Spl
 	}
 
 	FRotator NewRotation;
-	if (bChangeRotationThroughSpline) {
+	if (ChangeRotationThroughSpline == EG2IRotationType::PointRotation) {
 		const float InputKey = SplineComponent->GetInputKeyAtDistanceAlongSpline(SplineDistance);
 
 		const int32 CurrentPointIndex = FMath::TruncToInt(InputKey);
@@ -39,6 +39,9 @@ void AG2IMovingByGearWithSplineActor::SetLocationAndRotationWithSpline(float Spl
 
 		NewRotation = FMath::Lerp(StartRot, EndRot, Alpha);
 	} 
+	else if (ChangeRotationThroughSpline == EG2IRotationType::SplineRotation) {
+		NewRotation = SplineComponent->GetRotationAtDistanceAlongSpline(SplineDistance, ESplineCoordinateSpace::World);
+	}
 	else {
 		NewRotation = MainBoxComponent->GetComponentRotation();
 	}
