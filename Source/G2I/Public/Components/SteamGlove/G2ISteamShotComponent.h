@@ -10,6 +10,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FComponentActivateDelegate, float, S
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAimTypeChangedDelegate, EG2IAimType, NewAimType);
 
 class UG2ISoundComponent;
+class UNiagaraComponent;
+class UNiagaraSystem;
 
 UCLASS(ClassGroup=(SteamGlove), meta=(BlueprintSpawnableComponent))
 class G2I_API UG2ISteamShotComponent : public USceneComponent, public IG2ISteamShotInputInterface,
@@ -33,14 +35,20 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
 	TObjectPtr<UG2ISoundComponent> SoundComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ShotDetails)
+	TObjectPtr<UNiagaraSystem> NiagaraEffect;
+
+	UPROPERTY(VisibleAnywhere, Category = ShotDetails)
+	TObjectPtr<UNiagaraComponent> NiagaraComponent;
+
 private:
 
 	UPROPERTY()
 	TObjectPtr<UWorld> World;
 	
 	int32 SteamSoundId = -1;
-public:
 
+public:
 
 	virtual void BeginPlay() override;
 

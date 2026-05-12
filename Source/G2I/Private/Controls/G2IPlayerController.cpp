@@ -945,6 +945,10 @@ void AG2IPlayerController::StartAiming(const FInputActionValue& Value)
 	if (AimingComponent && AimingComponent->Implements<UG2IAimingInterface>())
 	{
 		IG2IAimingInterface::Execute_StartAimingAction(AimingComponent);
+		if (APawn* CurrentPawn = GetPawn())
+		{
+			CurrentPawn->bUseControllerRotationYaw = true;
+		}
 	}
 }
 
@@ -953,6 +957,10 @@ void AG2IPlayerController::StopAiming(const FInputActionValue& Value)
 	if (AimingComponent && AimingComponent->Implements<UG2IAimingInterface>())
 	{
 		IG2IAimingInterface::Execute_StopAimingAction(AimingComponent);
+		if (APawn* CurrentPawn = GetPawn())
+		{
+			CurrentPawn->bUseControllerRotationYaw = false;
+		}
 	}
 }
 

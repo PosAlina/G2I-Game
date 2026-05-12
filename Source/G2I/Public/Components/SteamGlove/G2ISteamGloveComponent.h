@@ -35,21 +35,12 @@ public:
 #endif
 
 protected:
-	/**
-	 * TODO: These variables will be used in the future
-	 *  to specify which bones
-	 *  scene components of the steam glove
-	 *  should be attached to.
-	 */
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attachment)
-	FName AttachBoneName = FName("HandGrip_R");
+	FName AttachBoneName = FName("hand_r");
 
-	/**
-	 * TODO: The point where the shot starts should be close to the aim to make it look more natural.
-	 *  We'll need to clarify this when the animation is added.
-	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attachment)
-	FName AttachBoneNameShotComponent = FName("upperarm_r");
+	FName AttachBoneNameShotComponent = FName("ring_metacarpal_r");
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Gadgets)
 	TObjectPtr<UG2IGlovePunchComponent> GlovePunchComp;

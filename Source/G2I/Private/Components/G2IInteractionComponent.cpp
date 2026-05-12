@@ -153,6 +153,30 @@ void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 
 		const FString InteractLogMessage = "Player interacted with " + ClosestInteractableActor->GetActorNameOrLabel();
 		G2I::DebugLogMessage(InteractLogMessage);
+
+		// Playing the animation
+		if (InteractAnimMontage)
+		{
+			const ACharacter* Character = Cast<ACharacter>(Owner);
+			if (!Character) {
+				UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't play the animation, Owner is not a Character."), *GetName());
+				return;
+			}
+
+			const USkeletalMeshComponent* Mesh = Character->GetMesh();
+			if (!Mesh) {
+				UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't play the animation, SkeletalMesh Component is null."), *GetName());
+				return;
+			}
+
+			UAnimInstance* AnimInstance = Mesh->GetAnimInstance();
+			if (!AnimInstance) {
+				UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't play the animation, AnimInstance is null."), *GetName());
+				return;
+			}
+
+			AnimInstance->Montage_Play(InteractAnimMontage);
+		}
 	}
 	else
 	{
