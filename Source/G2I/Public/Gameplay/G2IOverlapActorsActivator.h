@@ -31,7 +31,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Overlapping activator")
 	TObjectPtr<USoundBase> DeactivateSound;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UG2IActivationLauncherComponent> LauncherComp;
 
 private:
