@@ -99,6 +99,12 @@ void UG2IGameSoundManager::InitializeInStartGame()
 		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: OptionsParameters is null in GameInstance!"), *GetName(), *FString(__FUNCTION__));
 	}
 
+	OptionsParameters->MinVolume = FMath::Max(OptionsParameters->MinVolume, 0.f);
+
+	OptionsParameters->MaxVolume = FMath::Max(OptionsParameters->MaxVolume, OptionsParameters->MinVolume);
+
+	OptionsParameters->StepVolume = FMath::Clamp(OptionsParameters->StepVolume, 0.1f, OptionsParameters->MaxVolume - OptionsParameters->MinVolume);
+
 	InitializeInStartLevel();
 
 	GameInstance->OnCloseLevelDelegate.AddUObject(this, &ThisClass::CloseLevelSound);
@@ -133,6 +139,13 @@ void UG2IGameSoundManager::InitializeInStartLevel()
 
 void UG2IGameSoundManager::CloseLevelSound()
 {
+	if (UWorld* World = GetWorld())
+	{
+		for (auto& Pair : ActiveSounds)
+		{
+			World->GetTimerManager().ClearTimer(Pair.Value.PlayTimerHandle);
+		}
+	}
 	ActiveSounds.Empty();
 	IdStack.Empty();
 	CurrentNumberAvailable = START_SOUND_STACK_SIZE;
@@ -472,10 +485,10 @@ void UG2IGameSoundManager::InitGlobalAudio(USoundMix* _MainMix, const TMap<EG2IS
 
 	if (OptionsParameters)
 	{
-		GlobalSoundMultipliers.Add(EG2ISoundType::SpeechSound, OptionsParameters->DialoguesVolume);
-		GlobalSoundMultipliers.Add(EG2ISoundType::MusicSound, OptionsParameters->MusicVolume);
-		GlobalSoundMultipliers.Add(EG2ISoundType::EffectSound, OptionsParameters->EffectsVolume);
-		GlobalSoundMultipliers.Add(EG2ISoundType::DefaultSound, OptionsParameters->CommonVolume);
+		GlobalSoundMultipliers.Add(EG2ISoundType::SpeechSound, OptionsParameters->DefaultDialoguesVolume);
+		GlobalSoundMultipliers.Add(EG2ISoundType::MusicSound, OptionsParameters->DefaultMusicVolume);
+		GlobalSoundMultipliers.Add(EG2ISoundType::EffectSound, OptionsParameters->DefaultEffectsVolume);
+		GlobalSoundMultipliers.Add(EG2ISoundType::DefaultSound, OptionsParameters->DefaultCommonVolume);
 	}
 	else
 	{
@@ -516,8 +529,11 @@ void UG2IGameSoundManager::SetGlobalVolume(const EG2ISoundType SoundType, const 
 		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Can't get Sound class for the SoundType (ID: %d)"), *GetName(), *FString(__FUNCTION__), static_cast<int32>(SoundType));
 		return;
 	}
-
-	const float ClampedVolume = FMath::Clamp(NewVolume, 0.0f, 10.0f);
+	if (!ensure(OptionsParameters)) {
+		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Can't get OptionParameters for the SoundType (ID: %d)"), *GetName(), *FString(__FUNCTION__), static_cast<int32>(SoundType));
+		return;
+	}
+	const float ClampedVolume = FMath::Clamp(NewVolume, OptionsParameters->MinVolume, OptionsParameters->MaxVolume);
 
 	if (float* VolumePtr = GlobalSoundMultipliers.Find(SoundType))
 	{
