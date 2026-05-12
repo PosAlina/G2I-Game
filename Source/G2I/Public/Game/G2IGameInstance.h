@@ -18,7 +18,8 @@ enum class EG2ILevelName : uint8
 	TestLevel,
 	BoilerRoom,
 	ChildrenRoom,
-	Hall
+	Hall,
+	EndStory
 };
 
 USTRUCT(BlueprintType)
