@@ -63,7 +63,7 @@ struct FSoundConfig
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play", meta = (ClampMin = "0.1", ClampMax = "2.0"))
 	float PitchMultiplier = 1.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play", meta = (ClampMin = "0.0", ClampMax = "2.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play", meta = (ClampMin = "0.0"))
 	float Delay = 0.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play")
