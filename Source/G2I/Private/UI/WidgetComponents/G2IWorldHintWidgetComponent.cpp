@@ -185,10 +185,9 @@ void UG2IWorldHintWidgetComponent::ReactWidgetOnOverlappingActors()
 {
 	bIsInVisibleZone = false;
 	TArray<AActor*> OverlappingActors;
-	VisibilityZone->GetOverlappingActors(OverlappingActors);
-	for (AActor *OverlappingActor : OverlappingActors)
+	if (VisibilityZone->IsOverlappingActor(PlayerPawn))
 	{
-		if (SetVisibleForActor(OverlappingActor))
+		if (SetVisibleForActor(PlayerPawn))
 		{
 			return;
 		}
@@ -208,7 +207,6 @@ void UG2IWorldHintWidgetComponent::OnVisibilityZoneEndOverlap(UPrimitiveComponen
 {
 	if (OtherActor == PlayerPawn)
 	{
-		bIsInVisibleZone = false;
 		CloseWidget();
 	}
 }
@@ -272,7 +270,6 @@ bool UG2IWorldHintWidgetComponent::SetVisibleForActor(AActor* Actor)
 	{
 		return false;
 	}
-	bIsInVisibleZone = true;
 	OpenWidget();
 	return true;
 }
@@ -289,12 +286,13 @@ void UG2IWorldHintWidgetComponent::OpenWidget()
 			*UG2IUIManager::StaticClass()->GetName(), *GetName());
 		return;
 	}
-
+	bIsInVisibleZone = true;
 	UIManager->OpenWorldWidget(this);
 }
 
 void UG2IWorldHintWidgetComponent::CloseWidget()
 {
+	bIsInVisibleZone = false;
 	if (!ensure(UIManager))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s isn't defined in %s"),
