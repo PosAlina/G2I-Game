@@ -3,6 +3,9 @@
 #include "G2ITraceableObectInterface.h"
 #include "G2IAimTypeEnum.h"
 #include "Sound/G2ISoundComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 void UG2ISteamShotComponent::BeginPlay()
 {
@@ -50,6 +53,24 @@ void UG2ISteamShotComponent::ShootAction_Implementation(const FG2IHitInfo Target
 	if (SoundComponent)
 	{
 		SoundComponent->PlaySound(SteamSoundId);
+	}
+
+	if (NiagaraEffect)
+	{
+		const FRotator EffectWorldRotation = UKismetMathLibrary::FindLookAtRotation(StartShootLocation, TargetHitInfo.HitResult.Location);
+
+		const FTransform ComponentTransform = GetComponentTransform();
+		const FRotator EffectLocalRotation = ComponentTransform.InverseTransformRotation(EffectWorldRotation.Quaternion()).Rotator();
+
+		NiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+			NiagaraEffect,
+			this,
+			NAME_None,
+			FVector::ZeroVector,
+			EffectLocalRotation,
+			EAttachLocation::KeepRelativeOffset,
+			true // bAutoDestroy
+		);
 	}
 
 	if (TargetHitInfo.HitSuccess)
