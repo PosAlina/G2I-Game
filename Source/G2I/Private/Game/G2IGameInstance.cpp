@@ -27,6 +27,23 @@ void UG2IGameInstance::Init()
 		// TODO: Setup Saved Parameters if they exist
 	}
 	
+	if (UG2IGameSoundManager* SoundManager = GetSubsystem<UG2IGameSoundManager>())
+	{
+		TMap<EG2ISoundType, USoundClass*> TempSoundClasses;
+
+		for (const auto& Pair : DefaultSoundClasses)
+		{
+			TempSoundClasses.Add(Pair.Key, Pair.Value.Get());
+		}
+		SoundManager->InitGlobalAudio(DefaultMainSoundMix.Get(), TempSoundClasses);
+
+	}
+	else
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"),
+			*GetName(), *UG2IGameSoundManager::StaticClass()->GetName());
+	}
+
 	OnPlayerControllerInitDelegate.AddUObject(this, &ThisClass::StartLevelInitialize);
 }
 

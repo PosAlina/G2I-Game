@@ -157,16 +157,30 @@ public:
 	float StepBrightness = 1.f;*/
 	
 	// ==================== SOUNDS ====================
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound", meta = (ClampMin = "0.0", ClampMax = "10.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound|CommonVolume", meta = (ClampMin = "0.0"))
+	float DefaultCommonVolume = 10.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound|MusicVolume", meta = (ClampMin = "0.0"))
+	float DefaultMusicVolume = 10.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound|EffectsVolume", meta = (ClampMin = "0.0"))
+	float DefaultEffectsVolume = 10.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound|DialoguesVolume", meta = (ClampMin = "0.0"))
+	float DefaultDialoguesVolume = 10.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound", meta = (ClampMin = "0.0"))
+	float MinVolume = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound", meta = (ClampMin = "0.0"))
+	float MaxVolume = 10.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound", meta = (ClampMin = "0.0"))
+	float StepVolume = 0.1f;
+
 	float CommonVolume = 10.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound", meta = (ClampMin = "0.0", ClampMax = "10.0"))
 	float MusicVolume = 10.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound", meta = (ClampMin = "0.0", ClampMax = "10.0"))
 	float EffectsVolume = 10.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound", meta = (ClampMin = "0.0", ClampMax = "10.0"))
 	float DialoguesVolume = 10.f;
 	
 private:
