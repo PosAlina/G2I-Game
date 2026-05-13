@@ -6,6 +6,7 @@
 #include "G2IUIManager.h"
 #include "G2IWidgetNames.h"
 #include "Public/Game/G2ITaskManager.h"
+#include "G2ISavingGameplayManager.h"
 
 void UG2IGameInstance::Init()
 {
@@ -34,7 +35,7 @@ void UG2IGameInstance::StartLevelInitialize()
 {
 	SetCurrentLevelInfo();
 	OnStartLevelInitDelegate.Broadcast();
-	
+
 	if (CurrentLevelEnum == EG2ILevelName::BoilerRoom)
 	{
 		UG2ITaskManager *TaskManager = GetSubsystem<UG2ITaskManager>();
@@ -270,6 +271,17 @@ bool UG2IGameInstance::OpenLevel(const TSoftObjectPtr<UWorld>& Level)
 	
 	UGameplayStatics::OpenLevel(World, FName(LevelName));
 	SetCurrentLevelInfo();
+
+	if (!IsMainMenuLevel())
+	{
+		UG2ISavingGameplayManager* SaveManager = GetSubsystem<UG2ISavingGameplayManager>();
+		if (!ensure(SaveManager))
+		{
+			UE_LOG(LogG2I, Error, TEXT("%s: Couldnn't find %s"), *GetName(), *UG2ISavingGameplayManager::StaticClass()->GetName());
+			return true;
+		}
+		SaveManager->SaveCurrentLevel(CurrentLevelEnum, true);
+	}
 	
 	return true;
 }
