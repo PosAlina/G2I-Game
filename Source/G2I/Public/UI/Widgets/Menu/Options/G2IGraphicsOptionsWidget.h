@@ -13,6 +13,9 @@ class G2I_API UG2IGraphicsOptionsWidget : public UG2IOptionsBaseSubWidget
 	GENERATED_BODY()
 
 public:
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UG2ITextMultiValuePropertyRow> Antialiasing;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UG2ITextMultiValuePropertyRow> OverallQuality;
@@ -30,14 +33,13 @@ public:
 	TObjectPtr<UG2ITextMultiValuePropertyRow> PostProcessingQuality;
 	
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UG2ITextMultiValuePropertyRow> Antialiasing;
-
-protected:
-
-	UPROPERTY(EditAnywhere, meta = (ClampMin = 0, ClampMax = 5))
-	int32 DefaultQualityIndex = 4; // 4 is Epic Quality
+	TObjectPtr<UG2ITextMultiValuePropertyRow> AntialiasingQuality;
 	
-	int32 CustomQualityIndex = 5;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UG2ITextMultiValuePropertyRow> GlobalIlluminationQuality;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UG2ITextMultiValuePropertyRow> ReflectionQuality;
 
 public:
 
@@ -51,6 +53,16 @@ protected:
 private:
 
 	void InitializeDefaults();
+	void InitializeAntialiasing() const;
+	void InitializeOverallQuality(const TArray<FString>& PropertiesQualityValue) const;
+	void InitializeTextureQuality(TArray<FString>& PropertiesQualityValue) const;
+	void InitializeShadowsQuality(TArray<FString>& PropertiesQualityValue) const;
+	void InitializeEffectsQuality(TArray<FString>& PropertiesQualityValue) const;
+	void InitializePostProcessingQuality(TArray<FString>& PropertiesQualityValue) const;
+	void InitializeAntialiasingQuality(TArray<FString>& PropertiesQualityValue) const;
+	void InitializeGlobalIlluminationQuality(TArray<FString>& PropertiesQualityValue) const;
+	void InitializeReflectionQuality(TArray<FString>& PropertiesQualityValue) const;
+	
 	void BindDelegates();
 	
 	UFUNCTION()
