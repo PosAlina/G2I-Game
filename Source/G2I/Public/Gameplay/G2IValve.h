@@ -49,6 +49,8 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	virtual void ChangeActivation();
 
+	virtual void StopLocalRotation();
+
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
 	TObjectPtr<UG2ISoundComponent> SoundComp;

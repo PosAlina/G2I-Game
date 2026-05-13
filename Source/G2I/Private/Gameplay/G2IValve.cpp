@@ -152,10 +152,7 @@ void AG2IValve::ApplyLocalRotation()
 		CurrentRotation.Yaw > MaxRotation.Yaw)
 	{
 		CurrentRotation = MaxRotation;
-		SetActorTickEnabled(false);
-		if (SoundComp) {
-			SoundComp->StopSound(ValveRotationSoundId);
-		}
+		StopLocalRotation();
 	}
 
 	if (CurrentRotation.Pitch < MinRotation.Pitch ||
@@ -163,10 +160,7 @@ void AG2IValve::ApplyLocalRotation()
 		CurrentRotation.Yaw < MinRotation.Yaw)
 	{
 		CurrentRotation = MinRotation;
-		SetActorTickEnabled(false);
-		if (SoundComp) {
-			SoundComp->StopSound(ValveRotationSoundId);
-		}
+		StopLocalRotation();
 	}
 }
 
@@ -181,5 +175,19 @@ void AG2IValve::ChangeActivation()
 
 	if (SoundComp) {
 		SoundComp->PlaySound(ValveRotationSoundId);
+	}
+}
+
+void AG2IValve::StopLocalRotation()
+{
+	SetActorTickEnabled(false);
+
+	if (StaticMeshComponent)
+	{
+		StaticMeshComponent->SetRelativeRotation(CurrentRotation);
+	}
+
+	if (SoundComp) {
+		SoundComp->StopSound(ValveRotationSoundId);
 	}
 }
