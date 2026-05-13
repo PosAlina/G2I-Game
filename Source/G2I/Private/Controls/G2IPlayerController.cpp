@@ -780,7 +780,7 @@ void AG2IPlayerController::Fly(const int Direction) const
 		return;
 	}
 
-	bool bIsFlightSuccess = IG2IFlightInterface::Execute_Fly(FlightComponent, Direction);
+	const bool bIsFlightSuccess = IG2IFlightInterface::Execute_Fly(FlightComponent, Direction);
 	
 	if (Direction == 1 && bIsFlightSuccess)
 	{
