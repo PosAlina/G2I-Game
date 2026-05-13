@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "G2IUIManager.generated.h"
 
+enum class EG2ILevelName : uint8;
 enum class EG2IInputActionsWithSomeNames : uint8;
 class UG2ITasksCatalog;
 enum class EG2ITasksNames : uint8;
@@ -92,7 +93,7 @@ public:
 	void ShowWidget(EG2IWidgetNames WidgetName) const;
 	void HideWidget(EG2IWidgetNames WidgetName) const;
 
-	void OpenHUD() const;
+	void OpenHUD(EG2ILevelName LevelName) const;
 
 	void ShowAllWidgets() const;
 

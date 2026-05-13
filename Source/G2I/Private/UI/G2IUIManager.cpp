@@ -170,7 +170,7 @@ void UG2IUIManager::InitializeNewLevelUI() const
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
 			*UG2IUIDisplayManager::StaticClass()->GetName());
-		OpenHUD();
+		OpenHUD(EG2ILevelName::None);
 		return;
 	}
 	
@@ -184,7 +184,7 @@ void UG2IUIManager::InitializeNewLevelUI() const
 	}
 	if (!CutScenesParameters->bIsOnInEditor)
 	{
-		OpenHUD();
+		OpenHUD(LevelName);
 		return;
 	}
 #endif
@@ -197,12 +197,12 @@ void UG2IUIManager::InitializeNewLevelUI() const
 			Widget->SetFocus();
 			return;
 		}
-		OpenHUD();
+		OpenHUD(LevelName);
 		return;
 	}
 
 	// Other levels
-	OpenHUD();
+	OpenHUD(LevelName);
 }
 
 void UG2IUIManager::CloseCutScene(const EG2IWidgetNames WidgetName) const
@@ -220,7 +220,10 @@ void UG2IUIManager::CloseCutScene(const EG2IWidgetNames WidgetName) const
 		return;
 	}
 
-	OpenHUD();
+	if (WidgetName == EG2IWidgetNames::CutSceneStartBoilerRoom)
+	{
+		OpenHUD(EG2ILevelName::BoilerRoom);
+	}
 }
 
 void UG2IUIManager::CloseLevelUI() const
@@ -241,13 +244,16 @@ FString UG2IUIManager::GetWidgetNameString(EG2IWidgetNames WidgetName) const
 	return WidgetNamesEnumPtr->GetNameStringByValue(static_cast<int64>(WidgetName));
 }
 
-void UG2IUIManager::OpenHUD() const
+void UG2IUIManager::OpenHUD(const EG2ILevelName LevelName) const
 {
 	PlayerController->SetInputMode(FInputModeGameOnly());
 	PlayerController->bShowMouseCursor = false;
 	PlayerController->SetPause(false);
 	
-	OpenWidget(EG2IWidgetNames::TasksScreen, false);
+	if (LevelName == EG2ILevelName::BoilerRoom)
+	{
+		OpenWidget(EG2IWidgetNames::TasksScreen, false);
+	}
 }
 
 void UG2IUIManager::OpenWorldWidget(UG2IWorldHintWidgetComponent* WidgetComponent) const
