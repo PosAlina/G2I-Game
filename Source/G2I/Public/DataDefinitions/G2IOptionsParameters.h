@@ -30,6 +30,26 @@ enum class EG2IFrameRate : uint8
 	FPSUnlimited UMETA(DisplayName = "Unlimited FPS")
 };
 
+UENUM(BlueprintType)
+enum class EG2IQuality : uint8
+{
+	Low UMETA(DisplayName = "Low Quality"),
+	Medium UMETA(DisplayName = "Medium Quality"),
+	High UMETA(DisplayName = "High Quality"),
+	Ultra UMETA(DisplayName = "Ultra Quality"),
+	Epic UMETA(DisplayName = "Epic Quality")
+};
+
+UENUM(BlueprintType)
+enum class EG2IAntialiasing : uint8
+{
+	None UMETA(DisplayName = "None"),
+	FXAA UMETA(DisplayName = "FXAA"),
+	TAA UMETA(DisplayName = "TAA"),
+	MSAA UMETA(DisplayName = "MSAA"),
+	TSR UMETA(DisplayName = "TSR")
+};
+
 /**
  * Options Defaults
  */
@@ -64,6 +84,47 @@ public:
 	bool bIsDefaultInvertedCameraVerticalRotation = false;
 
 	// ==================== GRAPHICS ====================
+	EG2IAntialiasing Antialiasing = EG2IAntialiasing::TSR;
+	bool bCustomQuality = false;
+	EG2IQuality OverallQuality = EG2IQuality::Epic;
+	EG2IQuality TextureQuality = EG2IQuality::Epic;
+	EG2IQuality ShadowsQuality = EG2IQuality::Epic;
+	EG2IQuality EffectsQuality = EG2IQuality::Epic;
+	EG2IQuality PostProcessingQuality = EG2IQuality::Epic;
+	EG2IQuality AntialiasingQuality = EG2IQuality::Epic;
+	EG2IQuality GlobalIlluminationQuality = EG2IQuality::Epic;
+	EG2IQuality ReflectionQuality = EG2IQuality::Epic;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Graphics")
+	EG2IAntialiasing DefaultAntialiasing = EG2IAntialiasing::TSR;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Graphics")
+	bool bDefaultCustomQuality = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Graphics", meta = (ToolTip = "Used only if bDefaultCustomQuality == false"))
+	EG2IQuality DefaultOverallQuality = EG2IQuality::Epic;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Graphics|Optional", meta = (ToolTip = "Used only if bDefaultCustomQuality == true"))
+	EG2IQuality DefaultTextureQuality = EG2IQuality::Epic;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Graphics|Optional", meta = (ToolTip = "Used only if bDefaultCustomQuality == true"))
+	EG2IQuality DefaultShadowsQuality = EG2IQuality::Epic;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Graphics|Optional", meta = (ToolTip = "Used only if bDefaultCustomQuality == true"))
+	EG2IQuality DefaultEffectsQuality = EG2IQuality::Epic;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Graphics|Optional", meta = (ToolTip = "Used only if bDefaultCustomQuality == true"))
+	EG2IQuality DefaultPostProcessingQuality = EG2IQuality::Epic;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Graphics|Optional", meta = (ToolTip = "Used only if bDefaultCustomQuality == true"))
+	EG2IQuality DefaultAntialiasingQuality = EG2IQuality::Epic;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Graphics|Optional", meta = (ToolTip = "Used only if bDefaultCustomQuality == true"))
+	EG2IQuality DefaultGlobalIlluminationQuality = EG2IQuality::Epic;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Graphics|Optional", meta = (ToolTip = "Used only if bDefaultCustomQuality == true"))
+	EG2IQuality DefaultReflectionQuality = EG2IQuality::Epic;
+	
 	// ==================== SCREEN ====================
 	EG2IScreenMode ScreenMode = EG2IScreenMode::WindowedFullscreen;
 	EG2IScreenResolution ScreenResolution = EG2IScreenResolution::Resolution1920On1080;
@@ -122,5 +183,15 @@ public:
 	void SetFrameRate(EG2IFrameRate NewFrameRate);
 	//void SetBrightness(float NewBrightness);
 	void SetVSync(bool bIsNewVSync);
+	
+	void SetAntialiasing(EG2IAntialiasing NewAntialiasing);
+	void SetOverallQuality(EG2IQuality NewQuality);
+	void SetTextureQuality(EG2IQuality NewQuality);
+	void SetShadowsQuality(EG2IQuality NewQuality);
+	void SetEffectsQuality(EG2IQuality NewQuality);
+	void SetPostProcessingQuality(EG2IQuality NewQuality);
+	void SetAntialiasingQuality(EG2IQuality NewQuality);
+	void SetGlobalIlluminationQuality(EG2IQuality NewQuality);
+	void SetReflectionQuality(EG2IQuality NewQuality);
 	
 };
