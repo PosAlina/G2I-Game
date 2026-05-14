@@ -4,6 +4,7 @@
 #include "GameFramework/SaveGame.h"
 #include "GameFramework/Character.h"
 #include "Misc/Crc.h"
+#include "G2IGameInstance.h"
 #include "G2IGameplaySaveGame.generated.h"
 
 USTRUCT(BlueprintType)
@@ -79,4 +80,7 @@ public:
 
 	UPROPERTY(SaveGame, BlueprintReadWrite, Category = "Save Gameplay Data|Checkpoints")
 	TMap<FCheckpointSaveData, bool> CheckpointsSaveData;
+
+	UPROPERTY(SaveGame, BlueprintReadWrite, Category = "Save Gameplay Data|Progress")
+	EG2ILevelName CurrentLevel = EG2ILevelName::None;
 };
