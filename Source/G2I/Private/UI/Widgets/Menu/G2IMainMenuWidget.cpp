@@ -5,12 +5,31 @@
 #include "G2IUIManager.h"
 #include "G2IWidgetNames.h"
 #include "Components/Button.h"
+#include "G2ISavingGameplayManager.h"
 
 void UG2IMainMenuWidget::InitializeAfterManagerLoading()
 {
 	Super::InitializeAfterManagerLoading();
 
+	if (!ensure(GameInstance))
+	{
+		UE_LOG(LogG2I, Error, TEXT("GameInstance is null %s"), *GetName());
+		return;
+	}
+
+	SaveManager = GameInstance->GetSubsystem<UG2ISavingGameplayManager>();
+
 	InitializeDefaults();
+
+	if (SaveManager)
+	{
+		const bool bHasSave = SaveManager->DoesSaveExist();
+		if (ContinueButton)
+		{
+			ContinueButton->SetIsEnabled(bHasSave);
+		}
+	}
+
 	BindDelegates();
 }
 
@@ -68,15 +87,32 @@ void UG2IMainMenuWidget::BindDelegates()
 	{
 		UE_LOG(LogG2I, Error, TEXT("Quit game button isn't existed in %s"), *GetName());
 	}
+	if (ensure(ContinueButton))
+	{
+		ContinueButton->OnClicked.AddDynamic(this, &ThisClass::OnContinueButtonClicked);
+	}
+	else
+	{
+		UE_LOG(LogG2I, Error, TEXT("Continue button isn't existed in %s"), *GetName());
+	}
 }
 
 void UG2IMainMenuWidget::OnNewGameButtonClicked()
 {
-	LoadNewGame();
+	if (!ensure(SaveManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("SaveManager is null %s"), *GetName());
+		return;
+	}
 
-	// TODO: Add correlation from saving system
-	// if Saves exists:
-	// NewGameWithSaveExists()
+	if (SaveManager->DoesSaveExist())
+	{
+		NewGameWithSaveExists();
+	}
+	else
+	{
+		LoadNewGame();
+	}
 }
 
 void UG2IMainMenuWidget::LoadNewGame() const
@@ -107,7 +143,10 @@ void UG2IMainMenuWidget::NewGameWithSaveExists() const
 
 	UIManager->SetupConfirmationWidget([this]()
 	{
-		// TODO: Add removing saves
+		if (SaveManager)
+		{
+			SaveManager->ResetProgress();
+		}
 		LoadNewGame();
 	},
 	GetShowCurrentWidgetFunction(),
@@ -199,4 +238,54 @@ TFunction<void()> UG2IMainMenuWidget::GetShowCurrentWidgetFunction() const
 		UIManager->ShowWidget(EG2IWidgetNames::MainMenu);
 	};
 	return ShowCurrentWidget;
+}
+
+void UG2IMainMenuWidget::OnContinueButtonClicked()
+{
+
+	if (!ensure(SaveManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("SaveManager is null %s"), *GetName());
+		return;
+	}
+
+	SaveManager->LoadGameplay(false);
+
+	EG2ILevelName SavedLevel = SaveManager->LoadCurrentLevel();
+
+	if (SavedLevel == EG2ILevelName::None)
+	{
+		UE_LOG(LogG2I, Warning, TEXT("Saved level is None"));
+		return;
+	}
+
+	if (!ensure(GameInstance))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*UG2IGameInstance::StaticClass()->GetName());
+		return;
+	}
+	GameInstance->LoadLevel(SavedLevel);
+}
+
+void UG2IMainMenuWidget::StartLevelInitialize()
+{
+	Super::StartLevelInitialize();
+
+	if (!ensure(GameInstance))
+	{
+		UE_LOG(LogG2I, Error, TEXT("GameInstance is null %s"), *GetName());
+		return;
+	}
+
+	if (!ensure(SaveManager))
+	{
+		UE_LOG(LogG2I, Error, TEXT("SaveManager is null %s"), *GetName());
+		return;
+	}
+
+	if (ContinueButton)
+	{
+		ContinueButton->SetIsEnabled(SaveManager->DoesSaveExist());
+	}
 }

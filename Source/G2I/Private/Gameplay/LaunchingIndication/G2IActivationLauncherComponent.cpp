@@ -39,3 +39,9 @@ void UG2IActivationLauncherComponent::SetIsLaunched(const bool bNewIsLaunched)
 		Super::SetIsLaunched(bNewIsLaunched);
 	}
 }
+
+void UG2IActivationLauncherComponent::LaunchWithoutActivation(const bool bNewIsLaunched)
+{
+	bActivated = true;
+	Super::SetIsLaunched(bNewIsLaunched);
+}

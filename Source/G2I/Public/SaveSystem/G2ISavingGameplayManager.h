@@ -94,6 +94,18 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void LoadRequestedData(UObject* Requester) const;
 
+	UFUNCTION(BlueprintCallable)
+	bool DoesSaveExist() const;
+
+	UFUNCTION(BlueprintCallable)
+	void SaveCurrentLevel(EG2ILevelName LevelEnum, bool bAsync = false);
+
+	UFUNCTION(BlueprintCallable)
+	EG2ILevelName LoadCurrentLevel() const;
+
+	UFUNCTION(BlueprintCallable)
+	void ResetProgress();
+
 protected:
 
 	UFUNCTION(BlueprintCallable)
