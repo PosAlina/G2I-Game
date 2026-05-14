@@ -30,7 +30,7 @@ void AG2IValveWithActivationOrder::BeginPlay()
 	if (TriggerBox)
 	{
 		TriggerBox->SetCollisionProfileName(TEXT("Trigger"));
-		TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AG2IValveWithActivationOrder::OnTriggerBoxBeginOverlap);
+		TriggerBox->OnComponentBeginOverlap.AddUniqueDynamic(this, &AG2IValveWithActivationOrder::OnTriggerBoxBeginOverlap);
 	}
 
 	if (IsDeltaNegative())
