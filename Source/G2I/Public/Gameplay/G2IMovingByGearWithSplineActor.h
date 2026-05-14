@@ -22,7 +22,7 @@ class G2I_API AG2IMovingByGearWithSplineActor : public AActor, public IG2IMoving
 	GENERATED_BODY()
 
 private:
-	void SetLocationAndRotationWithSpline(float SplineDistance);
+	bool SetLocationAndRotationWithSpline(float SplineDistance);
 
 public:
 
@@ -51,5 +51,5 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Data")
 	float ForceModifier = 1.0f;
 
-	virtual void OnPushing_Implementation(float ForceMagnitude) override;
+	virtual bool OnPushing_Implementation(float ForceMagnitude) override;
 };

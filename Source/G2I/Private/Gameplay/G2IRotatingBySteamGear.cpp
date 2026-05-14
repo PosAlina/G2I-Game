@@ -110,7 +110,7 @@ void AG2IRotatingBySteamGear::OnShoot_Implementation(const FHitResult& HitResult
 		return;
 	}
 
-	if (!Timeline->IsPlaying())
+	if (!Timeline->IsPlaying() || bIsRotatingFromStartWhenShoot)
 	{
 		Timeline->PlayFromStart();
 	}
@@ -136,7 +136,22 @@ void AG2IRotatingBySteamGear::OnTimelineUpdate(const float Output)
 		}
 
 		if (i->Implements<UG2IMovingByGearObjectInterface>()) {
-			IG2IMovingByGearObjectInterface::Execute_OnPushing(i, CurrentRotationStep * RotationSign);
+			if (IG2IMovingByGearObjectInterface::Execute_OnPushing(i, CurrentRotationStep * RotationSign) && bIsStoppedWhenMovingActorStopped) {
+				if (!ensure(Timeline)) {
+					UE_LOG(LogG2I, Error, TEXT("%s: Can't get the Timeline"), *GetName());
+				}
+				else {
+					Timeline->Stop();
+				}
+				if (!ensure(SoundComp)) {
+					UE_LOG(LogG2I, Error, TEXT("%s: Can't get the Sound Component"), *GetName());
+				}
+				else {
+					SoundComp->StopSound(GearRotationSoundId);
+					SoundComp->StopSound(ActorMovingWithSplineSoundId);
+				}
+				return;
+			}
 		}
 	}
 
