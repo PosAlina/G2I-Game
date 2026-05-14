@@ -218,6 +218,12 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category="Input|Debug")
 	TObjectPtr<UInputAction> DebugPauseAction;
+	
+	/** Enable/disable AI characters to follow the player */
+	UPROPERTY(EditAnywhere, Category="Input|Debug")
+	TObjectPtr<UInputAction> ToggleFollowAIBehindPlayerAction;
+
+	void ToggleFollowAIBehindPlayer(const FInputActionValue& Value);
 #endif
 
 	UPROPERTY(VisibleAnywhere)
@@ -298,12 +304,6 @@ protected:
 	void StopFlight(const FInputActionValue& Value);
 
 	void Shoot(const FInputActionValue& Value);
-	
-	/** Enable/disable AI characters to follow the player */
-	UPROPERTY(EditAnywhere, Category="Input")
-	TObjectPtr<UInputAction> ToggleFollowAIBehindPlayerAction;
-
-	void ToggleFollowAIBehindPlayer(const FInputActionValue& Value);
 
 	UPROPERTY(EditAnywhere, Category="Input")
 	TObjectPtr<UInputAction> PauseAction;
