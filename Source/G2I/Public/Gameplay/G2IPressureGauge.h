@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "G2IPressureGauge.generated.h"
 
+class UG2ILauncherComponent;
 class UG2IActivationLauncherComponent;
 class UG2ISoundComponent;
 USTRUCT(BlueprintType)
@@ -45,8 +46,7 @@ public:
     AG2IPressureGauge();
 
 protected:
-
-    virtual void Tick(float DeltaTime) override;
+    
     
     virtual void BeginPlay() override;
 
@@ -76,6 +76,8 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TSet<TObjectPtr<AActor>> PuzzleActors;
+    
+    virtual void Tick(float DeltaTime) override;
 
 private:
     int32 ArrowRotationSoundId = -1;

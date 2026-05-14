@@ -16,6 +16,9 @@ class G2I_API UG2IActivationLauncherComponent : public UG2ILauncherComponent
 public:
 	UPROPERTY(EditAnywhere)
 	TArray<TObjectPtr<AActor>> ActorsToActivate;
+	
+	UPROPERTY(EditAnywhere)
+	bool bSkipActivation = false;
 
 private:
 	bool bActivated;
@@ -25,4 +28,5 @@ public:
 	void CallActivation();
 
 	virtual void SetIsLaunched(bool bNewIsLaunched) override;
+	void LaunchWithoutActivation(bool bNewIsLaunched);
 };

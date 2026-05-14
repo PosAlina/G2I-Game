@@ -117,7 +117,14 @@ void AG2IPressureGauge::ChangeAngles_Implementation(const TArray<float>& AngleDe
         }
         else
         {
-            LauncherComp->CallActivation();
+            if (LauncherComp->bSkipActivation)
+            {
+                LauncherComp->LaunchWithoutActivation(true);
+            }
+            else
+            {
+                LauncherComp->CallActivation();
+            }
         }
     }
 }

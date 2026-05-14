@@ -5,15 +5,15 @@
 void AG2IPingPongPlatform::BeginPlay()
 {
     Super::BeginPlay();
-
-    if (!ensure(Timeline))
+    
+    if (bIsActivated)
     {
-        UE_LOG(LogG2I, Error, TEXT("%s: Timeline is NULL"), *GetActorNameOrLabel());
-        return;
+        Activate_Implementation();
     }
-
-    Timeline->SetPlayRate(1.0f);
-    Timeline->PlayFromStart();
+    else
+    {
+        Deactivate_Implementation();
+    }
 }
 
 void AG2IPingPongPlatform::OnTimelineFinished()
@@ -35,4 +35,41 @@ void AG2IPingPongPlatform::OnTimelineFinished()
         Timeline->SetPlayRate(1.0f);
     }
     Timeline->Play();
+}
+
+void AG2IPingPongPlatform::ToggleLockingPlatform(
+    UG2ILauncherComponent* LauncherComponent, AActor* ComponentOwner, const bool bIsLocked)
+{
+    Super::ToggleLockingPlatform(LauncherComponent, ComponentOwner, bIsLocked);
+    
+    if (bIsLocked && bIsActivated)
+    {
+        Deactivate_Implementation();
+        return;
+    }
+    if (!bIsLocked && !bIsActivated)
+    {
+        Activate_Implementation();
+    }
+}
+
+void AG2IPingPongPlatform::Activate_Implementation()
+{
+    if (!ensure(Timeline))
+    {
+        UE_LOG(LogG2I, Error, TEXT("%s: Timeline is NULL"), *GetActorNameOrLabel());
+        return;
+    }
+
+    Timeline->SetPlayRate(1.0f);
+    Timeline->PlayFromStart();
+    
+    bIsActivated = true;
+}
+
+void AG2IPingPongPlatform::Deactivate_Implementation()
+{
+    
+    Timeline->Stop();
+    bIsActivated = false;
 }
