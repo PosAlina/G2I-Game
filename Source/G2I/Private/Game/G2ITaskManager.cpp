@@ -121,7 +121,7 @@ void UG2ITaskManager::CreateTaskSwitchCharacter()
 	FG2ITaskInfo& NewTaskInfo = ActiveTasks.Add(EG2ITasksNames::SwitchBetweenCharacters);
 	NewTaskInfo.OnTaskCompletedOutsideDelegates.Add(
 		PlayerController->OnSwitchBetweenCharacterDelegate.AddUObject(
-			this, &UG2ITaskManager::CompleteTaskSwitchCharacter));
+			this, &ThisClass::CompleteTaskSwitchCharacter));
 	
 	AddTaskInViewport(EG2ITasksNames::SwitchBetweenCharacters);
 }
@@ -157,7 +157,7 @@ void UG2ITaskManager::CreateTaskShootOnGear(AG2IRotatingBySteamGear * Gear)
 	}
 	FG2ITaskInfo& NewTaskInfo = ActiveTasks.Add(EG2ITasksNames::ShootOnGear);
 	NewTaskInfo.OnTaskCompletedOutsideDelegates.Add(
-		Gear->OnStartRotateDelegate.AddUObject(this, &UG2ITaskManager::CompleteTaskShootOnGear));
+		Gear->OnStartRotateDelegate.AddUObject(this, &ThisClass::CompleteTaskShootOnGear));
 	
 	AddTaskInViewport(EG2ITasksNames::ShootOnGear);
 }
@@ -185,7 +185,7 @@ void UG2ITaskManager::CreateTaskPunchBoxes(
 	{
 		++InCountShouldDestructBoxes;
 		NewTaskInfo.OnTaskCompletedOutsideDelegates.Add(
-			Box->OnDestroyedDelegate.AddUObject(this, &UG2ITaskManager::CompleteTaskPunchBox));
+			Box->OnDestroyedDelegate.AddUObject(this, &ThisClass::CompleteTaskPunchBox));
 	}
 	
 	if (CountShouldDestructActors == EG2ICountShouldDestructActors::AllActors)
@@ -233,7 +233,47 @@ void UG2ITaskManager::CreateTaskFly()
 	
 	FG2ITaskInfo& NewTaskInfo = ActiveTasks.Add(EG2ITasksNames::FlyUp);
 	NewTaskInfo.OnTaskCompletedOutsideDelegates.Add(
-		PlayerController->OnFlyUpDelegate.AddUObject(this, &UG2ITaskManager::CompleteTaskFly));
+		PlayerController->OnFlyUpDelegate.AddUObject(this, &ThisClass::CompleteTaskFly));
 	
 	AddTaskInViewport(EG2ITasksNames::FlyUp);
+}
+
+void UG2ITaskManager::CompleteTaskFollowAI(bool bCanMove)
+{
+	FG2ITaskInfo *TaskInfo = ActiveTasks.Find(EG2ITasksNames::FollowAI);
+	if (!ensure(TaskInfo))
+	{
+		G2I::DebugWarningMessage(GetName() + ": Attempt to complete not created task FlyUp");
+		return;
+	}
+
+	if (!ensure(PlayerController))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*AG2IPlayerController::StaticClass()->GetName());
+		return;
+	}
+	for (const FDelegateHandle& DelegateHandle : TaskInfo->OnTaskCompletedOutsideDelegates)
+	{
+		PlayerController->OnToggleFollowAIBehindPlayerDelegate.Remove(DelegateHandle);
+	}
+	
+	RemoveTaskInViewport(EG2ITasksNames::FollowAI);
+}
+
+void UG2ITaskManager::CreateTaskFollowAI()
+{
+	if (!ensure(PlayerController))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find %s"), *GetName(),
+			*AG2IPlayerController::StaticClass()->GetName());
+		return;
+	}
+	
+	FG2ITaskInfo& NewTaskInfo = ActiveTasks.Add(EG2ITasksNames::FollowAI);
+	NewTaskInfo.OnTaskCompletedOutsideDelegates.Add(
+		PlayerController->OnToggleFollowAIBehindPlayerDelegate.AddUObject(
+			this, &ThisClass::CompleteTaskFollowAI));
+	
+	AddTaskInViewport(EG2ITasksNames::FollowAI);
 }

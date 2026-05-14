@@ -86,7 +86,7 @@ void UG2IAIMovementComponent::BindDelegates()
 	}
 	else
 	{
-		PlayerController->OnToggleFollowAIBehindPlayerDelegate.AddDynamic(this, &ThisClass::SetCanMove);
+		PlayerController->OnToggleFollowAIBehindPlayerDelegate.AddUObject(this, &ThisClass::SetCanMove);
 	}
 }
 

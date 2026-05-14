@@ -54,7 +54,7 @@ struct FG2IInputKeyMapping
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUnPossessPawnDelegate, APawn *, Pawn);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPossessPawnDelegate, APawn *, Pawn);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FToggleFollowAIBehindPlayerDelegate, bool, Value);
+DECLARE_MULTICAST_DELEGATE_OneParam(FToggleFollowAIBehindPlayerDelegate, bool);
 DECLARE_MULTICAST_DELEGATE(FSwitchBetweenCharacterDelegate);
 DECLARE_MULTICAST_DELEGATE(FFlyUpDelegate);
 
@@ -79,7 +79,6 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FPossessPawnDelegate OnPossessPawnDelegate;
 
-	UPROPERTY(BlueprintAssignable)
 	FToggleFollowAIBehindPlayerDelegate OnToggleFollowAIBehindPlayerDelegate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)

@@ -64,6 +64,10 @@ public:
 	UFUNCTION()
 	void CompleteTaskFly();
 	void CreateTaskFly();
+	
+	UFUNCTION()
+	void CompleteTaskFollowAI(bool bCanMove);
+	void CreateTaskFollowAI();
 
 private:
 	
