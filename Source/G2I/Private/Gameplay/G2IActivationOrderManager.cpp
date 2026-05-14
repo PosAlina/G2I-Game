@@ -27,7 +27,14 @@ void AG2IActivationOrderManager::OrderCompleted()
 	}
 	else
 	{
-		LauncherComp->CallActivation();
+		if (LauncherComp->bSkipActivation)
+		{
+			LauncherComp->LaunchWithoutActivation(true);
+		}
+		else
+		{
+			LauncherComp->CallActivation();
+		}
 	}
 	
 	UnbindToAllDelegates();

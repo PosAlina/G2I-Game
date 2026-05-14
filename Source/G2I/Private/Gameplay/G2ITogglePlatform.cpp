@@ -35,6 +35,23 @@ void AG2ITogglePlatform::OnTimelineFinished()
     Timeline->Stop();
 }
 
+void AG2ITogglePlatform::ToggleLockingPlatform(UG2ILauncherComponent* LauncherComponent, AActor* ComponentOwner,
+    const bool bIsLocked)
+{
+    Super::ToggleLockingPlatform(LauncherComponent, ComponentOwner, bIsLocked);
+    
+    if (bIsLocked && bIsActivated)
+    {
+        Deactivate_Implementation();
+        return;
+    }
+    if (!bIsLocked && !bIsActivated)
+    {
+        Activate_Implementation();
+        return;
+    }
+}
+
 void AG2ITogglePlatform::Activate_Implementation()
 {
     if (bIsActivated) return;

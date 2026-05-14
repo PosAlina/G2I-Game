@@ -5,6 +5,7 @@
 #include "Components/TimelineComponent.h"
 #include "G2IBaseMovingPlatform.generated.h"
 
+class UG2ILauncherComponent;
 class UArrowComponent;
 class UStaticMeshComponent;
 class UCurveFloat;
@@ -15,6 +16,9 @@ class G2I_API AG2IBaseMovingPlatform : public AActor
     GENERATED_BODY()
 
 public:
+    UPROPERTY()
+    TObjectPtr<UG2ILauncherComponent> LauncherComp;
+    
     AG2IBaseMovingPlatform();
 
 protected:
@@ -45,4 +49,9 @@ protected:
 
     UFUNCTION()
     virtual void OnTimelineFinished() {};
+    
+    UFUNCTION()
+    virtual void ToggleLockingPlatform(
+        UG2ILauncherComponent* LauncherComponent, AActor* ComponentOwner, bool bIsLocked) {}
+    
 };
