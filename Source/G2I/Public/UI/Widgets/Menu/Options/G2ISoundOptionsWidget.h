@@ -6,6 +6,7 @@
 
 class UG2INumericalMultiValuePropertyRow;
 class UG2ITextMultiValuePropertyRow;
+class UG2IGameSoundManager;
 
 UCLASS()
 class G2I_API UG2ISoundOptionsWidget : public UG2IOptionsBaseSubWidget
@@ -26,12 +27,9 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UG2INumericalMultiValuePropertyRow> DialoguesVolume;
 
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UG2ITextMultiValuePropertyRow> Subtitles;
-
 protected:
-
-	int32 DefaultVolumeIndex = 10;
+	UPROPERTY()
+	TObjectPtr<UG2IGameSoundManager> SoundManager;
 
 public:
 
@@ -45,5 +43,14 @@ protected:
 private:
 	
 	void InitializeDefaults() const;
-	
+	void InitializeSoundManager();
+	void InitializeCommonVolume() const;
+	void InitializeMusicVolume() const;
+	void InitializeEffectsVolume() const;
+	void InitializeDialoguesVolume() const;
+	void InitializeVolumesData();
+
+	float MinVolume = 0.1f;
+	float MaxVolume = 10.f;
+	float StepVolume = 0.1f;
 };

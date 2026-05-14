@@ -8,14 +8,17 @@
 AG2IValveWithActivationOrder::AG2IValveWithActivationOrder()
 {
 	ActivationOrderComponent = CreateDefaultSubobject<UG2IOwnerActivationOrderComponent>(TEXT("ActivationComponent"));
-	ActivationOrderComponent->bCanBeReactivated = true;
+	if (ActivationOrderComponent)
+	{
+		ActivationOrderComponent->bCanBeReactivated = true;
+	}
 
 	TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox"));
-	TriggerBox->SetCollisionProfileName(TEXT("Trigger"));
-	TriggerBox->SetBoxExtent(FVector(60.0f, 50.0f, 50.0f));
-	TriggerBox->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-
-	TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AG2IValveWithActivationOrder::OnTriggerBoxBeginOverlap);
+	if (TriggerBox)
+	{
+		TriggerBox->SetBoxExtent(FVector(60.0f, 50.0f, 50.0f));
+		TriggerBox->SetupAttachment(GetRootComponent());
+	}
 
 	Tags.Add(FName("Interactive1"));
 }
@@ -24,17 +27,48 @@ void AG2IValveWithActivationOrder::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (TriggerBox)
+	{
+		TriggerBox->SetCollisionProfileName(TEXT("Trigger"));
+		TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AG2IValveWithActivationOrder::OnTriggerBoxBeginOverlap);
+	}
+
+	if (IsDeltaNegative())
+	{
+		MinMultiplier = -1;
+		DiffRotation = MaxRotation - MinRotation;
+	}
+	else
+	{
+		MaxMultiplier = -1;
+		DiffRotation = MinRotation - MaxRotation;
+	}
+
 	bStartActivation = bActivated;
 	if (bStartActivation)
 	{
 		ActivationsNum = 1;
 		if (StaticMeshComponent)
-			StaticMeshComponent->AddLocalRotation(MaxRotation);
+		{
+			if (IsDeltaNegative())
+			{
+				StaticMeshComponent->AddLocalRotation(MinRotation);
+			}
+			else
+			{
+				StaticMeshComponent->AddLocalRotation(MaxRotation);
+			}
+		}
 	}
 }
 
 void AG2IValveWithActivationOrder::KeepActivation()
 {
+	if (SoundComp)
+	{
+		SoundComp->PlaySound(ValveRotationSoundId);
+	}
+
 	if (StaticMeshComponent)
 		SetActorTickEnabled(true);
 }
@@ -54,36 +88,18 @@ void AG2IValveWithActivationOrder::ApplyLocalRotation()
 	StaticMeshComponent->AddLocalRotation(DeltaRotation);
 	CurrentRotation += DeltaRotation;
 
-	if (CurrentRotation.Pitch > MaxRotation.Pitch * (ActivationsNum + !bActivated) ||
-		CurrentRotation.Roll > MaxRotation.Roll * (ActivationsNum + !bActivated) ||
-		CurrentRotation.Yaw > MaxRotation.Yaw * (ActivationsNum + !bActivated))
+	if (CurrentRotation.Pitch > TargetMaxRotation.Pitch ||
+		CurrentRotation.Roll > TargetMaxRotation.Roll ||
+		CurrentRotation.Yaw > TargetMaxRotation.Yaw)
 	{
-		CurrentRotation = MaxRotation * (ActivationsNum + !bActivated);
-		SetActorTickEnabled(false);
-		if (SoundComp) {
-			SoundComp->StopSound(ValveRotationSoundId);
-		}
-		if (GetWorld() && GetWorldTimerManager().IsTimerActive(DeactivationTimer))
-		{
-			GetWorldTimerManager().ClearTimer(DeactivationTimer);
-			RestorePosition();
-		}
+		StopLocalRotation();
 	}
 
-	if (CurrentRotation.Pitch < MinRotation.Pitch + MaxRotation.Pitch * (ActivationsNum - bActivated) ||
-		CurrentRotation.Roll < MinRotation.Roll + MaxRotation.Roll * (ActivationsNum - bActivated) ||
-		CurrentRotation.Yaw < MinRotation.Yaw + MaxRotation.Yaw * (ActivationsNum - bActivated))
+	if (CurrentRotation.Pitch < TargetMinRotation.Pitch ||
+		CurrentRotation.Roll < TargetMinRotation.Roll ||
+		CurrentRotation.Yaw < TargetMinRotation.Yaw)
 	{
-		CurrentRotation = MinRotation * (ActivationsNum - bActivated);
-		SetActorTickEnabled(false);
-		if (SoundComp) {
-			SoundComp->StopSound(ValveRotationSoundId);
-		}
-		if (GetWorld() && GetWorldTimerManager().IsTimerActive(DeactivationTimer))
-		{
-			GetWorldTimerManager().ClearTimer(DeactivationTimer);
-			RestorePosition();
-		}
+		StopLocalRotation();
 	}
 }
 
@@ -97,13 +113,16 @@ void AG2IValveWithActivationOrder::Activate_Implementation()
 {
 	if (ActivationOrderComponent)
 	{
-		if (ActivationOrderComponent->bAccepted)
+		const bool bAcceptedByManager = ActivationOrderComponent->bAccepted;
+		if (bAcceptedByManager)
 			ActivationsNum++;
 		else
 			ActivationsNum--;
 
+		TargetMinRotation = DiffRotation * (MinMultiplier + ActivationsNum + !bAcceptedByManager);
+		TargetMaxRotation = DiffRotation * (MaxMultiplier + ActivationsNum + !bAcceptedByManager);
 
-		if (ActivationOrderComponent->bAccepted == bActivated)
+		if (bAcceptedByManager == bActivated)
 			KeepActivation();
 		else
 			ChangeActivation();
@@ -130,13 +149,45 @@ void AG2IValveWithActivationOrder::RestorePosition()
 		else
 			ActivationsNum = 0;
 
-		if (bActivated)
+		if (bActivated != bStartActivation)
+		{
+			TargetMinRotation = DiffRotation * (MinMultiplier + ActivationsNum + bActivated);
+			TargetMaxRotation = DiffRotation * (MaxMultiplier + ActivationsNum + bActivated);
 			ChangeActivation();
+		}
 		else
+		{
+			TargetMinRotation = DiffRotation * (MinMultiplier + ActivationsNum + !bActivated);
+			TargetMaxRotation = DiffRotation * (MaxMultiplier + ActivationsNum + !bActivated);
 			KeepActivation();
+		}
 	}
 
-	bActivated = bStartActivation;
 	if (ActivationOrderComponent)
 		ActivationOrderComponent->bActivated = bStartActivation;
+}
+
+void AG2IValveWithActivationOrder::StopLocalRotation()
+{
+	CurrentRotation = (MaxRotation + MinRotation) * ActivationsNum;
+
+	Super::StopLocalRotation();
+
+	if (GetWorld() && GetWorldTimerManager().IsTimerActive(DeactivationTimer))
+	{
+		GetWorldTimerManager().ClearTimer(DeactivationTimer);
+		RestorePosition();
+	}
+}
+
+bool AG2IValveWithActivationOrder::IsDeltaNegative() const
+{
+	if (DeltaRotation.Pitch < 0. ||
+		DeltaRotation.Yaw < 0. ||
+		DeltaRotation.Roll < 0.)
+	{
+		return true;
+	}
+
+	return false;
 }

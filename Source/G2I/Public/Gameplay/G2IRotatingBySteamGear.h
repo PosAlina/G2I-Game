@@ -30,7 +30,7 @@ private:
 
 	float RotationSign;
 
-	int32 GearRotationSoundId = -1;
+	
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "Data")
@@ -64,9 +64,20 @@ protected:
 	TObjectPtr<UG2IOutlineComponent> OutlineComponent;
 
 	virtual void BeginPlay() override;
+
+	int32 GearRotationSoundId = -1;
+	int32 ActorMovingWithSplineSoundId = -1;
 	
 public:
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName RotationTag = FName("RotatingActor");
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName GearRotationSoundName = FName("GearRotationSound");
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName ActorMovingWithSplineSoundName = FName("ActorMovingWithSplineSound");
+
 	FStartRotateDelegate OnStartRotateDelegate;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")

@@ -9,7 +9,7 @@ void UG2ILauncherComponent::SetIsLaunched(const bool bNewIsLaunched)
 		return;
 	}
 	bIsLaunched = bNewIsLaunched;
-	if (bIsLaunched)
+	if (bIsLaunched && bLockAfterLaunch)
 	{
 		SetIsLocked_Implementation(true);
 	}

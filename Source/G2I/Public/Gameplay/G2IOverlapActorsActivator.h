@@ -4,7 +4,7 @@
 #include "Engine/TriggerBox.h"
 #include "G2IOverlapActorsActivator.generated.h"
 
-class UG2ILauncherComponent;
+class UG2IActivationLauncherComponent;
 
 /**
  * In this zone, actors with the required tag are activated and deactivated when exiting.
@@ -31,8 +31,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Overlapping activator")
 	TObjectPtr<USoundBase> DeactivateSound;
 
-	UPROPERTY(EditAnywhere)
-	TObjectPtr<UG2ILauncherComponent> LauncherComp;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UG2IActivationLauncherComponent> LauncherComp;
 
 private:
 

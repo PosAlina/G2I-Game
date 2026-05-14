@@ -19,40 +19,58 @@ void UG2ISoundComponent::BeginPlay()
 
 int32 UG2ISoundComponent::AddSound(const FSoundConfig& NewSoundConfig)
 {
-	if (!ensure(SoundManager))
+	if (!SoundManager)
 	{
 		SoundManager = UG2IGameSoundManager::Get(this);
-		if (!ensure(SoundManager)) {
-			UE_LOG(LogG2I, Error, TEXT("[%s][UG2ISoundComponent::AddSound]: Couldn't get the Sound Manager"), *GetName());
+		if (!ensure(SoundManager))
+		{
+			UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
 			return -1;
 		}
 	}
 
-	//todo: check
 	FSoundConfig ConfigToSend = NewSoundConfig;
-	AActor* Owner = GetOwner();
-	if (!ensure(Owner)) {
-		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the owner of component"), *GetName(), *FString(__FUNCTION__));
-		return -1;
-	}
 
+	AActor* TargetActor = ConfigToSend.AttachToComponent.OtherActor.Get();
 
-
-	ConfigToSend.ResolvedAttachComponent = Cast<USceneComponent>(ConfigToSend.AttachToComponent.GetComponent(Owner));
-
-	if (!ConfigToSend.ResolvedAttachComponent && !ConfigToSend.bIs2D)
+	if (!TargetActor)
 	{
-		ConfigToSend.ResolvedAttachComponent = const_cast<UG2ISoundComponent*>(this);
+		ConfigToSend.ResolvedAttachComponent = nullptr;
+	}
+	else
+	{
+		USceneComponent* TargetComp = Cast<USceneComponent>(ConfigToSend.AttachToComponent.GetComponent(TargetActor));
+
+		if (TargetComp)
+		{
+			ConfigToSend.ResolvedAttachComponent = TargetComp;
+		}
+		else
+		{
+			ConfigToSend.ResolvedAttachComponent = TargetActor->GetRootComponent();
+
+			if (!ConfigToSend.ResolvedAttachComponent)
+			{
+				UE_LOG(LogG2I, Warning, TEXT("[%s]: TargetActor %s has no RootComponent! Falling back to Location."), *GetName(), *TargetActor->GetName());
+
+				ConfigToSend.ResolvedAttachComponent = nullptr;
+				ConfigToSend.WorldLocation = TargetActor->GetActorLocation();
+			}
+		}
 	}
 
 	return SoundManager->AddSound(ConfigToSend);
 }
 
-bool UG2ISoundComponent::PlaySound(const int32 SoundId) const
+bool UG2ISoundComponent::PlaySound(const int32 SoundId)
 {
-	if (!ensure(SoundManager)) {
-		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
-		return false;
+	if (!SoundManager)
+	{
+		SoundManager = UG2IGameSoundManager::Get(this);
+		if (!ensure(SoundManager)) {
+			UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
+			return false;
+		}
 	}
 	if (SoundId == -1) {
 		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: ID = -1"), *GetName(), *FString(__FUNCTION__));
@@ -61,11 +79,47 @@ bool UG2ISoundComponent::PlaySound(const int32 SoundId) const
 	return SoundManager->PlaySound(SoundId);
 }
 
-bool UG2ISoundComponent::StopSound(const int32 SoundId, const float FadeOutTime) const
+bool UG2ISoundComponent::PlaySoundSafe(UG2ISoundComponent* SoundComp, const int32 SoundId)
 {
-	if (!ensure(SoundManager)) {
-		UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
+	if (!ensure(SoundComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("[UG2ISoundComponent::PlaySoundSafe]: SoundComp is invalid!"));
 		return false;
+	}
+
+	return SoundComp->PlaySound(SoundId);
+}
+
+int32 UG2ISoundComponent::AddSoundSafe(UG2ISoundComponent* SoundComp, const FSoundConfig& NewSoundConfig)
+{
+	if (!ensure(SoundComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("[UG2ISoundComponent::AddSoundSafe]: SoundComp is invalid!"));
+		return -1;
+	}
+
+	return SoundComp->AddSound(NewSoundConfig);
+}
+
+bool UG2ISoundComponent::StopSoundSafe(UG2ISoundComponent* SoundComp, const int32 SoundId) {
+	if (!ensure(SoundComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("[UG2ISoundComponent::PlaySoundSafe]: SoundComp is invalid!"));
+		return false;
+	}
+
+	return SoundComp->StopSound(SoundId);
+}
+
+bool UG2ISoundComponent::StopSound(const int32 SoundId, const float FadeOutTime)
+{
+	if (!SoundManager)
+	{
+		SoundManager = UG2IGameSoundManager::Get(this);
+		if (!ensure(SoundManager)) {
+			UE_LOG(LogG2I, Error, TEXT("[%s][%s]: Couldn't get the Sound Manager"), *GetName(), *FString(__FUNCTION__));
+			return false;
+		}
 	}
 	if (SoundId == -1) {
 		UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: ID = -1"), *GetName(), *FString(__FUNCTION__));

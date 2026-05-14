@@ -3,6 +3,8 @@
 #include "CoreMinimal.h"
 #include "G2IUIManager.generated.h"
 
+enum class EG2ILevelName : uint8;
+enum class EG2IInputActionsWithSomeNames : uint8;
 class UG2ITasksCatalog;
 enum class EG2ITasksNames : uint8;
 class UWidget;
@@ -91,7 +93,7 @@ public:
 	void ShowWidget(EG2IWidgetNames WidgetName) const;
 	void HideWidget(EG2IWidgetNames WidgetName) const;
 
-	void OpenHUD() const;
+	void OpenHUD(EG2ILevelName LevelName) const;
 
 	void ShowAllWidgets() const;
 
@@ -122,6 +124,7 @@ public:
 	// ==================== OPTIONS WIDGETS ====================
 	void SetupOptionsWidget(const TFunction<void()>& NewBackAction) const;
 	void SetupControlsWidget(UWidgetSwitcher* CharacterControlsSwitcher) const;
+	FText GetControlActionName(const FString& ActionNameInTable) const;
 
 	// ==================== OPTIONS PROPERTIES ====================
 	void SetPropertyRow(UG2ITextMultiValuePropertyRow* PropertySelector, const FString& PropertyNameStringID,

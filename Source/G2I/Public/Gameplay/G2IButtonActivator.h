@@ -13,13 +13,15 @@ class G2I_API AG2IButtonActivator : public AActor, public IG2IInteractiveObjectI
 {
 	GENERATED_BODY()
 
-private:
-	int32 ActivationSoundId = -1;
-
 protected:
 
 	UPROPERTY(EditAnywhere, Category = "Data|Activation")
 	TSet<TObjectPtr<AActor>> ActorsToActivate;
+
+	UPROPERTY(EditAnywhere, Category = "Data")
+	bool bLockOnInteraction = true;
+
+	int32 ActivationSoundId = -1;
 
 	virtual void BeginPlay() override;
 
@@ -28,6 +30,9 @@ public:
 	TObjectPtr<UG2ISoundComponent> SoundComp;
 
 	AG2IButtonActivator();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName ActivationSoundName = FName("ActivationSound");
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UG2IWorldHintKeyWidgetComponent> HintKeyWidgetComp;

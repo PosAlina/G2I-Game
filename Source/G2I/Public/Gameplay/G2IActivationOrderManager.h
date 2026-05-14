@@ -5,7 +5,7 @@
 #include "Components/G2IActivationWithOrderComponent.h"
 #include "G2IActivationOrderManager.generated.h"
 
-class UG2ILauncherComponent;
+class UG2IActivationLauncherComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActivationWithOrderEndedDelegate, AActor*, ManagerActor, bool, bSuccess)
 ;
 
@@ -27,7 +27,7 @@ public:
 	FOnActivationWithOrderEndedDelegate OnActivationWithOrderEndedDelegate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TObjectPtr<UG2ILauncherComponent> LauncherComp;
+	TObjectPtr<UG2IActivationLauncherComponent> LauncherComp;
 
 protected:
 	// Array that holds already activated actors

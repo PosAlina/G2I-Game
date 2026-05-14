@@ -11,5 +11,6 @@ enum class EG2IStringTablesTypes : uint8
 	TrainingScreen UMETA(DisplayName = "String table of debug HUD with mechanic description"),
 	CutScenes UMETA(DisplayName = "String table of cut scenes"),
 	Gallery UMETA(DisplayName = "String table of gallery"),
-	Tasks UMETA(DisplayName = "String table of tasks")
+	Tasks UMETA(DisplayName = "String table of tasks"),
+	InputActionsWithSomeNames UMETA(DisplayName = "String table of input action multiply"),
 };

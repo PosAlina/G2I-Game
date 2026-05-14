@@ -62,8 +62,13 @@ void AG2ITransitBetweenLevelTriggerBox::NotifyActorBeginOverlap(AActor* OtherAct
 		UE_LOG(LogG2I, Error, TEXT("%s: Transit Component can't create"), *GetActorNameOrLabel());
 		return;
 	}
-	if (PlayerController->GetPawn() == OtherActor)
+	APawn *PlayerPawn = PlayerController->GetPawn();
+	if (PlayerPawn == OtherActor)
 	{
+		if (TransitComp->BanCharacters.Contains(PlayerPawn))
+		{
+			return;
+		}
 		if (!ensure(TransitComp->Transit()))
 		{
 			G2I::DebugWarningMessage(GetActorNameOrLabel() + " can't transit to level");

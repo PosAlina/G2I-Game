@@ -5,8 +5,17 @@
 #include "Interfaces/G2IMovingByGearObjectInterface.h"
 #include "G2IMovingByGearWithSplineActor.generated.h"
 
+UENUM(BlueprintType)
+enum class EG2IRotationType : uint8
+{
+	DisableRotation UMETA(DisplayName = "Disable rotation at all"),
+	PointRotation UMETA(DisplayName = "Rotation changes only through rotation change in spline points with lerp"),
+	SplineRotation UMETA(DisplayName = "Rotation changes along spline")
+};
+
 class USplineComponent;
 class UBoxComponent;
+
 UCLASS()
 class G2I_API AG2IMovingByGearWithSplineActor : public AActor, public IG2IMovingByGearObjectInterface
 {
@@ -14,7 +23,9 @@ class G2I_API AG2IMovingByGearWithSplineActor : public AActor, public IG2IMoving
 
 private:
 	void SetLocationAndRotationWithSpline(float SplineDistance);
+
 public:
+
 	UPROPERTY(EditAnywhere, Category = "Data|Spline")
 	TObjectPtr<USplineComponent> SplineComponent;
 
@@ -25,7 +36,7 @@ public:
 	float CurrentSplineDistance;
 
 	UPROPERTY(EditAnywhere, Category = "Data|Spline")
-	bool bChangeRotationThroughSpline = true;
+	EG2IRotationType ChangeRotationThroughSpline = EG2IRotationType::PointRotation;
 
 	UPROPERTY(EditAnywhere, Category = "Data|Spline")
 	bool bChangeLocationThroughSpline = true;

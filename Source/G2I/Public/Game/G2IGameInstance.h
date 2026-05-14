@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "Sound/G2IGameSoundManager.h"
 #include "G2IGameInstance.generated.h"
 
 class UG2ITasksCatalog;
@@ -18,7 +19,8 @@ enum class EG2ILevelName : uint8
 	TestLevel,
 	BoilerRoom,
 	ChildrenRoom,
-	Hall
+	Hall,
+	EndStory
 };
 
 USTRUCT(BlueprintType)
@@ -55,6 +57,12 @@ public:
 	FCloseLevelDelegate OnCloseLevelDelegate;
 
 protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Audio Settings")
+	TObjectPtr<USoundMix> DefaultMainSoundMix;
+
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Audio Settings")
+	TMap<EG2ISoundType, TObjectPtr<USoundClass>> DefaultSoundClasses;
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UG2IWidgetsCatalog> WidgetsCatalog;

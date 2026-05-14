@@ -2,6 +2,7 @@
 #include "G2I.h"
 #include "G2IOutlineComponent.h"
 #include "Components/SteamGlove/G2ISteamGloveComponent.h"
+#include "G2ISoundComponent.h"
 
 AG2IMovingBySteamAndHandsObject::AG2IMovingBySteamAndHandsObject()
 {
@@ -13,6 +14,11 @@ AG2IMovingBySteamAndHandsObject::AG2IMovingBySteamAndHandsObject()
 	if (!ensure(OutlineComponent))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: Failed to create Outline Component"), *GetName());
+	}
+
+	SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("SoundComponent"));
+	if (SoundComp) {
+		SoundComp->SetupSounds.Add(BounceSoundName, FSoundConfig());
 	}
 }
 
@@ -33,6 +39,20 @@ void AG2IMovingBySteamAndHandsObject::BeginPlay()
 	Timeline->AddInterpFloat(TimelineCurve, TimelineUpdate);
 	Timeline->SetTimelineLengthMode(ETimelineLengthMode::TL_LastKeyFrame);
 	Timeline->SetLooping(false);
+
+	if (!ensure(SoundComp)) {
+		UE_LOG(LogG2I, Warning, TEXT("Sound Component is not set for %s"), *GetName());
+		return;
+	}
+
+	if (SoundComp->SetupSounds.Contains(BounceSoundName))
+	{
+		BounceSoundId = SoundComp->AddSound(SoundComp->SetupSounds[BounceSoundName]);
+		if (BounceSoundId == -1)
+		{
+			UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: BounceSoundId (ID == -1)"), *GetName(), *FString(__FUNCTION__));
+		}
+	}
 }
 
 
@@ -68,6 +88,7 @@ void AG2IMovingBySteamAndHandsObject::OnTimelineUpdate(const float Output)
 	DeltaVector = ForwardVector * 10.0f * SteamPushForce * Multiplier;
 	DeltaVector += SM->GetComponentLocation();
 	SM->SetWorldLocation(DeltaVector, false, &SweepResult);
+	UG2ISoundComponent::PlaySoundSafe(SoundComp, BounceSoundId);
 }
 
 bool AG2IMovingBySteamAndHandsObject::CanInteract_Implementation(const ACharacter* Interactor) {

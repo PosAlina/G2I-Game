@@ -5,6 +5,7 @@
 #include "G2IAudioZoneComponent.generated.h"
 
 class UG2ISoundComponent;
+class UG2ILauncherComponent;
 class UPrimitiveComponent;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -23,6 +24,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Data|Audio_Zone")
 	TObjectPtr<UG2ISoundComponent> SoundComp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Data|Audio_Zone")
+	TObjectPtr<UG2ILauncherComponent> LauncherComp;
 
 	UPROPERTY(EditAnywhere, Category = "Data|Audio_Zone")
 	FComponentReference AudioZoneTriggerCollisionRef;

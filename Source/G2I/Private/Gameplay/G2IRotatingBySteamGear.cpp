@@ -3,6 +3,7 @@
 #include "G2IOutlineComponent.h"
 #include "Interfaces/G2IMovingByGearObjectInterface.h"
 #include "Components/G2IInventoryComponent.h"
+#include "EngineUtils.h"
 #include "Sound/G2ISoundComponent.h"
 
 AG2IRotatingBySteamGear::AG2IRotatingBySteamGear()
@@ -14,7 +15,8 @@ AG2IRotatingBySteamGear::AG2IRotatingBySteamGear()
 	SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("SoundComponent"));
 	if (SoundComp) {
 		SoundComp->SetupAttachment(RootComponent);
-		SoundComp->SetupSounds.Add(TEXT("GearRotationSound"), FSoundConfig());
+		SoundComp->SetupSounds.Add(GearRotationSoundName, FSoundConfig());
+		SoundComp->SetupSounds.Add(ActorMovingWithSplineSoundName, FSoundConfig());
 	}
 	OutlineComponent = CreateDefaultSubobject<UG2IOutlineComponent>(TEXT("OutlineComponent"));
 	if (!ensure(OutlineComponent))
@@ -42,52 +44,78 @@ void AG2IRotatingBySteamGear::BeginPlay()
 	Timeline->SetTimelineFinishedFunc(TimelineFinished);
 	Timeline->SetLooping(false);
 
-	if (SoundComp && SoundComp->SetupSounds.Contains(TEXT("GearRotationSound")))
+	if (!ensure(SoundComp)) {
+		UE_LOG(LogG2I, Warning, TEXT("Sound Component is not set for %s"), *GetName());
+		return;
+	}
+
+	if (SoundComp->SetupSounds.Contains(GearRotationSoundName))
 	{
-		GearRotationSoundId = SoundComp->AddSound(SoundComp->SetupSounds[TEXT("GearRotationSound")]);
+		GearRotationSoundId = SoundComp->AddSound(SoundComp->SetupSounds[GearRotationSoundName]);
 		if (GearRotationSoundId == -1)
 		{
 			UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: GearRotationSoundId (ID == -1)"), *GetName(), *FString(__FUNCTION__));
 		}
 	}
+
+	if (SoundComp->SetupSounds.Contains(ActorMovingWithSplineSoundName))
+	{
+		ActorMovingWithSplineSoundId = SoundComp->AddSound(SoundComp->SetupSounds[ActorMovingWithSplineSoundName]);
+		if (ActorMovingWithSplineSoundId == -1)
+		{
+			UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: ActorMovingWithSplineSoundId (ID == -1)"), *GetName(), *FString(__FUNCTION__));
+		}
+	}
+
+	if (const UWorld* World = GetWorld()) {
+		for (TActorIterator<AActor> It(GetWorld()); It; ++It)
+		{
+			AActor* CurrentActor = *It;
+			if (CurrentActor->ActorHasTag(RotationTag))
+			{
+				MovableObjects.Add(CurrentActor);
+			}
+		}
+	}
 }
 
-void AG2IRotatingBySteamGear::OnShoot_Implementation(const FHitResult& HitResult, AActor* Character) {
-	if (IsActive)
-	{
-		if (SoundComp) {
-			SoundComp->SetSoundVolume(GearRotationSoundId, 1.0f);
-			SoundComp->PlaySound(GearRotationSoundId);
-		}
+void AG2IRotatingBySteamGear::OnShoot_Implementation(const FHitResult& HitResult, AActor* Character)
+{
+	if (!IsActive) return;
 
-		//Wrap into pushing with use of all axis
-		//Calculating direction based on trace and rotation normal
-		FVector HitVector = HitResult.ImpactPoint - HitResult.TraceStart;
-		HitVector.X = HitVector.Z;
-		HitVector.Z = 0;
-		const FVector RotationNormal = { 1.0f, 0.0f, 0.0f };
-		const float CosineValue = FVector::DotProduct(HitVector.GetSafeNormal(), RotationNormal.GetSafeNormal());
-
-		//Calculating direction based on HitNormal and axis Z
-		FVector HitNormal = HitResult.ImpactNormal;
-		HitNormal.X = 0;
-		const FVector AxisZ = { 0.0f, 0.0f, 1.0f };
-		const FVector CrossProductResult = FVector::CrossProduct(AxisZ, HitNormal);
-
-		RotationSign = CrossProductResult.X * CosineValue;
-
-		if (!Timeline) {
-			UE_LOG(LogG2I, Error, TEXT("Can't start timeline for %s"), *GetName());
-			return;
-		}
-
-		if (!Timeline->IsPlaying())
-		{
-			Timeline->PlayFromStart();
-		}
-		
-		OnStartRotateDelegate.Broadcast(this);
+	if (SoundComp) {
+		SoundComp->SetSoundVolume(GearRotationSoundId, 1.0f);
+		SoundComp->PlaySound(GearRotationSoundId);
+		SoundComp->PlaySound(ActorMovingWithSplineSoundId);
 	}
+
+	const FVector HitDirection = (HitResult.ImpactPoint - HitResult.TraceStart).GetSafeNormal();
+
+	const FVector LeverArm = HitResult.ImpactPoint - GetActorLocation();
+
+	const FVector SimulatedTorque = FVector::CrossProduct(LeverArm, HitDirection);
+
+	FVector AllowedRotationAxis = FVector::ZeroVector;
+	if (bRotateRoll)  AllowedRotationAxis += GetActorForwardVector();
+	if (bRotatePitch) AllowedRotationAxis += GetActorRightVector();
+	if (bRotateYaw)   AllowedRotationAxis += GetActorUpVector();
+	AllowedRotationAxis.Normalize();
+
+	const float TorqueOnAxis = FVector::DotProduct(SimulatedTorque, AllowedRotationAxis);
+
+	RotationSign = FMath::Sign(TorqueOnAxis);
+
+	if (!Timeline) {
+		UE_LOG(LogG2I, Error, TEXT("Can't start timeline for %s"), *GetName());
+		return;
+	}
+
+	if (!Timeline->IsPlaying())
+	{
+		Timeline->PlayFromStart();
+	}
+
+	OnStartRotateDelegate.Broadcast(this);
 }
 
 void AG2IRotatingBySteamGear::OnTimelineUpdate(const float Output)
@@ -100,6 +128,7 @@ void AG2IRotatingBySteamGear::OnTimelineUpdate(const float Output)
 
 	const float DeltaTime = World->GetDeltaSeconds();
 	const float CurrentRotationStep = Output * RotationSpeed * DeltaTime;
+
 	for (const auto& i : MovableObjects) {
 		if (!i) {
 			UE_LOG(LogG2I, Error, TEXT("Can't get object to push for %s"), *GetName());
@@ -111,20 +140,24 @@ void AG2IRotatingBySteamGear::OnTimelineUpdate(const float Output)
 		}
 	}
 
-	FRotator ActorRotator = { 0.0f, 0.0f, 0.0f };
+	FRotator ActorRotator = FRotator::ZeroRotator;
+	float StepWithSign = CurrentRotationStep * RotationSign;
+
 	if (bRotateRoll) {
-		ActorRotator.Roll = CurrentRotationStep * FMath::Sign(RotationSign);
+		ActorRotator.Roll = StepWithSign;
 	}
 	if (bRotatePitch) {
-		ActorRotator.Pitch = CurrentRotationStep * FMath::Sign(RotationSign);
+		ActorRotator.Pitch = StepWithSign;
 	}
 	if (bRotateYaw) {
-		ActorRotator.Yaw = CurrentRotationStep * FMath::Sign(RotationSign);
+		ActorRotator.Yaw = StepWithSign;
 	}
+
 	if (SoundComp) {
 		SoundComp->SetSoundVolume(GearRotationSoundId, Output);
 	}
-	AddActorWorldRotation(ActorRotator);
+
+	AddActorLocalRotation(ActorRotator);
 }
 
 void AG2IRotatingBySteamGear::Repair(AActor* Interactor)
@@ -149,5 +182,6 @@ void AG2IRotatingBySteamGear::OnTimelineFinished()
 {
 	if (SoundComp) {
 		SoundComp->StopSound(GearRotationSoundId);
+		SoundComp->StopSound(ActorMovingWithSplineSoundId);
 	}
 }

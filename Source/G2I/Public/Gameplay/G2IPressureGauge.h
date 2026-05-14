@@ -6,7 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "G2IPressureGauge.generated.h"
 
-class UG2ILauncherComponent;
+class UG2IActivationLauncherComponent;
 class UG2ISoundComponent;
 USTRUCT(BlueprintType)
 struct FArrowInfo
@@ -58,7 +58,7 @@ public:
     TObjectPtr<UG2ISoundComponent> SoundComp;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
-    TObjectPtr<UG2ILauncherComponent> LauncherComp;
+    TObjectPtr<UG2IActivationLauncherComponent> LauncherComp;
     
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gauge")
     TArray<FArrowInfo> Arrows;

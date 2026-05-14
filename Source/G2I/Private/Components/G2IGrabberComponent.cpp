@@ -37,6 +37,38 @@ UG2IGrabberComponent::UG2IGrabberComponent()
 	}
 }
 
+void UG2IGrabberComponent::OnRegister()
+{
+	Super::OnRegister();
+	
+	if (!ensure(VerticalMovementComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find VerticalMovementComponent"), *GetName());
+	}
+	else
+	{
+		VerticalMovementComp->RegisterComponent();
+	}
+	
+	if (!ensure(PhysicsHandleComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find PhysicsHandleComponent"), *GetName());
+	}
+	else
+	{
+		PhysicsHandleComp->RegisterComponent();
+	}
+	
+	if (!ensure(SoundComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find SoundComp"), *GetName());
+	}
+	else
+	{
+		SoundComp->RegisterComponent();
+	}
+}
+
 void UG2IGrabberComponent::PlayHookAnimation(UAnimSequence* Animation)
 {
 	if (!ensure(SkeletalMeshComp) || !ensure(Animation)) {
