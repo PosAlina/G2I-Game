@@ -23,8 +23,8 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UG2ITextMultiValuePropertyRow> FrameRate;
 
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UG2INumericalMultiValuePropertyRow> Brightness;
+	/*UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UG2INumericalMultiValuePropertyRow> Brightness;*/
 	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UG2ITextMultiValuePropertyRow> VSync;
@@ -33,13 +33,18 @@ public:
 
 	virtual void ApplyOptions_Implementation() override;
 	virtual void CancelUnAppliedOptions_Implementation() override;
-	
+
 protected:
 	
 	virtual void InitializeAfterManagerLoading() override;
-	
+
 private:
 	
 	void InitializeDefaults() const;
+	void InitializeScreenMode() const;
+	void InitializeScreenResolution() const;
+	void InitializeFrameRate() const;
+	void InitializeVSync() const;
+	//void InitializeBrightness() const;
 	
 };

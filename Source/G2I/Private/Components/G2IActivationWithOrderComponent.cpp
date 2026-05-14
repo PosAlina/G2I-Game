@@ -7,7 +7,7 @@ void UG2IActivationWithOrderComponent::Activated()
 	{
 		if (bCanBeReactivated)
 		{
-			bActivated = false;
+			//bActivated = false;
 			OnActivatedDelegate.ExecuteIfBound(GetOwner(), true, this);
 		}
 	}
@@ -26,6 +26,10 @@ void UG2IActivationWithOrderComponent::Accepted(int32 AtIndex)
 void UG2IActivationWithOrderComponent::Declined()
 {
 	ActivatedIndexes.Pop();
+	if (ActivatedIndexes.IsEmpty())
+	{
+		bActivated = false;
+	}
 }
 
 void UG2IActivationWithOrderComponent::Restored()

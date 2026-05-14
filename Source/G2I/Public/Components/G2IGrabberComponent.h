@@ -46,6 +46,8 @@ private:
 	int32 GrabbingSoundId = -1;
 public:	
 	UG2IGrabberComponent();
+	
+	virtual void OnRegister() override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
 	TObjectPtr<UG2ISoundComponent> SoundComp;

@@ -18,7 +18,7 @@ void AG2IActivationOrderManagerSounds::OrderFailed()
 
 void AG2IActivationOrderManagerSounds::OnActorActivated(AActor* ActivatedActor, bool bReactivation, UG2IActivationWithOrderComponent* ActivationComponent)
 {
-	if (bReactivation)
+	if (bReactivation && bAllowCancel)
 	{
 		if (CurrentIndex > 0 && ActivatedActor == ActivatedActorsArray.Last())
 		{
@@ -26,14 +26,13 @@ void AG2IActivationOrderManagerSounds::OnActorActivated(AActor* ActivatedActor, 
 			CurrentIndex--;
 			if (ActivationComponent)
 				ActivationComponent->Declined();
+			return;
 		}
 	}
-	else
-	{
-		ActivatedActorsArray.Add(ActivatedActor);
-		if (ActivationComponent)
-			ActivationComponent->Accepted(CurrentIndex);
-		CurrentIndex++;
-		CheckIfOrderCompleted();
-	}
+
+	ActivatedActorsArray.Add(ActivatedActor);
+	if (ActivationComponent)
+		ActivationComponent->Accepted(CurrentIndex);
+	CurrentIndex++;
+	CheckIfOrderCompleted();
 }

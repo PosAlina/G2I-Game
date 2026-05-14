@@ -185,7 +185,7 @@ bool AG2ILaunchingActorsIndicator::CheckState(const FName& StateName)
 void AG2ILaunchingActorsIndicator::SetState(const FName& NewState)
 {
 	CurrentState = NewState;
-	G2I::DebugLogMessage(GetActorNameOrLabel() + "set state " + DefaultState.ToString());
+	G2I::DebugLogMessage(GetActorNameOrLabel() + " set state " + DefaultState.ToString());
 	UpdateState();
 }
 

@@ -779,8 +779,10 @@ void AG2IPlayerController::Fly(const int Direction) const
 			*FlightComponent->GetName());
 		return;
 	}
+
+	const bool bIsFlightSuccess = IG2IFlightInterface::Execute_Fly(FlightComponent, Direction);
 	
-	if (Direction == 1 && IG2IFlightInterface::Execute_Fly(FlightComponent, Direction))
+	if (Direction == 1 && bIsFlightSuccess)
 	{
 		OnFlyUpDelegate.Broadcast();
 	}
@@ -945,6 +947,10 @@ void AG2IPlayerController::StartAiming(const FInputActionValue& Value)
 	if (AimingComponent && AimingComponent->Implements<UG2IAimingInterface>())
 	{
 		IG2IAimingInterface::Execute_StartAimingAction(AimingComponent);
+		if (APawn* CurrentPawn = GetPawn())
+		{
+			CurrentPawn->bUseControllerRotationYaw = true;
+		}
 	}
 }
 
@@ -953,6 +959,10 @@ void AG2IPlayerController::StopAiming(const FInputActionValue& Value)
 	if (AimingComponent && AimingComponent->Implements<UG2IAimingInterface>())
 	{
 		IG2IAimingInterface::Execute_StopAimingAction(AimingComponent);
+		if (APawn* CurrentPawn = GetPawn())
+		{
+			CurrentPawn->bUseControllerRotationYaw = false;
+		}
 	}
 }
 
@@ -1055,3 +1065,18 @@ void AG2IPlayerController::RotateCameraTo(const float Yaw, const float Pitch)
 	}
 }
 
+void AG2IPlayerController::GetAudioListenerPosition(FVector& OutLocation, FVector& OutFrontDir, FVector& OutRightDir) const
+{
+	if (const APawn* CurrentPawn = GetPawn())
+	{
+		OutLocation = CurrentPawn->GetActorLocation();
+
+		const FRotator ViewRotation = GetControlRotation();
+		OutFrontDir = ViewRotation.Vector();
+		OutRightDir = FRotationMatrix(ViewRotation).GetScaledAxis(EAxis::Y);
+	}
+	else
+	{
+		Super::GetAudioListenerPosition(OutLocation, OutFrontDir, OutRightDir);
+	}
+}

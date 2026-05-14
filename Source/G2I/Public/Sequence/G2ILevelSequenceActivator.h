@@ -9,6 +9,8 @@
 class ULevelSequence;
 class UBillboardComponent;
 class UG2ISoundComponent;
+class UInputMappingContext;
+class AG2IPlayerController;
 
 UCLASS()
 class G2I_API AG2ILevelSequenceActivator : public AActor, public IG2IActivationInterface
@@ -19,6 +21,12 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound", 
 		meta = (Tooltip = "Sounds that could be played in the Sequence."))
 	TObjectPtr<UG2ISoundComponent> SoundComp;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputMappingContext> CutsceneIMC;
+
+	UPROPERTY()
+	TObjectPtr<AG2IPlayerController> PC;
 
 private:
 	UPROPERTY(EditAnywhere, meta = (Tooltip = "Sequence (a.k.a. 3D cutscene) that will be played after this actor activates."))
@@ -50,6 +58,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ActivateOtherActors() const;
+
+	UFUNCTION()
+	void OnSequenceFinished();
 
 protected:
 	virtual void BeginPlay() override;

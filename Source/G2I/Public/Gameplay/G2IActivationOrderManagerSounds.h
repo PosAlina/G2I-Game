@@ -12,10 +12,12 @@ UCLASS()
 class G2I_API AG2IActivationOrderManagerSounds : public AG2IActivationOrderManager
 {
 	GENERATED_BODY()
-
-public:
 	
 protected:
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Activation with order")
+	bool bAllowCancel = true;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Activation with order")
 	TObjectPtr<USoundBase> CorrectOrderSound;
 

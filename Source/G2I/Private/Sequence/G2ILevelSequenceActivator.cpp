@@ -3,6 +3,8 @@
 #include "LevelSequencePlayer.h"
 #include "G2ISoundComponent.h"
 #include "G2I.h"
+#include "InputMappingContext.h"
+#include "G2IPlayerController.h"
 
 AG2ILevelSequenceActivator::AG2ILevelSequenceActivator()
 {
@@ -59,7 +61,18 @@ void AG2ILevelSequenceActivator::Activate_Implementation()
 		return;
 	}
 
+	PC = Cast<AG2IPlayerController>(GetWorld()->GetFirstPlayerController());
+
 	SequencePlayer->Play();
+
+	if (!ensure(PC))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: PlayerController is null"), *GetActorNameOrLabel());
+		return;
+	}
+	PC->OverrideInputMappingContext({ CutsceneIMC });
+
+	SequencePlayer->OnFinished.AddDynamic(this, &AG2ILevelSequenceActivator::OnSequenceFinished);
 }
 
 void AG2ILevelSequenceActivator::ActivateOtherActors() const
@@ -106,4 +119,15 @@ void AG2ILevelSequenceActivator::BeginPlay()
 			UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't create %s (ActivationSoundId == -1)."), *GetName(), *ActivationSoundName.ToString());
 		}
 	}
+}
+
+void AG2ILevelSequenceActivator::OnSequenceFinished()
+{
+	if (!ensure(PC))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: PlayerController is null"), *GetActorNameOrLabel());
+		return;
+	}
+
+	PC->StopOverrideInputMappingContext();
 }

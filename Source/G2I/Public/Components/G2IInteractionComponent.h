@@ -26,6 +26,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Data", meta = (AllowPrivateAccess = "true"))
 	bool bCanInteract = true;
 
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UAnimMontage> InteractAnimMontage;
+
 	UPROPERTY()
 	TObjectPtr<UG2IUIManager> UIManager;
 
