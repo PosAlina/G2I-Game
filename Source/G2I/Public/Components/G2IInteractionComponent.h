@@ -29,6 +29,9 @@ private:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UAnimMontage> InteractAnimMontage;
 
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UAnimMontage> MovingAnimMontage;
+
 	UPROPERTY()
 	TObjectPtr<UG2IUIManager> UIManager;
 
