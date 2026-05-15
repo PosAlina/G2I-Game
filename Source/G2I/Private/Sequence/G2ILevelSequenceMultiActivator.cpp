@@ -71,8 +71,6 @@ void AG2ILevelSequenceMultiActivator::Activate_Implementation()
 	
 	PC = Cast<AG2IPlayerController>(GetWorld()->GetFirstPlayerController());
 
-	SequencePlayer->Play();
-
 	if (!ensure(PC))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: PlayerController is null"), *GetActorNameOrLabel());
@@ -81,6 +79,8 @@ void AG2ILevelSequenceMultiActivator::Activate_Implementation()
 	PC->OverrideInputMappingContext({ CutsceneIMC });
 
 	SequencePlayer->OnFinished.AddDynamic(this, &AG2ILevelSequenceMultiActivator::OnSequenceFinished);
+
+	SequencePlayer->Play();
 }
 
 void AG2ILevelSequenceMultiActivator::ActivateOtherActors() const
