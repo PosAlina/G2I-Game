@@ -110,3 +110,26 @@ void UG2IAudioZoneComponent::OnOverlapEnd(UPrimitiveComponent* OverlappedCompone
 
 	SoundComp->StopSound(PlayingSoundId);
 }
+
+void UG2IAudioZoneComponent::OnRegister()
+{
+	Super::OnRegister();
+
+	if (!ensure(LauncherComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find PhysicsHandleComponent"), *GetName());
+	}
+	else
+	{
+		LauncherComp->RegisterComponent();
+	}
+
+	if (!ensure(SoundComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: Couldn't find SoundComp"), *GetName());
+	}
+	else
+	{
+		SoundComp->RegisterComponent();
+	}
+}
