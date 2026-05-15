@@ -70,6 +70,12 @@ protected:
 	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsStoppedWhenMovingActorStopped = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsRotatingFromStartWhenShoot = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName RotationTag = FName("RotatingActor");
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

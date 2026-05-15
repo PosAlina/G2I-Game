@@ -182,7 +182,7 @@ void AG2IPlayerController::BindEnhancedDelegates()
 		TakeAimAction, ETriggerEvent::Completed, this, &ThisClass::StopAiming);
 
 	EnhancedInputComponent->BindAction(
-		ShootAction, ETriggerEvent::Started, this, &ThisClass::Shoot);
+		ShootAction, ETriggerEvent::Triggered, this, &ThisClass::Shoot);
 
 	EnhancedInputComponent->BindAction(
 		GlovePunchAction, ETriggerEvent::Started, this, &ThisClass::GlovePunchActivation);

@@ -3,16 +3,16 @@
 #include "Components/SplineComponent.h"
 #include "Components/BoxComponent.h"
 
-void AG2IMovingByGearWithSplineActor::SetLocationAndRotationWithSpline(float SplineDistance)
+bool AG2IMovingByGearWithSplineActor::SetLocationAndRotationWithSpline(float SplineDistance)
 {
 	if (!ensure(SplineComponent)) {
 		UE_LOG(LogG2I, Warning, TEXT("Couldn't get the Spline Component for %s"), *GetName());
-		return;
+		return true;
 	}
 
 	if (!ensure(MainBoxComponent)) {
 		UE_LOG(LogG2I, Warning, TEXT("Couldn't get the Main Box Component for %s"), *GetName());
-		return;
+		return true;
 	}
 
 	FVector NewLocation;
@@ -54,7 +54,16 @@ void AG2IMovingByGearWithSplineActor::SetLocationAndRotationWithSpline(float Spl
 		CurrentSplineDistance = SplineComponent->GetDistanceAlongSplineAtLocation(
 				MainBoxComponent->GetComponentLocation(),
 				ESplineCoordinateSpace::World);
-	}	
+		return true;
+	}
+	if (FMath::IsNearlyEqual(SplineDistance, SplineComponent->GetSplineLength())) {
+		return true;
+	}
+	if (FMath::IsNearlyEqual(SplineDistance, 0.f)) {
+		return true;
+	}
+
+	return false;
 }
 
 
@@ -88,15 +97,15 @@ void AG2IMovingByGearWithSplineActor::BeginPlay()
 	SetLocationAndRotationWithSpline(0.0f);
 }
 
-void AG2IMovingByGearWithSplineActor::OnPushing_Implementation(float ForceMagnitude)
+bool AG2IMovingByGearWithSplineActor::OnPushing_Implementation(float ForceMagnitude)
 {
 	if (!ensure(SplineComponent)) {
 		UE_LOG(LogG2I, Warning, TEXT("SplineComponent is not set for %s"), *GetName());
-		return;
+		return true;
 	}
 	const float SplineLength = SplineComponent->GetSplineLength();
 	CurrentSplineDistance += ForceMagnitude * ForceModifier;
 	CurrentSplineDistance = FMath::Clamp(CurrentSplineDistance, 0.0f, SplineLength);
 
-	SetLocationAndRotationWithSpline(CurrentSplineDistance);
+	return SetLocationAndRotationWithSpline(CurrentSplineDistance);
 }
