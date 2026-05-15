@@ -614,18 +614,26 @@ void UG2IGameSoundManager::OnSoundFinished(UAudioComponent* AudioComponent, cons
 		IdStack.Push(SoundId);
 		return;
 	}
-
-	const bool bAdvanceQueue = (SoundId == CurrentSoundFromQueueId);
-
-	if (FG2IActiveSoundData* SoundData = ActiveSounds.Find(SoundId))
-	{
-		if (const UWorld* World = GetWorld())
+	if (AudioComponent->bAutoDestroy) {
+		ActiveSounds.Remove(SoundId);
+		IdStack.Push(SoundId);
+		
+		if (FG2IActiveSoundData* SoundData = ActiveSounds.Find(SoundId))
 		{
-			World->GetTimerManager().ClearTimer(SoundData->PlayTimerHandle);
+			if (const UWorld* World = GetWorld())
+			{
+				World->GetTimerManager().ClearTimer(SoundData->PlayTimerHandle);
+			}
 		}
 	}
-	ActiveSounds.Remove(SoundId);
-	IdStack.Push(SoundId);
+
+	const bool bAdvanceQueue = (SoundId == CurrentSoundFromQueueId) && (SoundId != -1);
+	if (!bAdvanceQueue)
+	{
+		return;
+	}
+
+	
 
 	SoundPlayQueue.Remove(SoundId);
 
