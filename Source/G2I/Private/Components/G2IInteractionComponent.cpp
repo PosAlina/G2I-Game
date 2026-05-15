@@ -143,10 +143,13 @@ void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 
 	if (ClosestInteractableActor)
 	{
+		UAnimMontage* CurrentAnimMontage = InteractAnimMontage;
+
 		if (ClosestInteractableActor->Implements<UG2IMovingObjectInterface>())
 		{
-			float SpeedChange = IG2IMovingObjectInterface::Execute_GetSpeedChange(ClosestInteractableActor);
+			const float SpeedChange = IG2IMovingObjectInterface::Execute_GetSpeedChange(ClosestInteractableActor);
 			OnMovingInteractingDelegate.Broadcast(SpeedChange);
+			CurrentAnimMontage = MovingAnimMontage;
 		}
 
 		IG2IInteractiveObjectInterface::Execute_Interact(ClosestInteractableActor, Owner);
@@ -155,7 +158,7 @@ void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 		G2I::DebugLogMessage(InteractLogMessage);
 
 		// Playing the animation
-		if (InteractAnimMontage)
+		if (CurrentAnimMontage)
 		{
 			const ACharacter* Character = Cast<ACharacter>(Owner);
 			if (!Character) {
@@ -175,7 +178,14 @@ void UG2IInteractionComponent::InteractAction_Implementation(const FName& Tag)
 				return;
 			}
 
-			AnimInstance->Montage_Play(InteractAnimMontage);
+			if (AnimInstance->Montage_IsPlaying(CurrentAnimMontage))
+			{
+				AnimInstance->Montage_Stop(CurrentAnimMontage->GetDefaultBlendOutTime(), CurrentAnimMontage);
+			}
+			else
+			{
+				AnimInstance->Montage_Play(CurrentAnimMontage);
+			}
 		}
 	}
 	else
