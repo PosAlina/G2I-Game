@@ -1,7 +1,14 @@
 #include "Gameplay/G2ITogglePlatform.h"
 #include "Components/TimelineComponent.h"
 #include "G2I.h"
+#include "G2ISoundComponent.h"
 
+AG2ITogglePlatform::AG2ITogglePlatform() {
+    SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("SoundComponent"));
+    if (SoundComp) {
+        SoundComp->SetupSounds.Add(PlatformSoundName, FSoundConfig());
+    }
+}
 
 void AG2ITogglePlatform::BeginPlay()
 {
@@ -23,6 +30,20 @@ void AG2ITogglePlatform::BeginPlay()
         PlatformMesh->SetWorldLocation(StartLoc);
         Timeline->SetPlaybackPosition(0.0f, false);
     }
+
+    if (!ensure(SoundComp)) {
+        UE_LOG(LogG2I, Warning, TEXT("Sound Component is not set for %s"), *GetName());
+        return;
+    }
+
+    if (SoundComp->SetupSounds.Contains(PlatformSoundName))
+    {
+        PlatformSoundId = SoundComp->AddSound(SoundComp->SetupSounds[PlatformSoundName]);
+        if (PlatformSoundId == -1)
+        {
+            UE_LOG(LogG2I, Warning, TEXT("[%s][%s]: PlatformSoundId (ID == -1)"), *GetName(), *FString(__FUNCTION__));
+        }
+    }
 }
 
 void AG2ITogglePlatform::OnTimelineFinished()
@@ -33,6 +54,12 @@ void AG2ITogglePlatform::OnTimelineFinished()
         return;
     }
     Timeline->Stop();
+
+    if (!ensure(SoundComp)) {
+        UE_LOG(LogG2I, Warning, TEXT("Sound Component is not set for %s"), *GetName());
+        return;
+    }
+    SoundComp->StopSound(PlatformSoundId);
 }
 
 void AG2ITogglePlatform::ToggleLockingPlatform(UG2ILauncherComponent* LauncherComponent, AActor* ComponentOwner,
@@ -74,6 +101,11 @@ void AG2ITogglePlatform::Activate_Implementation()
         Timeline->SetPlayRate(1.0f);
         Timeline->Play();
     }
+    if (!ensure(SoundComp)) {
+        UE_LOG(LogG2I, Warning, TEXT("Sound Component is not set for %s"), *GetName());
+        return;
+    }
+    SoundComp->PlaySound(PlatformSoundId);
 }
 
 void AG2ITogglePlatform::Deactivate_Implementation()
@@ -98,4 +130,9 @@ void AG2ITogglePlatform::Deactivate_Implementation()
         Timeline->SetPlayRate(-1.0f);
         Timeline->Play();
     }
+    if (!ensure(SoundComp)) {
+        UE_LOG(LogG2I, Warning, TEXT("Sound Component is not set for %s"), *GetName());
+        return;
+    }
+    SoundComp->PlaySound(PlatformSoundId);
 }
