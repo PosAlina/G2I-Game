@@ -176,7 +176,7 @@ public:
 	float MaxVolume = 10.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound", meta = (ClampMin = "0.0"))
-	float StepVolume = 0.1f;
+	float StepVolume = 1.f;
 
 	float CommonVolume = 10.f;
 	float MusicVolume = 10.f;

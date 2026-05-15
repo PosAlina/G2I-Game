@@ -68,7 +68,7 @@ int32 UG2INumericalMultiValuePropertyRow::GetStepsCountUpToValue(const float InV
 
 bool UG2INumericalMultiValuePropertyRow::SelectValue(const float InValue)
 {
-	if (!bIsInitialized || (GetStepsCountUpToValue(InValue) == -1))
+	if (!bIsInitialized)
 	{
 		return false;
 	}

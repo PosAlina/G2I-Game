@@ -50,7 +50,7 @@ private:
 	void InitializeDialoguesVolume() const;
 	void InitializeVolumesData();
 
-	float MinVolume = 0.1f;
+	float MinVolume = 0.f;
 	float MaxVolume = 10.f;
-	float StepVolume = 0.1f;
+	float StepVolume = 1.f;
 };
