@@ -13,6 +13,15 @@ class UAudioComponent;
 class UG2IGameInstance;
 class UG2IOptionsParameters;
 
+
+UENUM(BlueprintType)
+enum class EG2ISoundStopType : uint8
+{
+	Not UMETA(DisplayName = "Can't stop queue play"),
+	Pause UMETA(DisplayName = "Pauses current sound"),
+	Stop UMETA(DisplayName = "Remove current sound"),
+};
+
 USTRUCT(BlueprintType)
 struct FG2IActiveSoundData
 {
@@ -33,8 +42,14 @@ struct FG2IActiveSoundData
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound Data")
 	float Delay = 0.0f;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound Data")
 	FTimerHandle PlayTimerHandle;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound Data")
+	bool bIsPlayingInQueue = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound Data")
+	EG2ISoundStopType bIsPausesQueuePlay = EG2ISoundStopType::Not;
+
 };
 
 USTRUCT(BlueprintType)
@@ -77,6 +92,12 @@ struct FSoundConfig
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Location")
 	bool bIs2D = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play")
+	bool bIsPlayingInQueue = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Play", meta = (EditCondition = "bIsPlayingInQueue", EditConditionHides))
+	EG2ISoundStopType bIsPausesQueuePlay = EG2ISoundStopType::Not;
 };
 
 UENUM(BlueprintType)
@@ -94,6 +115,11 @@ class G2I_API UG2IGameSoundManager : public UGameInstanceSubsystem
 	GENERATED_BODY()
 	
 private:
+	int32 CurrentSoundFromQueueId = -1;
+
+	UPROPERTY()
+	TArray<int32> SoundPlayQueue;
+
 	UPROPERTY()
 	TObjectPtr<UG2IOptionsParameters> OptionsParameters;
 
@@ -120,6 +146,9 @@ private:
 	UPROPERTY()
 	TMap<EG2ISoundType, TObjectPtr<USoundClass>> SoundClasses;
 
+	void HandleSoundQueueAdd(const int32 SoundId);
+	void AdvanceQueue();
+
 protected:
 	void ExecuteDelayedPlay(const int32 SoundId, const float FadeInTime);
 
@@ -132,6 +161,7 @@ protected:
 	FG2IActiveSoundData* GetSoundDataById(const int32 SoundId);
 
 	void OnSoundFinished(UAudioComponent* AudioComp, const int32 SoundId);
+
 public:
 
 	UFUNCTION(BlueprintPure, Category = "Sound Manager", meta = (WorldContext = "WorldContextObject"))
@@ -202,10 +232,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Sound Manager")
 	bool GetSoundPlayingOneTime(const int32 SoundId) const;
 
-	UFUNCTION(BlueprintCallable, Category = "Sound Manager")
+	UFUNCTION(BlueprintPure, Category = "Sound Manager")
 	bool GetSoundPlayingFromStart(const int32 SoundId) const;
 
-	UFUNCTION(BlueprintCallable, Category = "Sound Manager")
+	UFUNCTION(BlueprintPure, Category = "Sound Manager")
 	float GetSoundDelay(const int32 SoundId) const;
 
 	UFUNCTION(BlueprintPure, Category = "Sound Manager")
