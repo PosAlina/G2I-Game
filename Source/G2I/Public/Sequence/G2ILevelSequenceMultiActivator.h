@@ -52,6 +52,9 @@ private:
 
 	int32 ActivationSoundId = -1;
 
+	UPROPERTY()
+	TMap<FName, int32> SoundIDs;
+
 	int32 CurrentSequence = -1;
 
 public:
@@ -61,6 +64,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ActivateOtherActors() const;
+
+	UFUNCTION(BlueprintCallable)
+	void PlaySound(const FName& SoundName);
 
 	UFUNCTION()
 	void OnSequenceFinished();
