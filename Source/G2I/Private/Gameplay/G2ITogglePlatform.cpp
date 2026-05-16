@@ -3,7 +3,8 @@
 #include "G2I.h"
 #include "G2ISoundComponent.h"
 
-AG2ITogglePlatform::AG2ITogglePlatform() {
+AG2ITogglePlatform::AG2ITogglePlatform() 
+{
     SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("SoundComponent"));
     if (SoundComp) {
         SoundComp->SetupSounds.Add(PlatformSoundName, FSoundConfig());

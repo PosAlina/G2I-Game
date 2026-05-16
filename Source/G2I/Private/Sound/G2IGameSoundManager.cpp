@@ -821,8 +821,8 @@ void UG2IGameSoundManager::HandleSoundQueueAdd(const int32 NewSoundId)
 			{
 				World->GetTimerManager().ClearTimer(CurrentQueueSound->PlayTimerHandle);
 			}
-			ActiveSounds.Remove(CurrentSoundFromQueueId);
-			IdStack.Push(CurrentSoundFromQueueId);
+			//ActiveSounds.Remove(CurrentSoundFromQueueId);
+			//IdStack.Push(CurrentSoundFromQueueId);
 
 			CurrentSoundFromQueueId = NewSoundId;
 			break;
