@@ -16,6 +16,7 @@ class UG2ICharacterCollisionComponent;
 class UG2IInteractionComponent;
 class UG2IInventoryComponent;
 class UG2ISoundComponent;
+class UG2IFootstepsComponent;
 
 /**
  *  First player`s character. Engineer.
@@ -58,6 +59,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
 	TObjectPtr<UG2ISoundComponent> SoundComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
+	TObjectPtr<UG2IFootstepsComponent> FootstepsComp;
 
 private:
 

@@ -27,7 +27,8 @@ public class G2I : ModuleRules
 			"Niagara",
 			"AsyncLoadingScreen",
             "LevelSequence",
-            "MovieScene"
+            "MovieScene",
+            "PhysicsCore"
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
