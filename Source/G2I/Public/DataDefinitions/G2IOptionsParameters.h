@@ -86,14 +86,14 @@ public:
 	// ==================== GRAPHICS ====================
 	EG2IAntialiasing Antialiasing = EG2IAntialiasing::TSR;
 	bool bCustomQuality = false;
-	EG2IQuality OverallQuality = EG2IQuality::Epic;
-	EG2IQuality TextureQuality = EG2IQuality::Epic;
-	EG2IQuality ShadowsQuality = EG2IQuality::Epic;
-	EG2IQuality EffectsQuality = EG2IQuality::Epic;
-	EG2IQuality PostProcessingQuality = EG2IQuality::Epic;
-	EG2IQuality AntialiasingQuality = EG2IQuality::Epic;
-	EG2IQuality GlobalIlluminationQuality = EG2IQuality::Epic;
-	EG2IQuality ReflectionQuality = EG2IQuality::Epic;
+	EG2IQuality OverallQuality = EG2IQuality::High;
+	EG2IQuality TextureQuality = EG2IQuality::High;
+	EG2IQuality ShadowsQuality = EG2IQuality::High;
+	EG2IQuality EffectsQuality = EG2IQuality::High;
+	EG2IQuality PostProcessingQuality = EG2IQuality::High;
+	EG2IQuality AntialiasingQuality = EG2IQuality::High;
+	EG2IQuality GlobalIlluminationQuality = EG2IQuality::High;
+	EG2IQuality ReflectionQuality = EG2IQuality::High;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Graphics")
 	EG2IAntialiasing DefaultAntialiasing = EG2IAntialiasing::TSR;
@@ -102,28 +102,28 @@ public:
 	bool bDefaultCustomQuality = false;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Graphics", meta = (ToolTip = "Used only if bDefaultCustomQuality == false"))
-	EG2IQuality DefaultOverallQuality = EG2IQuality::Epic;
+	EG2IQuality DefaultOverallQuality = EG2IQuality::High;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Graphics|Optional", meta = (ToolTip = "Used only if bDefaultCustomQuality == true"))
-	EG2IQuality DefaultTextureQuality = EG2IQuality::Epic;
+	EG2IQuality DefaultTextureQuality = EG2IQuality::High;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Graphics|Optional", meta = (ToolTip = "Used only if bDefaultCustomQuality == true"))
-	EG2IQuality DefaultShadowsQuality = EG2IQuality::Epic;
+	EG2IQuality DefaultShadowsQuality = EG2IQuality::High;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Graphics|Optional", meta = (ToolTip = "Used only if bDefaultCustomQuality == true"))
-	EG2IQuality DefaultEffectsQuality = EG2IQuality::Epic;
+	EG2IQuality DefaultEffectsQuality = EG2IQuality::High;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Graphics|Optional", meta = (ToolTip = "Used only if bDefaultCustomQuality == true"))
-	EG2IQuality DefaultPostProcessingQuality = EG2IQuality::Epic;
+	EG2IQuality DefaultPostProcessingQuality = EG2IQuality::High;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Graphics|Optional", meta = (ToolTip = "Used only if bDefaultCustomQuality == true"))
-	EG2IQuality DefaultAntialiasingQuality = EG2IQuality::Epic;
+	EG2IQuality DefaultAntialiasingQuality = EG2IQuality::High;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Graphics|Optional", meta = (ToolTip = "Used only if bDefaultCustomQuality == true"))
-	EG2IQuality DefaultGlobalIlluminationQuality = EG2IQuality::Epic;
+	EG2IQuality DefaultGlobalIlluminationQuality = EG2IQuality::High;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Graphics|Optional", meta = (ToolTip = "Used only if bDefaultCustomQuality == true"))
-	EG2IQuality DefaultReflectionQuality = EG2IQuality::Epic;
+	EG2IQuality DefaultReflectionQuality = EG2IQuality::High;
 	
 	// ==================== SCREEN ====================
 	EG2IScreenMode ScreenMode = EG2IScreenMode::WindowedFullscreen;
