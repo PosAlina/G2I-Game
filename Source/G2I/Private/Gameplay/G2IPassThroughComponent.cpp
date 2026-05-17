@@ -125,7 +125,7 @@ void UG2IPassThroughComponent::HideGhostMaterial(APawn* Pawn)
 	UG2ICharacterMovementComponent* Component = Cast<UG2ICharacterMovementComponent>(Pawn->GetMovementComponent());
 	if (!ensure(Component))
 	{
-		UE_LOG(LogG2I, Error, TEXT("Owner %s hasn't movement component in %s"), *Owner->GetName(), *GetName());
+		UE_LOG(LogG2I, Warning, TEXT("Owner %s hasn't movement component in %s"), *Owner->GetName(), *GetName());
 		return;
 	}
 
@@ -140,7 +140,13 @@ void UG2IPassThroughComponent::HideGhostMaterial(APawn* Pawn)
 			MaterialsMap.MultiFind(SMCount, MaterialsArray, false);
 
 			for (int32 i = 0; i < MaterialsArray.Num(); i++)
+			{
+				if (!SMPair.Key)
+				{
+					continue;
+				}
 				SMPair.Key->SetMaterial(i, MaterialsArray[i]);
+			}
 		}
 	}
 
@@ -174,7 +180,7 @@ void UG2IPassThroughComponent::ShowGhostMaterial(APawn* Pawn)
 	{
 		if (!ensure(GhostMaterial))
 		{
-			UE_LOG(LogG2I, Error, TEXT("Ghost Material isn't set up %s"), *GetName());
+			UE_LOG(LogG2I, Warning, TEXT("Ghost Material isn't set up %s"), *GetName());
 			return;
 		}
 
@@ -186,7 +192,13 @@ void UG2IPassThroughComponent::ShowGhostMaterial(APawn* Pawn)
 			MaterialsMap.MultiFind(SMCount, MaterialsArray, false);
 
 			for (int32 i = 0; i < MaterialsArray.Num(); i++)
+			{
+				if (!SMPair.Key)
+				{
+					continue;
+				}
 				SMPair.Key->SetMaterial(i, GhostMaterial);
+			}
 		}
 	}
 
