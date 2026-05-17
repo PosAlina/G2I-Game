@@ -12,6 +12,7 @@
 #include "Engine/World.h"
 #include "G2I.h"
 #include "Sound/G2ISoundComponent.h"
+#include "G2IFootstepsComponent.h"
 
 AG2ICharacterEngineer::AG2ICharacterEngineer(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UG2ICharacterMovementComponent>(
@@ -29,12 +30,17 @@ AG2ICharacterEngineer::AG2ICharacterEngineer(const FObjectInitializer& ObjectIni
 	ValveInteractionComp = CreateDefaultSubobject<UG2IValveInteractionComponent>(TEXT("ValveInteractionComp"));
 	HoleInteractionComp = CreateDefaultSubobject<UG2IHoleInteractionComponent>(TEXT("HoleInteractionComp"));
 	SteamGloveComp = CreateDefaultSubobject<UG2ISteamGloveComponent>(TEXT("SteamGloveComp"));
+	FootstepsComp = CreateDefaultSubobject<UG2IFootstepsComponent>(TEXT("FootstepsComp"));
 
 	SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("SoundComponent"));
 	if (SoundComp) {
 		SoundComp->SetupAttachment(RootComponent);
 		SoundComp->SetupSounds.Add(TEXT("PunchSound"), FSoundConfig());
 		SoundComp->SetupSounds.Add(TEXT("SteamShotSound"), FSoundConfig());
+		SoundComp->SetupSounds.Add(TEXT("FootstepsWood"), FSoundConfig());
+		SoundComp->SetupSounds.Add(TEXT("FootstepsMetal"), FSoundConfig());
+		SoundComp->SetupSounds.Add(TEXT("FootstepsCarpet"), FSoundConfig());
+		SoundComp->SetupSounds.Add(TEXT("FootstepsDefault"), FSoundConfig());
 	}
 
 	if (!ensure(InventoryComp))

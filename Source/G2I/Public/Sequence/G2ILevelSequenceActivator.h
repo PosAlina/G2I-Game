@@ -50,6 +50,9 @@ private:
 	FName ActivationSoundName = TEXT("ActivationSound");
 
 	int32 ActivationSoundId = -1;
+
+	UPROPERTY()
+	TMap<FName, int32> SoundIDs;
 	
 public:
 	AG2ILevelSequenceActivator();
@@ -58,6 +61,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ActivateOtherActors() const;
+
+	UFUNCTION(BlueprintCallable)
+	void PlaySound(const FName& SoundName);
 
 	UFUNCTION()
 	void OnSequenceFinished();

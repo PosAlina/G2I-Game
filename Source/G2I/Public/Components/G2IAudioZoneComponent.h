@@ -22,6 +22,8 @@ private:
 public:
 	UG2IAudioZoneComponent();
 
+	virtual void OnRegister() override;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Data|Audio_Zone")
 	TObjectPtr<UG2ISoundComponent> SoundComp;
 

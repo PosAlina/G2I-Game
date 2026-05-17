@@ -230,7 +230,8 @@ void UG2IGrabberComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, A
 		return;
 	}
 
-	if (!ensure(OtherActor->ActorHasTag(FName("CanBeGrabbed")))) {
+	if (!OtherActor->ActorHasTag(FName("CanBeGrabbed"))) 
+	{
 		UE_LOG(LogG2I, Verbose, TEXT("Actor %s doesn't have CanBeGrabbed tag"), *OtherActor->GetName());
 		return;
 	}
