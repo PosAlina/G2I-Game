@@ -15,6 +15,8 @@ class UG2IThirdPersonCameraComponent;
 class UG2IInteractionComponent;
 class UG2ICharacterMovementComponent;
 class UG2IInventoryComponent;
+class UG2ISoundComponent;
+class UG2IFootstepsComponent;
 
 
 /**
@@ -49,6 +51,13 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement)
 	TObjectPtr<UG2IFlightComponent> FlightComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
+	TObjectPtr<UG2ISoundComponent> SoundComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
+	TObjectPtr<UG2IFootstepsComponent> FootstepsComp;
+
 private:
 
 	UPROPERTY(BlueprintAssignable)

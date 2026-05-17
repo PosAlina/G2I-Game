@@ -10,6 +10,8 @@
 #include "Components/Camera/G2ICameraControllerComponent.h"
 #include "Components/Camera/G2IFixedCamerasComponent.h"
 #include "Components/G2IInventoryComponent.h"
+#include "G2IFootstepsComponent.h"
+#include "Sound/G2ISoundComponent.h"
 #include <InputActionValue.h>
 
 AG2ICharacterDaughter::AG2ICharacterDaughter(const FObjectInitializer& ObjectInitializer)
@@ -36,6 +38,14 @@ AG2ICharacterDaughter::AG2ICharacterDaughter(const FObjectInitializer& ObjectIni
 	ThirdPersonCameraComp = CreateDefaultSubobject<UG2IThirdPersonCameraComponent>(TEXT("ThirdPersonCameraComp"));
 	FixedCamerasComp = CreateDefaultSubobject<UG2IFixedCamerasComponent>(TEXT("FixedCamerasComp"));
 	FlightComponent = CreateDefaultSubobject<UG2IFlightComponent>(TEXT("FlightComp"));
+	FootstepsComp = CreateDefaultSubobject<UG2IFootstepsComponent>(TEXT("FootstepsComp"));
+
+	SoundComp = CreateDefaultSubobject<UG2ISoundComponent>(TEXT("SoundComponent"));
+	if (SoundComp)
+	{
+		SoundComp->SetupAttachment(RootComponent);
+		SoundComp->SetupSounds.Add(TEXT("FootstepsDefault"), FSoundConfig());
+	}
 
 	UG2ICharacterMovementComponent* MovementComp =
 		Cast<UG2ICharacterMovementComponent>(GetCharacterMovement());
