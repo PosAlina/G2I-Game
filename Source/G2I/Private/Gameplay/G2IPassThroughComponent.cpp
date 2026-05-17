@@ -178,7 +178,7 @@ void UG2IPassThroughComponent::ShowGhostMaterial(APawn* Pawn)
 	// Showing ghost material if character can pass through objects
 	if (Component->CanPassThroughObject())
 	{
-		if (!ensure(GhostMaterial))
+		if (!(GhostMaterial))
 		{
 			UE_LOG(LogG2I, Warning, TEXT("Ghost Material isn't set up %s"), *GetName());
 			return;
