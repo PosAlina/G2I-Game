@@ -63,8 +63,6 @@ void AG2ILevelSequenceActivator::Activate_Implementation()
 
 	PC = Cast<AG2IPlayerController>(GetWorld()->GetFirstPlayerController());
 
-	SequencePlayer->Play();
-
 	if (!ensure(PC))
 	{
 		UE_LOG(LogG2I, Error, TEXT("%s: PlayerController is null"), *GetActorNameOrLabel());
@@ -73,6 +71,8 @@ void AG2ILevelSequenceActivator::Activate_Implementation()
 	PC->OverrideInputMappingContext({ CutsceneIMC });
 
 	SequencePlayer->OnFinished.AddDynamic(this, &AG2ILevelSequenceActivator::OnSequenceFinished);
+
+	SequencePlayer->Play();
 }
 
 void AG2ILevelSequenceActivator::ActivateOtherActors() const
@@ -105,6 +105,47 @@ void AG2ILevelSequenceActivator::ActivateOtherActors() const
 			}
 		}
 	}
+}
+
+void AG2ILevelSequenceActivator::PlaySound(const FName& SoundName)
+{
+	if (!ensure(SoundComp))
+	{
+		UE_LOG(LogG2I, Error, TEXT("%s: %s is null."), *GetActorNameOrLabel(), *UG2ISoundComponent::StaticClass()->GetName());
+		return;
+	}
+
+	if (!SoundComp->SetupSounds.Contains(SoundName))
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: SetupSounds doesn't contain %s."), *GetActorNameOrLabel(), *SoundName.ToString());
+		return;
+	}
+
+	// If it's the activation sound
+	if (SoundName == ActivationSoundName)
+	{
+		SoundComp->PlaySound(ActivationSoundId);
+		return;
+	}
+
+	// If this sound was already added/registered
+	if (const int32* Id = SoundIDs.Find(SoundName))
+	{
+		SoundComp->PlaySound(*Id);
+		return;
+	}
+
+	// Otherwise registering it first
+	const int32 SoundId = SoundComp->AddSound(SoundComp->SetupSounds[SoundName]);
+
+	if (SoundId == -1)
+	{
+		UE_LOG(LogG2I, Warning, TEXT("%s: Couldn't create %s (ActivationSoundId == -1)."), *GetName(), *SoundName.ToString());
+		return;
+	}
+
+	SoundIDs.Add(SoundName, SoundId);
+	SoundComp->PlaySound(SoundId);
 }
 
 void AG2ILevelSequenceActivator::BeginPlay()

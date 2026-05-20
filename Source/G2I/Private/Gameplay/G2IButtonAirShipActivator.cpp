@@ -61,7 +61,11 @@ void AG2IButtonAirShipActivator::Tick(float DeltaTime)
 
 		if (Actor->Implements<UG2IMovingByGearObjectInterface>())
 		{
-			IG2IMovingByGearObjectInterface::Execute_OnPushing(Actor, CurrentForce);
+			if (IG2IMovingByGearObjectInterface::Execute_OnPushing(Actor, CurrentForce)) {
+				bIsPushing = false;
+				SetActorTickEnabled(false);
+				UG2ISoundComponent::StopSoundSafe(SoundComp, ActivationSoundId);
+			}
 		}
 	}
 }

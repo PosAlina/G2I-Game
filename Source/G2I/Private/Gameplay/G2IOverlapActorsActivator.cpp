@@ -27,7 +27,14 @@ void AG2IOverlapActorsActivator::NotifyActorBeginOverlap(AActor* OtherActor)
 			}
 			else
 			{
-				LauncherComp->CallActivation();
+				if (LauncherComp->bSkipActivation)
+				{
+					LauncherComp->LaunchWithoutActivation(true);
+				}
+				else
+				{
+					LauncherComp->CallActivation();
+				}
 			}
 
 			const FString DebugMessage = GetActorNameOrLabel() + " in " + OtherActor->GetActorNameOrLabel() + " activated";
@@ -111,7 +118,14 @@ void AG2IOverlapActorsActivator::BeginPlay()
 				}
 				else
 				{
-					LauncherComp->CallActivation();
+					if (LauncherComp->bSkipActivation)
+					{
+						LauncherComp->LaunchWithoutActivation(true);
+					}
+					else
+					{
+						LauncherComp->CallActivation();
+					}
 				}
 
 				const FString DebugMessage = GetActorNameOrLabel() + " in " + OtherActor->GetActorNameOrLabel() + " activated";

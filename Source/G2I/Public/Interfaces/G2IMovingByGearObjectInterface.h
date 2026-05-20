@@ -15,5 +15,5 @@ class G2I_API IG2IMovingByGearObjectInterface
 	GENERATED_BODY()
 public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interaction")
-	void OnPushing(float ForceMagnitude);
+	bool OnPushing(float ForceMagnitude);
 };

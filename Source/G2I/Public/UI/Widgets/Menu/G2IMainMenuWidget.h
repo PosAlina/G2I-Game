@@ -5,6 +5,7 @@
 #include "G2IMainMenuWidget.generated.h"
 
 class UButton;
+class UG2ISavingGameplayManager;
 
 UCLASS()
 class G2I_API UG2IMainMenuWidget : public UG2IUserWidget
@@ -34,6 +35,8 @@ public:
 protected:
 
 	virtual void InitializeAfterManagerLoading() override;
+
+	virtual void StartLevelInitialize() override;
 	
 	UFUNCTION()
 	void OnNewGameButtonClicked();
@@ -50,6 +53,9 @@ protected:
 	UFUNCTION()
 	void OnQuitGameButtonClicked();
 
+	UFUNCTION()
+	void OnContinueButtonClicked();
+
 private:
 
 	void NewGameWithSaveExists() const;
@@ -59,5 +65,9 @@ private:
 	void BindDelegates();
 	
 	TFunction<void()> GetShowCurrentWidgetFunction() const;
-	
+
+private:
+
+	UPROPERTY()
+	TObjectPtr<UG2ISavingGameplayManager> SaveManager;
 };

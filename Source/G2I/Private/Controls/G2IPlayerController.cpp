@@ -182,10 +182,7 @@ void AG2IPlayerController::BindEnhancedDelegates()
 		TakeAimAction, ETriggerEvent::Completed, this, &ThisClass::StopAiming);
 
 	EnhancedInputComponent->BindAction(
-		ShootAction, ETriggerEvent::Started, this, &ThisClass::Shoot);
-
-	EnhancedInputComponent->BindAction(
-		ToggleFollowAIBehindPlayerAction, ETriggerEvent::Started, this, &ThisClass::ToggleFollowAIBehindPlayer);
+		ShootAction, ETriggerEvent::Triggered, this, &ThisClass::Shoot);
 
 	EnhancedInputComponent->BindAction(
 		GlovePunchAction, ETriggerEvent::Started, this, &ThisClass::GlovePunchActivation);
@@ -209,6 +206,8 @@ void AG2IPlayerController::BindEnhancedDelegates()
 		SaveAction, ETriggerEvent::Triggered, this, &ThisClass::SaveGameplay);
 	EnhancedInputComponent->BindAction(
 		LoadAction, ETriggerEvent::Triggered, this, &ThisClass::LoadGameplay);
+	EnhancedInputComponent->BindAction(
+	ToggleFollowAIBehindPlayerAction, ETriggerEvent::Started, this, &ThisClass::ToggleFollowAIBehindPlayer);
 #endif
 }
 
@@ -984,11 +983,17 @@ void AG2IPlayerController::Shoot(const FInputActionValue& Value)
 	}
 }
 
+#if WITH_EDITOR
 void AG2IPlayerController::ToggleFollowAIBehindPlayer(const FInputActionValue& Value)
 {
+	if (!bIsDebugAction)
+	{
+		return;
+	}
 	bIsFollowingAIBehindPlayer = !bIsFollowingAIBehindPlayer;
 	OnToggleFollowAIBehindPlayerDelegate.Broadcast(bIsFollowingAIBehindPlayer);
 }
+#endif
 
 void AG2IPlayerController::GlovePunchActivation(const FInputActionInstance& Instance)
 {

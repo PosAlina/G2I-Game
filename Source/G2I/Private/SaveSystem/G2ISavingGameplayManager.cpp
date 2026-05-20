@@ -246,3 +246,37 @@ void UG2ISavingGameplayManager::LoadRequestedData(UObject* Requester) const
             UE_LOG(LogG2I, Warning, TEXT("%s doesn't implement Savable interface. It's data won't be loaded."), *Requester->GetName());
     }
 }
+
+bool UG2ISavingGameplayManager::DoesSaveExist() const
+{
+    return UGameplayStatics::DoesSaveGameExist(GameplaySaveSlotName, 0);
+}
+
+void UG2ISavingGameplayManager::SaveCurrentLevel(EG2ILevelName LevelEnum, bool bAsync)
+{
+    if (!GameplaySaveGame)
+    {
+        if (!CreateGameplaySaveGame())
+        {
+            return;
+        }
+
+    }
+    GameplaySaveGame->CurrentLevel = LevelEnum;
+    SaveGameplay(bAsync);
+}
+
+EG2ILevelName UG2ISavingGameplayManager::LoadCurrentLevel() const
+{
+    if (!GameplaySaveGame)
+    {
+        return EG2ILevelName::None;
+    }
+    return GameplaySaveGame->CurrentLevel;
+}
+
+void UG2ISavingGameplayManager::ResetProgress()
+{
+    CreateNewGameplaySaveGameObject();
+    SaveGameplay(false);
+}

@@ -4,6 +4,7 @@
 #include "Components/TimelineComponent.h"
 #include "Curves/CurveFloat.h"
 #include "G2I.h"
+#include "LaunchingIndication/G2ILauncherComponent.h"
 
 AG2IBaseMovingPlatform::AG2IBaseMovingPlatform()
 {
@@ -11,12 +12,14 @@ AG2IBaseMovingPlatform::AG2IBaseMovingPlatform()
     if (!ensure(RootComponent))
     {
         UE_LOG(LogG2I, Error, TEXT("%s: Couldn't create RootComponent"), *GetActorNameOrLabel());
+        return;
     }
 
     PlatformMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlatformMesh"));
     if (!ensure(PlatformMesh))
     {
         UE_LOG(LogG2I, Error, TEXT("%s: Couldn't create PlatformMesh"), *GetActorNameOrLabel());
+        return;
     }
     PlatformMesh->SetupAttachment(RootComponent);
 
@@ -24,6 +27,7 @@ AG2IBaseMovingPlatform::AG2IBaseMovingPlatform()
     if (!ensure(StartPosition))
     {
         UE_LOG(LogG2I, Error, TEXT("%s: Couldn't create StartPosition"), *GetActorNameOrLabel());
+        return;
     }
     StartPosition->SetupAttachment(RootComponent);
 
@@ -31,6 +35,7 @@ AG2IBaseMovingPlatform::AG2IBaseMovingPlatform()
     if (!ensure(EndPosition))
     {
         UE_LOG(LogG2I, Error, TEXT("%s: Couldn't create EndPosition"), *GetActorNameOrLabel());
+        return;
     }
     EndPosition->SetupAttachment(RootComponent);
 
@@ -38,6 +43,14 @@ AG2IBaseMovingPlatform::AG2IBaseMovingPlatform()
     if (!ensure(Timeline))
     {
         UE_LOG(LogG2I, Error, TEXT("%s: Couldn't create Timeline"), *GetActorNameOrLabel());
+        return;
+    }
+    	
+    LauncherComp = CreateDefaultSubobject<UG2ILauncherComponent>(TEXT("LauncherComp"));
+    if (!ensure(LauncherComp))
+    {
+        UE_LOG(LogG2I, Error, TEXT("%s: Couldn't create %s"), *GetActorNameOrLabel(),
+            *UG2ILauncherComponent::StaticClass()->GetName());
     }
 }
 
@@ -74,6 +87,8 @@ void AG2IBaseMovingPlatform::BeginPlay()
     FOnTimelineEvent FinishedEvent;
     FinishedEvent.BindUFunction(this, FName("OnTimelineFinished"));
     Timeline->SetTimelineFinishedFunc(FinishedEvent);
+    
+    LauncherComp->GetOnLockedDelegate().AddDynamic(this, &ThisClass::ToggleLockingPlatform);
 }
 
 void AG2IBaseMovingPlatform::HandleProgress(const float Value)
